@@ -1,12 +1,12 @@
-import './App.css';
+import './Solitaire.css';
 
-function App() {
+function Solitaire() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src="Octocat.png" className="App-logo" alt="logo" />
+    <div className="Solitaire">
+      
+      {/* <header className="App-header">
         <p>
-          GitHub Codespaces <span className="heart">♥️</span> React
+          GitHub Codespaces <span className="heart">♥️</span> M React
         </p>
         <p className="small">
           Edit <code>src/App.js</code> and save to reload.
@@ -21,9 +21,9 @@ function App() {
             Learn React
           </a>
         </p>
-      </header>
+      </header> */}
     </div>
   );
 }
 
-export default App;
+export default Solitaire;
