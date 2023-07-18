@@ -1,31 +1,64 @@
-.App {
-  text-align: center;
+#playarea {
+  --card-height: 175px;
+  --card-width: 125px;
+  display: grid;
+  grid-template-rows: var(--card-height) 1fr;
+  grid-gap: 30px;
+  height: 100vh;
+  justify-content: space-between;
+  margin: 10px auto;
+  width: 95%;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+#foundation,
+#stock,
+#tableau {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
 }
 
-.App-link {
-  color: #61dafb;
+#foundation {
+  grid-column: 4/8;
+  justify-content: space-between;
 }
 
-.heart {
-  color: #ff0000;
+#stock {
+  grid-column: 1/1;
 }
 
-.small {
-  font-size: 0.75rem;
+#waste {
+  grid-column: 2/3;
+}
+
+#tableau {
+  grid-column: 1/8;
+  grid-row: 2;
+  justify-content: space-between;
+  width: 100%;
+}
+
+#timer {
+  bottom: 20px;
+  color: yellow;
+  filter: drop-shadow(1px 1px 1px black);
+  font-size: 22px;
+  position: fixed;
+}
+
+.card {
+  border: 1px solid black;
+  border-radius: 12px;
+  box-shadow: inset 1px 1px 1px 0 rgba(255,255,255,0.5), inset -1px -1px 1px 0 rgba(0,0,0,0.5);
+  height: var(--card-height);
+  width: var(--card-width);
+}
+
+@media (max-width: 965px) {
+  #playarea {
+    --card-width: calc(100vw / 8);
+    --card-height: calc(var(--card-width) * 1.4);
+  }
+
+  .card {
+    border-radius: 6px;
+  }
 }
