@@ -1,13 +1,19 @@
+import './index.css';
+
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import './index.css';
 import Solitaire from './Solitaire';
 import reportWebVitals from './reportWebVitals';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
+const urlParams = new URLSearchParams(window.location.search);
+const isDebug = urlParams.get('isDebug') === "true" || false;
+
 root.render(
   <React.StrictMode>
-    <Solitaire />
+    <Solitaire
+      isDebug={isDebug}
+    />
   </React.StrictMode>
 );
 

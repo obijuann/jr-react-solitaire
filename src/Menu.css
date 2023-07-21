@@ -1,0 +1,54 @@
+.debug {
+    align-items: center;
+    display: flex;
+    flex: 0 0 100%;
+    justify-content: center;
+}
+
+#menu {
+    align-items: center;
+    background: rgba(0, 0, 0, .5);
+    bottom: -250px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    left: 0;
+    padding: 15px 0;
+    position: fixed;
+    transition: bottom .5s;
+    width: 100%;
+}
+
+#menu.visible {
+    bottom: 0;
+}
+
+#newgame {
+    background-image: url("/public/icons/play.svg");
+}
+
+#redo {
+    background-image: url("/public/icons/arrow.svg");
+}
+
+#undo {
+    background-image: url("/public/icons/reverse-arrow.svg");
+}
+
+button {
+    background: transparent no-repeat center top;
+    border: 0;
+    border-radius: 4px;
+    color: #fff;
+    cursor: pointer;
+    font-size: 18px;
+    height: 100px;
+    margin: 0;
+    padding-top: 80px;
+    width: 100px;
+}
+
+button:hover, 
+button:active {
+    background-color: rgba(0, 0, 0, .1);
+}
