@@ -3,6 +3,7 @@ import "./Solitaire.css";
 import React, { Component } from 'react';
 
 import Menu from "./Menu";
+import { publish } from "./Events";
 
 // const suits = ["clubs", "diamonds", "hearts", "spades"];
 // const ranks = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "jack", "queen", "king", "ace"];
@@ -15,8 +16,7 @@ class Solitaire extends Component {
 
     // Set initial state
     this.state = {
-      isDebug: props.isDebug || false,
-      isMenuVisible: false
+      isDebug: props.isDebug || false
     };
   }
 
@@ -43,10 +43,7 @@ class Solitaire extends Component {
           <div id="tab6" className="card"></div>
           <div id="tab7" className="card"></div>
         </div>
-        <Menu
-          isDebug={this.state.isDebug}
-          isMenuVisible={this.state.isMenuVisible}
-        />
+        <Menu />
         <div id="timer"></div>
       </div>
     );
@@ -58,7 +55,7 @@ class Solitaire extends Component {
     }
     e.preventDefault();
     if (e.target && e.target && (e.target.id === "playarea" || e.target.id === "menu")) {
-      this.setState({ isMenuVisible: !this.state.isMenuVisible });
+      publish("toggleMenu", true);
     }
   }
 
@@ -68,7 +65,7 @@ class Solitaire extends Component {
     }
     // Toggle the menu on Esc or m/M
     if (e.keyCode === 27 || e.keyCode === 77) {
-      this.setState({ isMenuVisible: !this.state.isMenuVisible });
+      publish("toggleMenu", true);
     }
   }
 }

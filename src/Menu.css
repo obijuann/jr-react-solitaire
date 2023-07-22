@@ -35,6 +35,44 @@
     background-image: url("/public/icons/reverse-arrow.svg");
 }
 
+#help {
+    background-image: url("/public/icons/question.svg");
+}
+
+#submenu {
+    background-color: green;
+    border: 2px solid white;
+    border-radius: 8px;
+    bottom: 145px;
+    color: white;
+    max-height: 400px;
+    max-width: 45%;
+    overflow: hidden;
+    padding: 10px 20px;
+    position: absolute;
+}
+
+#submenu::-webkit-scrollbar {
+    width: 8px;
+}
+
+#submenu::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+#submenu::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, .2);
+}
+
+#submenu::-webkit-scrollbar-thumb:hover {
+    background:  rgba(0, 0, 0, .5);;
+}
+
+#submenu.help {
+    overflow-y: scroll;
+}
+
+
 button {
     background: transparent no-repeat center top;
     border: 0;
@@ -48,7 +86,7 @@ button {
     width: 100px;
 }
 
-button:hover, 
+button:hover,
 button:active {
     background-color: rgba(0, 0, 0, .1);
 }
