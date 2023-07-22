@@ -1,11 +1,5 @@
-.debug {
-    align-items: center;
-    display: flex;
-    flex: 0 0 100%;
-    justify-content: center;
-}
-
 #menu {
+    --border-radius: 8px;
     align-items: center;
     background: rgba(0, 0, 0, .5);
     bottom: -250px;
@@ -23,6 +17,7 @@
     bottom: 0;
 }
 
+#newmenu,
 #newgame {
     background-image: url("/public/icons/play.svg");
 }
@@ -39,17 +34,40 @@
     background-image: url("/public/icons/question.svg");
 }
 
+#restart {
+    background-image: url("/public/icons/restart.svg");
+}
+
+#quit {
+    background-image: url("/public/icons/quit.svg");
+}
+
 #submenu {
     background-color: green;
     border: 2px solid white;
-    border-radius: 8px;
+    border-radius: var(--border-radius);
     bottom: 145px;
     color: white;
     max-height: 400px;
     max-width: 45%;
     overflow: hidden;
-    padding: 10px 20px;
+    padding: 5px;
     position: absolute;
+}
+
+#submenu.list {
+    align-items: stretch;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+}
+
+#submenu.help {
+    padding: 10px;
+}
+
+#submenu.help h2 {
+    margin: 0;
 }
 
 #submenu::-webkit-scrollbar {
@@ -61,6 +79,7 @@
 }
 
 #submenu::-webkit-scrollbar-thumb {
+    border-radius: var(--border-radius);
     background: rgba(0, 0, 0, .2);
 }
 
@@ -72,18 +91,29 @@
     overflow-y: scroll;
 }
 
-
 button {
-    background: transparent no-repeat center top;
     border: 0;
-    border-radius: 4px;
+    border-radius: var(--border-radius);
     color: #fff;
     cursor: pointer;
     font-size: 18px;
-    height: 100px;
     margin: 0;
+}
+
+button.primary {
+    background: transparent no-repeat center top;
+    height: 100px;
     padding-top: 80px;
     width: 100px;
+}
+
+button.secondary {
+    background: transparent no-repeat left 4px;
+    background-size: 30px;
+    height: 40px;
+    padding-inline-start: 35px;
+    padding-inline-end: 10px;
+    text-align: justify;
 }
 
 button:hover,

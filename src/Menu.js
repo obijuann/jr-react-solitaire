@@ -33,10 +33,10 @@ class Menu extends Component {
     render() {
         return (
             <div id="menu" className={this.state.isMenuVisible ? "visible" : ""}>
-                <button id="newgame" onClick={this.enableStartSubmenu}>New</button>
-                <button id="undo">Undo</button>
-                <button id="redo">Redo</button>
-                <button id="help" onClick={this.enableHelpSubmenu}>Help</button>
+                <button className="primary" id="newmenu" onClick={this.enableStartSubmenu}>New</button>
+                <button className="primary" id="undo">Undo</button>
+                <button className="primary" id="redo">Redo</button>
+                <button className="primary" id="help" onClick={this.enableHelpSubmenu}>Help</button>
                 {this.renderSubMenu()}
             </div>
         );
@@ -64,9 +64,9 @@ class Menu extends Component {
     renderStartSubmenu() {
         return (
             <div id="submenu" className="list">
-                <button>New game</button>
-                <button>Restart this game</button>
-                <button>Quit this game</button>
+                <button className="secondary" id="newgame">New game</button>
+                <button className="secondary" id="restart">Restart this game</button>
+                <button className="secondary" id="quit">Quit this game</button>
             </div>
         );
     }
