@@ -1,7 +1,9 @@
 import './Menu.css';
 
 import React, { Component } from 'react';
-import { subscribe, unsubscribe } from './Events';
+import { publish, subscribe, unsubscribe } from './Events';
+
+import { throttle } from './Utils';
 
 class Menu extends Component {
 
@@ -11,73 +13,73 @@ class Menu extends Component {
         // Set initial state
         this.state = {
             isMenuVisible: false,
-            subMenu: ""
+            submenuId: "",
+            submenuPos: 0
         }
     }
 
     componentDidMount() {
         // Bind helper functions
-        this.enableHelpSubmenu = this.enableHelpSubmenu.bind(this);
-        this.enableStartSubmenu = this.enableStartSubmenu.bind(this);
         this.toggleMenu = this.toggleMenu.bind(this);
+        this.toggleSubmenu = this.toggleSubmenu.bind(this);
+        this.resizeHandler = this.resizeHandler.bind(this);
 
-        // Set listener for toggle menu event
+        // Set listener for toggle menu event, which happens in the main Solitaire component
         subscribe("toggleMenu", this.toggleMenu);
+
+        // Close the submenu on resize
+        window.addEventListener("resize", throttle(this.resizeHandler, 150));
     }
 
     componentWillUnmount() {
         // Remove listener for toggle menu event
         unsubscribe("toggleMenu", this.toggleMenu);
+
+        // Remove the resize handler
+        window.removeEventListener("resize", throttle(this.resizeHandler, 150));
     }
 
     render() {
         return (
             <div id="menu" className={this.state.isMenuVisible ? "visible" : ""}>
-                <button className="primary" id="newmenu" onClick={this.enableStartSubmenu}>New</button>
-                <button className="primary" id="undo">Undo</button>
-                <button className="primary" id="redo">Redo</button>
-                <button className="primary" id="help" onClick={this.enableHelpSubmenu}>Help</button>
-                {this.renderSubMenu()}
+                <button className="primary" id="newgame" onClick={this.toggleSubmenu}>New</button>
+                {/* TODO: disable these buttons when no moves have been made */}
+                <button className="primary" id="undo" onClick={this.undoMoveHandler}>Undo</button>
+                <button className="primary" id="redo" onClick={this.redoMoveHandler}>Redo</button>
+                <button className="primary" id="help" onClick={this.toggleSubmenu}>Help</button>
+                {this.renderSubmenu()}
             </div>
         );
     }
 
-    renderSubMenu() {
+    renderSubmenu() {
         if (!this.state.isMenuVisible) {
             return;
         }
 
-        switch (this.state.subMenu) {
+        switch (this.state.submenuId) {
             case "help":
                 return this.renderHelpSubmenu();
-            case "start":
+            case "newgame":
                 return this.renderStartSubmenu();
             default:
                 return;
         }
     }
 
-    enableStartSubmenu() {
-        this.setState({ subMenu: "start" });
-    }
-
     renderStartSubmenu() {
         return (
-            <div id="submenu" className="list">
-                <button className="secondary" id="newgame">New game</button>
-                <button className="secondary" id="restart">Restart this game</button>
-                <button className="secondary" id="quit">Quit this game</button>
+            <div id="submenu" className="list" style={{ left: this.state.submenuPos + "px" }}>
+                <button className="secondary" id="newgame" onClick={this.newGameHandler.bind(this)}>New game</button>
+                <button className="secondary" id="restart" onClick={this.restartGameHandler.bind(this)}>Restart this game</button>
+                <button className="secondary" id="quit" onClick={this.exitGameHandler.bind(this)}>Quit this game</button>
             </div>
         );
     }
 
-    enableHelpSubmenu() {
-        this.setState({ subMenu: "help" });
-    }
-
     renderHelpSubmenu() {
         return (
-            <div id="submenu" className="help">
+            <div id="submenu" className="help" style={{ left: this.state.submenuPos + "px" }}>
                 <h2>Object of the game</h2>
                 <p>
                     The first objective is to release and play into position certain cards to build up each foundation, in sequence and in suit, from the ace through the king.
@@ -139,15 +141,69 @@ class Menu extends Component {
     }
 
     /**
+     * Closes the submenu on window resize
+     */
+    resizeHandler() {
+        this.setState({ submenuId: "" });
+    }
+
+    /**
      * Toggling the menu should dismiss the submenu first, then the main menu.
      * Otherwise it should enable the main menu without a submenu
      */
-    toggleMenu() {
-        if (this.state.subMenu || !this.state.isMenuVisible) {
-            this.setState({ isMenuVisible: true, subMenu: "" })
+    toggleMenu(e, hideMenus) {
+        if (hideMenus) {
+            this.setState({ isMenuVisible: false, submenuId: "" })
+        } else if (this.state.submenuId || !this.state.isMenuVisible) {
+            this.setState({ isMenuVisible: true, submenuId: "" })
         } else {
-            this.setState({ isMenuVisible: false, subMenu: "" })
+            this.setState({ isMenuVisible: false, submenuId: "" })
         }
+    }
+
+    /**
+     * Toggles the submenu
+     */
+    toggleSubmenu(e) {
+
+        if (this.state.submenuId) {
+            this.setState({ submenuId: null, submenuPos: 0 });
+        }
+
+        if (e && e.target && e.target.id) {
+            const clientRect = e.target.getBoundingClientRect();
+            const submenuPos = clientRect.left;
+            console.log(clientRect);
+            console.log(submenuPos);
+            this.setState({ submenuId: e.target.id, submenuPos: submenuPos });
+        }
+    }
+
+    /**
+     * Handler for clicking on the "New Game" menu option
+     * @param {*} e The event
+     */
+    newGameHandler(e) {
+        this.toggleMenu(e, true);
+        publish("newGame");
+    }
+
+    restartGameHandler(e) {
+        this.toggleMenu(e, true);
+        publish("restartGame");
+    }
+
+    exitGameHandler(e) {
+        this.toggleMenu(e, true);
+        publish("exitGame");
+    }
+
+    redoMoveHandler(e) {
+        publish("redoMove");
+    }
+
+    undoMoveHandler(e) {
+        publish("undoMove");
     }
 }
 

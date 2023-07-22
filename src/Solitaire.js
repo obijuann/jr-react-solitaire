@@ -1,9 +1,9 @@
 import "./Solitaire.css";
 
 import React, { Component } from 'react';
+import { publish, subscribe, unsubscribe } from "./Events";
 
 import Menu from "./Menu";
-import { publish } from "./Events";
 
 // const suits = ["clubs", "diamonds", "hearts", "spades"];
 // const ranks = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "jack", "queen", "king", "ace"];
@@ -20,9 +20,36 @@ class Solitaire extends Component {
     };
   }
 
+  componentDidMount() {
+    // Bind helper functions to the class
+    this.keyDownHandler = this.keyDownHandler.bind(this);
+    this.toggleMenu = this.toggleMenu.bind(this);
+    this.newGameHandler = this.newGameHandler.bind(this);
+    this.restartGameHandler = this.restartGameHandler.bind(this);
+    this.exitGameHandler = this.exitGameHandler.bind(this);
+    this.redoMoveHandler = this.redoMoveHandler.bind(this);
+    this.undoMoveHandler = this.undoMoveHandler.bind(this);
+
+    // Set listeners for various game events
+    subscribe("newGame", this.newGameHandler);
+    subscribe("restartGame", this.restartGameHandler);
+    subscribe("exitGame", this.exitGameHandler);
+    subscribe("redoMove", this.redoMoveHandler);
+    subscribe("undoMove", this.undoMoveHandler);
+  }
+
+  componentWillUnmount() {
+    // Remove listeners for game events
+    unsubscribe("newGame", this.newGameHandler);
+    unsubscribe("restartGame", this.restartGameHandler);
+    unsubscribe("exitGame", this.exitGameHandler);
+    unsubscribe("redoMove", this.redoMoveHandler);
+    unsubscribe("undoMove", this.undoMoveHandler);
+  }
+
   render() {
     return (
-      <div id="playarea" onClick={this.toggleMenu.bind(this)} onKeyDown={this.handleKeyDown.bind(this)}>
+      <div id="playarea" onClick={this.toggleMenu} onKeyDown={this.keyDownHandler}>
         <div id="stock">
           <div id="draw" className="card"></div>
         </div>
@@ -59,7 +86,7 @@ class Solitaire extends Component {
     }
   }
 
-  handleKeyDown(e) {
+  keyDownHandler(e) {
     if (!e || !e.key) {
       return;
     }
@@ -67,6 +94,26 @@ class Solitaire extends Component {
     if (e.keyCode === 27 || e.keyCode === 77) {
       publish("toggleMenu", true);
     }
+  }
+
+  newGameHandler() {
+    console.log("new game");
+  }
+
+  restartGameHandler() {
+    console.log("restart game");
+  }
+
+  exitGameHandler() {
+    console.log("exit game");
+  }
+
+  redoMoveHandler() {
+    console.log("redoing last move");
+  }
+
+  undoMoveHandler() {
+    console.log("undo last move");
   }
 }
 
