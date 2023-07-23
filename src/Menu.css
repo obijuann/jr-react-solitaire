@@ -52,7 +52,19 @@
     overflow: hidden;
     padding: 5px;
     position: absolute;
-    width: 300px;
+    width: var(--submenu-width);
+}
+
+#submenu::after {
+    border-left: var(--submenu-icon-size) solid transparent;
+    border-right: var(--submenu-icon-size) solid transparent;
+    border-top: var(--submenu-icon-size) solid #fff;
+    bottom: 130px;
+    content: "";
+    height: 0;
+    left: var(--submenu-icon-pos);
+    position: fixed;
+    width: 0;
 }
 
 #submenu.list {
@@ -106,6 +118,11 @@ button.primary {
     width: 100px;
 }
 
+button.primary:disabled {
+    cursor: unset;
+    opacity: .5;
+}
+
 button.secondary {
     background: transparent no-repeat left 4px;
     background-size: 30px;
@@ -116,7 +133,7 @@ button.secondary {
     text-align: justify;
 }
 
-button:hover,
-button:active {
+button:not(:disabled):hover,
+button:not(:disabled):active {
     background-color: rgba(0, 0, 0, .1);
 }

@@ -5,6 +5,9 @@ import { publish, subscribe, unsubscribe } from './Events';
 
 import { throttle } from './Utils';
 
+const submenuArrowSize = 15;
+const submenuWidth = 300;
+
 class Menu extends Component {
 
     constructor(props) {
@@ -14,7 +17,8 @@ class Menu extends Component {
         this.state = {
             isMenuVisible: false,
             submenuId: "",
-            submenuPos: 0
+            subMenuPosStyle: 0,
+            submenuArrowPos: 0
         }
     }
 
@@ -43,9 +47,8 @@ class Menu extends Component {
         return (
             <div id="menu" className={this.state.isMenuVisible ? "visible" : ""}>
                 <button className="primary" id="newgame" onClick={this.toggleSubmenu}>New</button>
-                {/* TODO: disable these buttons when no moves have been made */}
-                <button className="primary" id="undo" onClick={this.undoMoveHandler}>Undo</button>
-                <button className="primary" id="redo" onClick={this.redoMoveHandler}>Redo</button>
+                <button className="primary" id="undo" disabled onClick={this.undoMoveHandler}>Undo</button>
+                <button className="primary" id="redo" disabled onClick={this.redoMoveHandler}>Redo</button>
                 <button className="primary" id="help" onClick={this.toggleSubmenu}>Help</button>
                 {this.renderSubmenu()}
             </div>
@@ -55,6 +58,13 @@ class Menu extends Component {
     renderSubmenu() {
         if (!this.state.isMenuVisible) {
             return;
+        }
+
+        // Adjust where the submenu arrow is pointing
+        if (this.state.submenuArrowPos) {
+            document.documentElement.style.setProperty('--submenu-icon-pos', `${this.state.submenuArrowPos}px`);
+            document.documentElement.style.setProperty('--submenu-icon-size', `${submenuArrowSize}px`);
+            document.documentElement.style.setProperty('--submenu-width', `${submenuWidth}px`);
         }
 
         switch (this.state.submenuId) {
@@ -69,7 +79,7 @@ class Menu extends Component {
 
     renderStartSubmenu() {
         return (
-            <div id="submenu" className="list" style={{ left: this.state.submenuPos + "px" }}>
+            <div id="submenu" className="list" style={this.state.subMenuPosStyle}>
                 <button className="secondary" id="newgame" onClick={this.newGameHandler.bind(this)}>New game</button>
                 <button className="secondary" id="restart" onClick={this.restartGameHandler.bind(this)}>Restart this game</button>
                 <button className="secondary" id="quit" onClick={this.exitGameHandler.bind(this)}>Quit this game</button>
@@ -79,7 +89,7 @@ class Menu extends Component {
 
     renderHelpSubmenu() {
         return (
-            <div id="submenu" className="help" style={{ left: this.state.submenuPos + "px" }}>
+            <div id="submenu" className="help" style={this.state.subMenuPosStyle}>
                 <h2>Object of the game</h2>
                 <p>
                     The first objective is to release and play into position certain cards to build up each foundation, in sequence and in suit, from the ace through the king.
@@ -166,17 +176,48 @@ class Menu extends Component {
      */
     toggleSubmenu(e) {
 
-        if (this.state.submenuId) {
-            this.setState({ submenuId: null, submenuPos: 0 });
+        // If no menu ID was passed, close any existing submenus
+        if (!e || !e.target || !e.target.id) {
+            this.setState({ submenuId: null, subMenuPosStyle: null });
+            return;
         }
 
-        if (e && e.target && e.target.id) {
-            const clientRect = e.target.getBoundingClientRect();
-            const submenuPos = clientRect.left;
-            console.log(clientRect);
-            console.log(submenuPos);
-            this.setState({ submenuId: e.target.id, submenuPos: submenuPos });
+        const submenuId = e.target.id;
+
+        // Close any open submenus
+        if (this.state.submenuId) {
+            let oldSubmenuId = this.state.submenuId;
+            this.setState({ submenuId: null, subMenuPosStyle: null });
+
+            // If the same menu button was clicked again, we're done after closing the menu
+            if (oldSubmenuId === submenuId) {
+                return;
+            }
         }
+
+        // Calculate the positions of the submenu element and the arrow
+        const submenuViewportOffset = 20;
+        const clientRect = e.target.getBoundingClientRect();
+        const menuIconCenter = clientRect.left + (clientRect.width / 2);
+        const viewportWidth = window.innerWidth;
+
+        // Make sure the submenu doesn't fall off the viewport
+        // Submenus positioned over the leftmost edge of the viewport is reset to the base offset from the left
+        // Otherwise, they should be positioned over the center of the button
+        // Note: This isn't super precise because we're not accounting for padding or scroll bars, but it's close enough
+        let subMenuPos = menuIconCenter - submenuWidth / 2;
+        let subMenuPosStyle = { left: `${subMenuPos < 1 ? submenuViewportOffset : subMenuPos}px` }
+
+        // Submenus positioned over the rightmost edge of the viewport is reset to the base offset from the right
+        if (subMenuPos + submenuWidth + submenuViewportOffset > viewportWidth) {
+            subMenuPosStyle = { right: `${submenuViewportOffset}px` };
+        }
+
+        // The submenu arrow should point to the middle of the parent menu element
+        const submenuArrowPos = parseInt(menuIconCenter - submenuArrowSize);
+
+        // Open the submenu
+        this.setState({ submenuId, subMenuPosStyle, submenuArrowPos });
     }
 
     /**
