@@ -229,20 +229,36 @@ class Menu extends Component {
         publish("newGame");
     }
 
+    /**
+     * Handler for clicking on the "Restart Game" menu option
+     * @param {*} e The event
+     */
     restartGameHandler(e) {
         this.toggleMenu(e, true);
         publish("restartGame");
     }
 
+    /**
+     * Handler for clicking on the "Exit Game" menu option
+     * @param {*} e The event
+     */
     exitGameHandler(e) {
         this.toggleMenu(e, true);
         publish("exitGame");
     }
 
+    /**
+     * Handler for clicking on the "redo" menu option
+     * @param {*} e The event
+     */
     redoMoveHandler(e) {
         publish("redoMove");
     }
 
+    /**
+     * Handler for clicking on the "undo" menu option
+     * @param {*} e The event
+     */
     undoMoveHandler(e) {
         publish("undoMove");
     }

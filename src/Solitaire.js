@@ -3,21 +3,34 @@ import "./Solitaire.css";
 import React, { Component } from 'react';
 import { publish, subscribe, unsubscribe } from "./Events";
 
+import Card from "./Card";
 import Menu from "./Menu";
 
-// const suits = ["clubs", "diamonds", "hearts", "spades"];
-// const ranks = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "jack", "queen", "king", "ace"];
-// var deck = [];
+const suits = ["clubs", "diamonds", "hearts", "spades"];
+const ranks = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "jack", "queen", "king", "ace"];
 
 class Solitaire extends Component {
+
+  gameDeck = [];
 
   constructor(props) {
     super(props);
 
     // Set initial state
     this.state = {
-      isDebug: props.isDebug || false
+      isDebug: props.isDebug || false,
+      tableauCardData: [
+        [],
+        [],
+        [],
+        [],
+        [],
+        [],
+        [],
+      ]
     };
+
+    this.tableauArea = React.createRef();
   }
 
   componentDidMount() {
@@ -51,30 +64,48 @@ class Solitaire extends Component {
     return (
       <div id="playarea" onClick={this.toggleMenu} onKeyDown={this.keyDownHandler}>
         <div id="stock">
-          <div id="draw" className="card"></div>
+          <div id="draw" className="cardpile"></div>
         </div>
         <div id="waste">
         </div>
         <div id="foundation">
-          <div id="stack1" className="card"></div>
-          <div id="stack2" className="card"></div>
-          <div id="stack3" className="card"></div>
-          <div id="stack4" className="card"></div>
+          <div id="stack1" className="cardpile"></div>
+          <div id="stack2" className="cardpile"></div>
+          <div id="stack3" className="cardpile"></div>
+          <div id="stack4" className="cardpile"></div>
         </div>
-        <div id="tableau">
-          <div id="tab1" className="card"></div>
-          <div id="tab2" className="card"></div>
-          <div id="tab3" className="card"></div>
-          <div id="tab4" className="card"></div>
-          <div id="tab5" className="card"></div>
-          <div id="tab6" className="card"></div>
-          <div id="tab7" className="card"></div>
-        </div>
+        {this.renderTableau()}
         <Menu />
         <div id="timer"></div>
       </div>
     );
   }
+
+  renderTableau() {
+    return (
+      <div id="tableau" ref={this.tableauArea}>
+        {this.state.tableauCardData.map((cardDataList, pileIndex) => {
+          return (<div id={`pile${pileIndex}`} key={`pile${pileIndex}`} className="cardpile">
+            {
+              cardDataList.map((cardData, cardIndex) => {
+                let offset = cardIndex * 30;
+                return (
+                  <Card
+                    key={`${cardData.rank}_${cardData.suit}_${offset}`}
+                    rank={cardData.rank}
+                    suit={cardData.suit}
+                    face={cardData.face}
+                    offset={offset}
+                  />
+                )
+              })
+            }
+          </div>)
+        })}
+      </div>
+    );
+  }
+
 
   toggleMenu(e) {
     if (!e) {
@@ -90,6 +121,7 @@ class Solitaire extends Component {
     if (!e || !e.key) {
       return;
     }
+
     // Toggle the menu on Esc or m/M
     if (e.keyCode === 27 || e.keyCode === 77) {
       publish("toggleMenu", true);
@@ -98,6 +130,9 @@ class Solitaire extends Component {
 
   newGameHandler() {
     console.log("new game");
+    // Create a new shuffled deck
+    this.shuffleDeck();
+    this.dealDeck();
   }
 
   restartGameHandler() {
@@ -114,6 +149,58 @@ class Solitaire extends Component {
 
   undoMoveHandler() {
     console.log("undo last move");
+  }
+
+  shuffleDeck() {
+    // Reset the deck
+    this.gameDeck = [];
+
+    // Create an unshuffled deck of cards.
+    for (let si = 0; si < suits.length; si++) {
+      for (let ri = 0; ri < ranks.length; ri++) {
+        let card = { rank: ranks[ri], suit: suits[si] };
+        this.gameDeck.push(card);
+      }
+    }
+
+    // Shuffle the cards in the deck
+    for (let i = this.gameDeck.length - 1; i > 0; i--) {
+      // Pick a random card from the deck
+      let j = Math.floor(Math.random() * i);
+
+      // Swap the card at the current index with the randomly chosen one
+      let temp = this.gameDeck[i];
+      this.gameDeck[i] = this.gameDeck[j];
+      this.gameDeck[j] = temp;
+    }
+  }
+
+  dealDeck() {
+    // Deal cards into the Tableau piles
+    // Starting with the leftmost tableau pile, we deal cards accordingly
+    // Pile 1: 1 faceup card
+    // Pile 2: 1 facedown card + 1 faceup card
+    // Pile 3: 2 facedown cards + 1 faceup card
+    // etc.
+    let cardsToDeal = 1;
+    let cardIndex = 0;
+    let tableauCardData = []
+    for (let i = 0; i < this.state.tableauCardData.length; i++) {
+      let cardDataList = [];
+      for (let i = 0; i < cardsToDeal; i++) {
+        // Create a card element and add it to the pile
+        const cardData = this.gameDeck[cardIndex++];
+        // Last card in the pile is face up
+        cardData.face = i === cardsToDeal - 1 ? "up" : "down";
+        cardDataList.push(cardData);
+      }
+      cardsToDeal++;
+      tableauCardData.push(cardDataList);
+    }
+
+    console.log(tableauCardData);
+
+    this.setState({ tableauCardData });
   }
 }
 
