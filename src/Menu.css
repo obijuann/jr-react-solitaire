@@ -96,7 +96,7 @@
 }
 
 #submenu::-webkit-scrollbar-thumb:hover {
-    background:  rgba(0, 0, 0, .5);;
+    background: rgba(0, 0, 0, .5);
 }
 
 #submenu.help {
@@ -136,4 +136,13 @@ button.secondary {
 button:not(:disabled):hover,
 button:not(:disabled):active {
     background-color: rgba(0, 0, 0, .1);
+}
+
+@media (max-width: 965px) {
+    button.primary {
+        background-size: contain;
+        font-size: 16px;
+        padding-top: 70px;
+        width: 60px;
+    }
 }

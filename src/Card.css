@@ -15,6 +15,11 @@
     }
 }
 
+.facedown {
+    background-image: url("/public/cards/backs/blue2.svg");
+    background-size: cover;
+}
+
 .clubs-2 {
     background-image: url("/public/cards/fronts/clubs_2.svg");
 }
@@ -221,8 +226,4 @@
 
 .spades-queen {
     background-image: url("/public/cards/fronts/spades_queen.svg");
-}
-
-.facedown {
-    background-image: url("/public/cards/backs/red2.svg");
 }

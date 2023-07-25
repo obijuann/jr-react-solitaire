@@ -11,8 +11,7 @@ class Card extends Component {
     this.state = {
       suit: props.suit,
       rank: props.rank,
-      face: props.face,
-      offset: props.offset
+      face: props.face
     }
   }
 
@@ -27,7 +26,7 @@ class Card extends Component {
     }
 
     return (
-      <div className={`card ${cardClass}`} title={cardText} style={{ top: `${this.state.offset}%`}}>
+      <div className={`card ${cardClass}`} title={cardText}>        
       </div>
     );
   }

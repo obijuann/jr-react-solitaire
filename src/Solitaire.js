@@ -19,6 +19,7 @@ class Solitaire extends Component {
     // Set initial state
     this.state = {
       isDebug: props.isDebug || false,
+      drawPileCardData: [],
       tableauCardData: [
         [],
         [],
@@ -63,9 +64,7 @@ class Solitaire extends Component {
   render() {
     return (
       <div id="playarea" onClick={this.toggleMenu} onKeyDown={this.keyDownHandler}>
-        <div id="stock">
-          <div id="draw" className="cardpile"></div>
-        </div>
+        {this.renderDrawPile()}
         <div id="waste">
         </div>
         <div id="foundation">
@@ -81,21 +80,39 @@ class Solitaire extends Component {
     );
   }
 
+  renderDrawPile() {
+    return (
+      <div id="stock">
+        <div id="draw" className="cardpile">
+          {this.state.drawPileCardData.map((cardData, pileIndex) => {
+            return (
+              <Card
+                key={`${cardData.rank}_${cardData.suit}_${cardData.face}`}
+                rank={cardData.rank}
+                suit={cardData.suit}
+                face="down"
+              />
+            )
+          })
+          }
+        </div>
+      </div>
+    );
+  }
+
   renderTableau() {
     return (
       <div id="tableau" ref={this.tableauArea}>
         {this.state.tableauCardData.map((cardDataList, pileIndex) => {
           return (<div id={`pile${pileIndex}`} key={`pile${pileIndex}`} className="cardpile">
             {
-              cardDataList.map((cardData, cardIndex) => {
-                let offset = cardIndex * 30;
+              cardDataList.map((cardData) => {
                 return (
                   <Card
-                    key={`${cardData.rank}_${cardData.suit}_${offset}`}
+                    key={`${cardData.rank}_${cardData.suit}_${cardData.face}`}
                     rank={cardData.rank}
                     suit={cardData.suit}
                     face={cardData.face}
-                    offset={offset}
                   />
                 )
               })
@@ -129,14 +146,16 @@ class Solitaire extends Component {
   }
 
   newGameHandler() {
-    console.log("new game");
     // Create a new shuffled deck
     this.shuffleDeck();
+
+    // Deal the deck
     this.dealDeck();
   }
 
   restartGameHandler() {
     console.log("restart game");
+    this.dealDeck();
   }
 
   exitGameHandler() {
@@ -198,9 +217,17 @@ class Solitaire extends Component {
       tableauCardData.push(cardDataList);
     }
 
-    console.log(tableauCardData);
+    // Add the rest of the cards to the draw pile
+    const drawPileCardData = this.gameDeck.slice(cardIndex).reverse();
 
-    this.setState({ tableauCardData });
+    if (this.state.isDebug) {
+      console.log(this.gameDeck);
+      console.log(tableauCardData);
+      console.log(drawPileCardData);
+    }
+
+    // Update the game state
+    this.setState({ drawPileCardData, tableauCardData });
   }
 }
 
