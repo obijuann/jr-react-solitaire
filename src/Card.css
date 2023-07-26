@@ -1,11 +1,8 @@
 .card {
-    background-color: white;
-    border: 1px solid black;
-    border-radius: 12px;
-    box-shadow: 1px 1px 1px 0px rgba(0, 0, 0, 0.75);
+    background-color: transparent;
     color: black;
     height: var(--card-height);
-    overflow: hidden;
+    perspective: 1000px;
     position: absolute;
     width: var(--card-width);
 }
@@ -15,25 +12,47 @@
     width: var(--card-width);
 }
 
-.diamonds,
-.hearts {
-    color: red;
+.cardinner {
+    height: 100%;
+    position: relative;
+    text-align: center;
+    transition: transform .8s;
+    transform-style: preserve-3d;
+    width: 100%;
+}
+
+/* Card flipping animation when turned face up */
+.card.faceup .cardinner {
+    transform: rotateY(180deg);
 }
 
 .face,
-.face span,
-.faceup .back {
+.back {
+    /* Safari */
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    border: 1px solid black;
+    border-radius: var(--border-radius);
+    box-shadow: 1px 1px 1px 0px rgba(0, 0, 0, 0.75);
+    overflow: hidden;
+    height: 100%;
+    position: absolute;
+    width: 100%;
+}
+
+.face {
+    background-color: white;
+    display: flex;
+    transform: rotateY(180deg);
+}
+
+.face span {
     display: none;
 }
 
-.faceup .face {
-    display: block;
-}
-
-@media (max-width: 965px) {
-    .card {
-        border-radius: 6px;
-    }
+.diamonds,
+.hearts {
+    color: red;
 }
 
 @media (max-width: 450px) {
@@ -46,13 +65,13 @@
         padding: 0 3px;
     }
 
-    .card .face span {
+    .face span {
         display: block;
         font-size: 7vw;
         font-weight: bold;
     }
 
-    .card .face img {
+    .face img {
         display: none;
     }
 }

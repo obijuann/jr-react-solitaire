@@ -1,4 +1,5 @@
 #playarea {
+  --border-radius: 12px;
   --card-height: 175px;
   --card-width: 125px;
   display: grid;
@@ -67,7 +68,7 @@
 
 .cardpile {
   border: 1px solid black;
-  border-radius: 12px;
+  border-radius: var(--border-radius);
   box-shadow: inset 1px 1px 1px 0 rgba(255,255,255,0.5), inset -1px -1px 1px 0 rgba(0,0,0,0.5);
   height: var(--card-height);
   position: relative;
@@ -81,6 +82,6 @@
   }
 
   .cardpile {
-    border-radius: 6px;
+    --border-radius: 6px;
   }
 }
