@@ -1,6 +1,6 @@
 .card {
-    background-color: transparent;
     color: black;
+    filter: drop-shadow(1px 1px 1px black);
     height: var(--card-height);
     perspective: 1000px;
     position: absolute;
@@ -13,6 +13,8 @@
 }
 
 .cardinner {
+    background-color: white;
+    border-radius: var(--border-radius);
     height: 100%;
     position: relative;
     text-align: center;
@@ -33,7 +35,6 @@
     backface-visibility: hidden;
     border: 1px solid black;
     border-radius: var(--border-radius);
-    box-shadow: 1px 1px 1px 0px rgba(0, 0, 0, 0.75);
     overflow: hidden;
     height: 100%;
     position: absolute;
