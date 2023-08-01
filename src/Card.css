@@ -24,12 +24,18 @@
 }
 
 /* Card flipping animation when turned face up */
+.card:hover .cardinner,
 .card.faceup .cardinner {
     transform: rotateY(180deg);
 }
 
-.face,
-.back {
+.card.faceup .back img {
+    opacity: 0;
+    transition: opacity 2s;
+}
+
+.back,
+.face {
     /* Safari */
     -webkit-backface-visibility: hidden;
     backface-visibility: hidden;

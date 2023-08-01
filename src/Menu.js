@@ -99,7 +99,7 @@ class Menu extends Component {
                 <p>
                     The rank of cards in Solitaire games is: K (high), Q, J, 10, 9, 8, 7, 6, 5, 4, 3, 2, A (low).
                 </p>
-                <h2>The Deal</h2>
+                <h2>The Pile</h2>
                 There are four different types of piles in Solitaire:
                 <ul>
                     <li>The Tableau: Seven piles that make up the main table.</li>
@@ -109,18 +109,6 @@ class Menu extends Component {
                     <li>The Stock (or “Hand”) Pile: If the entire pack is not laid out in a tableau at the beginning of a game, the remaining cards form the stock pile from which additional cards are brought into play according to the rules.</li>
                     <li>The Talon (or “Waste”) Pile: Cards from the stock pile that have no place in the tableau or on foundations are laid face up in the waste pile.</li>
                 </ul>
-                <p>
-                    To form the tableau, seven piles need to be created. Starting from left to right, place the first card face up to make the first pile, deal one card face down for the next six piles.
-                    Starting again from left to right, place one card face up on the second pile and deal one card face down on piles three through seven.
-                    Starting again from left to right, place one card face up on the third pile and deal one card face down on piles four through seven.
-                    Continue this pattern until pile seven has one card facing up on top of a pile of six cards facing down.
-                </p>
-                <p>
-                    The remaining cards form the stock (or “hand”) pile and are placed above the tableau.
-                </p>
-                <p>
-                    When starting out, the foundations and waste pile do not have any cards.
-                </p>
                 <h2>The Play</h2>
                 <p>
                     The initial array may be changed by "building" - transferring cards among the face-up cards in the tableau.

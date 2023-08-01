@@ -41,19 +41,25 @@ class Card extends Component {
     }
 
     return (
-      <div className={`card ${this.state.suit} ${this.state.flipped ? "faceup" : ""}`}>
+      <div className={`card ${this.state.suit} ${this.state.flipped ? "faceup" : ""}`} draggable={this.state.flipped} onDragStart={this.drag.bind(this)}>
         <div className="cardinner">
           <div className="face">
-            <img src={`${process.env.PUBLIC_URL}/cards/fronts/${this.state.suit}_${this.state.rank}.svg`} alt={`${this.state.rank} of ${this.state.suit}`}></img>
+            <img src={`${process.env.PUBLIC_URL}/cards/fronts/${this.state.suit}_${this.state.rank}.svg`} alt={`${this.state.rank} of ${this.state.suit}`} draggable="false"></img>
             <span className="rank">{rankMap[this.state.rank] || this.state.rank}</span>
             <span className="suit" dangerouslySetInnerHTML={{ __html: suitMap[this.state.suit] }}></span>
           </div>
           <div className="back">
-            <img src={`${process.env.PUBLIC_URL}/cards/backs/red2.svg`} alt="card"></img>
+            <img src={`${process.env.PUBLIC_URL}/cards/backs/red2.svg`} alt="card" draggable="false"></img>
           </div>
         </div>
       </div>
     );
+  }
+
+  drag(e) {
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.clearData();
+    e.dataTransfer.setData("cardData", JSON.stringify(this.state));
   }
 }
 
