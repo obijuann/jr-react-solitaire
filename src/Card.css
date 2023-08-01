@@ -18,13 +18,17 @@
     height: 100%;
     position: relative;
     text-align: center;
-    transition: transform .8s;
+    transition: transform .5s;
     transform-style: preserve-3d;
     width: 100%;
 }
 
+.card.faceup {
+    cursor: grab;
+}
+
 /* Card flipping animation when turned face up */
-.card:hover .cardinner,
+/* .card:hover .cardinner, */
 .card.faceup .cardinner {
     transform: rotateY(180deg);
 }

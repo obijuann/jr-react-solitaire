@@ -37,11 +37,11 @@ class Card extends Component {
     if (this.state.face === "up" && !this.state.flipped) {
       setTimeout(() => {
         this.setState({ flipped: true })
-      }, 800);
+      }, 0);
     }
 
     return (
-      <div className={`card ${this.state.suit} ${this.state.flipped ? "faceup" : ""}`} draggable={this.state.flipped} onDragStart={this.drag.bind(this)}>
+      <div className={`card ${this.state.flipped ? `${this.state.suit} faceup` : ""}`} draggable={this.state.flipped} onDragStart={this.drag.bind(this)}>
         <div className="cardinner">
           <div className="face">
             <img src={`${process.env.PUBLIC_URL}/cards/fronts/${this.state.suit}_${this.state.rank}.svg`} alt={`${this.state.rank} of ${this.state.suit}`} draggable="false"></img>

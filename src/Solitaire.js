@@ -25,6 +25,7 @@ class Solitaire extends Component {
     this.state = {
       isDebug: props.isDebug || false,
       drawPileCardData: [],
+      wastePileCardData: [],
       foundationCardData: [
         [],
         [],
@@ -43,19 +44,18 @@ class Solitaire extends Component {
     };
 
     this.tableauArea = React.createRef();
-  }
 
-  componentDidMount() {
     // Bind helper functions to the class
-    this.keyDownHandler = this.keyDownHandler.bind(this);
-    this.toggleMenu = this.toggleMenu.bind(this);
     this.newGameHandler = this.newGameHandler.bind(this);
     this.restartGameHandler = this.restartGameHandler.bind(this);
     this.exitGameHandler = this.exitGameHandler.bind(this);
     this.redoMoveHandler = this.redoMoveHandler.bind(this);
     this.undoMoveHandler = this.undoMoveHandler.bind(this);
     this.dropHandler = this.dropHandler.bind(this);
+    this.drawCardHandler = this.drawCardHandler.bind(this);
+  }
 
+  componentDidMount() {
     // Set listeners for various game events
     subscribe("newGame", this.newGameHandler);
     subscribe("restartGame", this.restartGameHandler);
@@ -77,8 +77,7 @@ class Solitaire extends Component {
     return (
       <div id="playarea" onClick={this.toggleMenu} onKeyDown={this.keyDownHandler}>
         {this.renderDrawPile()}
-        <div id="waste">
-        </div>
+        {this.renderWastePile()}
         {this.renderFoundation()}
         {this.renderTableau()}
         <Menu />
@@ -90,8 +89,8 @@ class Solitaire extends Component {
   renderDrawPile() {
     return (
       <div id="stock">
-        <div id="draw" className="cardpile">
-          {this.state.drawPileCardData.map((cardData, pileIndex) => {
+        <div id="draw" className="cardpile" onClick={this.drawCardHandler}>
+          {this.state.drawPileCardData.map((cardData) => {
             return (
               <Card
                 key={`${cardData.rank}_${cardData.suit}_${cardData.face}`}
@@ -103,6 +102,24 @@ class Solitaire extends Component {
           })
           }
         </div>
+      </div>
+    );
+  }
+
+  renderWastePile() {
+    return (
+      <div id="waste">
+        {this.state.wastePileCardData.map((cardData) => {
+          return (
+            <Card
+              key={`${cardData.rank}_${cardData.suit}_${cardData.face}`}
+              rank={cardData.rank}
+              suit={cardData.suit}
+              face="up"
+            />
+          )
+        })
+        }
       </div>
     );
   }
@@ -194,6 +211,28 @@ class Solitaire extends Component {
       console.log("this is a valid move");
     } else {
       console.log("this is an invalid move");
+    }
+  }
+
+  /**
+   * Invoked when drawing cards from the draw pile
+   */
+  drawCardHandler(e) {
+    e.preventDefault();
+
+    if (!this.state.drawPileCardData || !this.state.drawPileCardData || (!this.state.drawPileCardData.length && !this.state.wastePileCardData.length)) {
+      return;
+    }
+
+    const { drawPileCardData, wastePileCardData } = this.state;
+
+    // If the draw pile is empty, and the waste pile has cards, move the waste pile back to the draw pile
+    if (!drawPileCardData.length && wastePileCardData.length) {
+      this.setState({ drawPileCardData: wastePileCardData.reverse(), wastePileCardData: [] });
+    } else {
+      // Add the last card from the draw pile to the waste pile
+      wastePileCardData.push(drawPileCardData.pop());
+      this.setState({ drawPileCardData, wastePileCardData });
     }
   }
 
@@ -349,7 +388,7 @@ class Solitaire extends Component {
     }
 
     // Update the game state
-    this.setState({ drawPileCardData, tableauCardData });
+    this.setState({ drawPileCardData, tableauCardData, wastePileCardData: [], foundationCardData: [[], [], [], []] });
   }
 }
 
