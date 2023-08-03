@@ -12,7 +12,7 @@ const suits = {
   "hearts": "red",
   "spades": "black"
 };
-const ranks = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "jack", "queen", "king", "ace"];
+const ranks = ["ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "jack", "queen", "king"];
 
 class Solitaire extends Component {
 
@@ -42,8 +42,6 @@ class Solitaire extends Component {
         [],
       ]
     };
-
-    this.tableauArea = React.createRef();
 
     // Bind helper functions to the class
     this.newGameHandler = this.newGameHandler.bind(this);
@@ -90,13 +88,15 @@ class Solitaire extends Component {
     return (
       <div id="stock">
         <div id="draw" className="cardpile" onClick={this.drawCardHandler}>
-          {this.state.drawPileCardData.map((cardData) => {
+          {this.state.drawPileCardData.map((cardData, cardIndex) => {
             return (
               <Card
-                key={`${cardData.rank}_${cardData.suit}_${cardData.face}`}
+                key={`${cardData.rank}_${cardData.suit}_${cardData.face}_draw_${cardIndex}`}
                 rank={cardData.rank}
                 suit={cardData.suit}
                 face="down"
+                piletype="draw"
+                cardindex={cardIndex}
               />
             )
           })
@@ -109,13 +109,15 @@ class Solitaire extends Component {
   renderWastePile() {
     return (
       <div id="waste">
-        {this.state.wastePileCardData.map((cardData) => {
+        {this.state.wastePileCardData.map((cardData, cardIndex) => {
           return (
             <Card
-              key={`${cardData.rank}_${cardData.suit}_${cardData.face}`}
+              key={`${cardData.rank}_${cardData.suit}_${cardData.face}_waste_${cardIndex}`}
               rank={cardData.rank}
               suit={cardData.suit}
               face="up"
+              piletype="waste"
+              cardindex={cardIndex}
             />
           )
         })
@@ -126,17 +128,21 @@ class Solitaire extends Component {
 
   renderFoundation() {
     return (
-      <div id="foundation" ref={this.tableauArea}>
+      <div id="foundation">
         {this.state.foundationCardData.map((cardDataList, pileIndex) => {
           return (<div id={`fpile${pileIndex}`} key={`fpile${pileIndex}`} datapileindex={pileIndex} datapiletype="foundation" className="cardpile" onDrop={this.dropHandler} onDragEnter={this.dragEnterHandler} onDragOver={this.dragOverHander}>
             {
-              cardDataList.map((cardData) => {
+              cardDataList.map((cardData, cardIndex) => {
                 return (
                   <Card
-                    key={`${cardData.rank}_${cardData.suit}_${cardData.face}`}
+                    key={`${cardData.rank}_${cardData.suit}_${cardData.face}_foundation_${pileIndex}_${cardIndex}`}
                     rank={cardData.rank}
                     suit={cardData.suit}
                     face={cardData.face}
+                    piletype="foundation"
+                    flipped={true}
+                    pileindex={pileIndex}
+                    cardindex={cardIndex}
                   />
                 )
               })
@@ -149,17 +155,28 @@ class Solitaire extends Component {
 
   renderTableau() {
     return (
-      <div id="tableau" ref={this.tableauArea}>
+      <div id="tableau">
         {this.state.tableauCardData.map((cardDataList, pileIndex) => {
           return (<div id={`tabpile${pileIndex}`} key={`pile${pileIndex}`} datapileindex={pileIndex} datapiletype="tableau" className="cardpile" onDrop={this.dropHandler} onDragEnter={this.dragEnterHandler} onDragOver={this.dragOverHander}>
             {
-              cardDataList.map((cardData) => {
+              cardDataList.map((cardData, cardIndex) => {
+                // Last card should always be up
+                const lastCard = cardIndex + 1 === cardDataList.length;
+                cardData.face = lastCard ? "up" : cardData.face;
+                // Determine if the card should already appear as flipped
+                const flipped = cardData.face === "up" && !lastCard;
+
                 return (
                   <Card
-                    key={`${cardData.rank}_${cardData.suit}_${cardData.face}`}
+                    key={`${cardData.rank}_${cardData.suit}_${cardData.face}_tableau_${pileIndex}_${cardIndex}`}
                     rank={cardData.rank}
                     suit={cardData.suit}
                     face={cardData.face}
+                    piletype="tableau"
+                    pileindex={pileIndex}
+                    cardindex={cardIndex}
+                    offset={cardIndex * 3}
+                    flipped={flipped}
                   />
                 )
               })
@@ -182,36 +199,88 @@ class Solitaire extends Component {
 
     // Get card data from the dropped card
     const cardDataString = e.dataTransfer.getData("cardData");
-    const droppedCardData = cardDataString ? JSON.parse(cardDataString) : null;
-    if (!droppedCardData || !droppedCardData.suit || !droppedCardData.rank) {
+    const sourceCardData = cardDataString ? JSON.parse(cardDataString) : null;
+    if (!sourceCardData || !sourceCardData.suit || !sourceCardData.rank) {
       return;
     }
 
     // Find the closest card pile element
-    const droppedCardPile = e.target.closest(".cardpile");
-
-    // Find the last element in the card data
-    let pileCardData;
-    let pileType = "";
+    const targetCardPile = e.target.closest(".cardpile");
 
     // Get the pile type and the last card in the pile
-    let pileIndex = 0;
-    if (droppedCardPile && droppedCardPile.getAttribute("datapiletype") && droppedCardPile.getAttribute("datapileindex") !== null) {
-      pileType = droppedCardPile.getAttribute("datapiletype");
-      pileIndex = droppedCardPile.getAttribute("datapileindex");
-      const cardDataList = pileType === "tableau" ? this.state.tableauCardData[pileIndex] : this.state.foundationCardData[pileIndex];
+    let targetCardData;
+    let targetPileType = "";
+    let targetPileIndex = 0;
+
+    if (targetCardPile && targetCardPile.getAttribute("datapiletype") && targetCardPile.getAttribute("datapileindex") !== null) {
+      targetPileType = targetCardPile.getAttribute("datapiletype");
+      targetPileIndex = targetCardPile.getAttribute("datapileindex");
+      const cardDataList = targetPileType === "tableau" ? this.state.tableauCardData[targetPileIndex] : this.state.foundationCardData[targetPileIndex];
 
       if (cardDataList && cardDataList.length) {
-        pileCardData = cardDataList.slice(-1)[0];
+        targetCardData = cardDataList.slice(-1)[0];
       }
     }
 
     // See if this is a valid move
-    if (this.isValidMove(pileCardData, droppedCardData, pileType)) {
-      console.log("this is a valid move");
-    } else {
-      console.log("this is an invalid move");
+    if (this.isValidMove(sourceCardData, targetCardData, targetPileType)) {
+      this.moveCard(sourceCardData, targetPileType, targetPileIndex);
     }
+  }
+
+  /**
+   * Moves the souce card from its origin to the target pile
+   * @param {*} sourceCardData Card data for the source card
+   * @param {*} targetPileType The type of target pile 
+   * @param {*} targetPileIndex The target pile index
+   */
+  moveCard(sourceCardData, targetPileType, targetPileIndex) {
+
+    let newFoundationCardData = [...this.state.foundationCardData];
+    let newTableauCardData = [...this.state.tableauCardData];
+    let newWastePileCardData = [...this.state.wastePileCardData];
+
+    // Remove the card (and any subsequent cards) from the source pile
+    const { piletype: sourcePileType, pileindex: sourcePileIndex, cardindex: sourceCardIndex } = sourceCardData;
+    let cardsToMove;
+    switch (sourcePileType) {
+      case "foundation":
+        cardsToMove = newFoundationCardData[sourcePileIndex].slice(sourceCardIndex);
+        newFoundationCardData[sourcePileIndex] = newFoundationCardData[sourcePileIndex].slice(0, sourceCardIndex);
+        break;
+      case "tableau":
+        cardsToMove = newTableauCardData[sourcePileIndex].slice(sourceCardIndex);
+        newTableauCardData[sourcePileIndex] = newTableauCardData[sourcePileIndex].slice(0, sourceCardIndex);
+        break;
+      case "waste":
+        cardsToMove = newWastePileCardData.slice(sourceCardIndex);
+        newWastePileCardData = newWastePileCardData.slice(0, sourceCardIndex);
+        break;
+      default:
+        return;
+    }
+
+    // Move cards to target pile
+    switch (targetPileType) {
+      case "foundation":
+        newFoundationCardData[targetPileIndex] = newFoundationCardData[targetPileIndex].concat(cardsToMove);
+        break;
+      case "tableau":
+        newTableauCardData[targetPileIndex] = newTableauCardData[targetPileIndex].concat(cardsToMove);
+        break;
+      case "waste":
+        newWastePileCardData = newWastePileCardData.concat(cardsToMove);
+        break;
+      default:
+        return;
+    }
+
+    // Update state
+    this.setState({
+      foundationCardData: newFoundationCardData,
+      tableauCardData: newTableauCardData,
+      wastePileCardData: newWastePileCardData
+    });
   }
 
   /**
@@ -239,36 +308,37 @@ class Solitaire extends Component {
   /**
    * Returns true if the dropped card can be placed atop the pile card
    * 
-   * @param {cardData} pileCardData 
-   * @param {cardData} droppedCardData 
+   * @param {cardData} targetCardData 
+   * @param {cardData} sourceCardData 
+   * @param {string} targetPileType
    */
-  isValidMove(pileCardData, droppedCardData, pileType) {
-    if (!pileCardData && !droppedCardData) {
+  isValidMove(sourceCardData, targetCardData, targetPileType) {
+    if (!targetCardData && !sourceCardData) {
       return false;
     }
 
-    const pileCardDataRankIndex = pileCardData ? ranks.indexOf(pileCardData.rank) : - 1;
-    const droppedCardDataRankIndex = ranks.indexOf(droppedCardData.rank);
+    const pileCardDataRankIndex = targetCardData ? ranks.indexOf(targetCardData.rank) : - 1;
+    const droppedCardDataRankIndex = ranks.indexOf(sourceCardData.rank);
 
-    if (pileType === "tableau") {
+    if (targetPileType === "tableau") {
       // Kings are the only card that can be placed on an empty tableau pile
-      if (!pileCardData && droppedCardData.rank === "king") {
+      if (!targetCardData && sourceCardData.rank === "king") {
         return true;
       }
 
       // Valid moves must be descending ranks of alternating red/black suits
-      if (pileCardData && suits[pileCardData.suit] !== suits[droppedCardData.suit] && droppedCardDataRankIndex + 1 === pileCardDataRankIndex) {
+      if (targetCardData && suits[targetCardData.suit] !== suits[sourceCardData.suit] && droppedCardDataRankIndex + 1 === pileCardDataRankIndex) {
         return true;
       }
 
-    } else if (pileType === "foundation") {
+    } else if (targetPileType === "foundation") {
       // Aces are the only card that can be placed on an empty foundation pile
-      if (!pileCardData && droppedCardData.rank === "ace") {
+      if (!targetCardData && sourceCardData.rank === "ace") {
         return true;
       }
 
       // Valid moves must be ascending ranks of the same suit
-      if (pileCardData && pileCardData.suit === droppedCardData.suit && droppedCardDataRankIndex - 1 === pileCardDataRankIndex) {
+      if (targetCardData && targetCardData.suit === sourceCardData.suit && droppedCardDataRankIndex - 1 === pileCardDataRankIndex) {
         return true;
       }
     }
@@ -314,20 +384,19 @@ class Solitaire extends Component {
   }
 
   restartGameHandler() {
-    console.log("restart game");
     this.dealDeck();
   }
 
   exitGameHandler() {
-    console.log("exit game");
+    console.error("not yet implemented");
   }
 
   redoMoveHandler() {
-    console.log("redoing last move");
+    console.error("not yet implemented");
   }
 
   undoMoveHandler() {
-    console.log("undo last move");
+    console.error("not yet implemented");
   }
 
   shuffleDeck() {
@@ -369,10 +438,7 @@ class Solitaire extends Component {
       let cardDataList = [];
       for (let i = 0; i < cardsToDeal; i++) {
         // Create a card element and add it to the pile
-        const cardData = this.gameDeck[cardIndex++];
-        // Last card in the pile is face up
-        cardData.face = i === cardsToDeal - 1 ? "up" : "down";
-        cardDataList.push(cardData);
+        cardDataList.push(this.gameDeck[cardIndex++]);
       }
       cardsToDeal++;
       tableauCardData.push(cardDataList);
@@ -380,12 +446,6 @@ class Solitaire extends Component {
 
     // Add the rest of the cards to the draw pile
     const drawPileCardData = this.gameDeck.slice(cardIndex).reverse();
-
-    if (this.state.isDebug) {
-      console.log(this.gameDeck);
-      console.log(tableauCardData);
-      console.log(drawPileCardData);
-    }
 
     // Update the game state
     this.setState({ drawPileCardData, tableauCardData, wastePileCardData: [], foundationCardData: [[], [], [], []] });

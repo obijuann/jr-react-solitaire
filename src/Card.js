@@ -25,7 +25,12 @@ class Card extends Component {
     this.state = {
       suit: props.suit,
       rank: props.rank,
-      face: props.face
+      face: props.face || "down",
+      flipped: props.flipped,
+      piletype: props.piletype,
+      pileindex: props.pileindex,
+      cardindex: props.cardindex,
+      offset: props.offset || 0
     }
   }
 
@@ -40,8 +45,16 @@ class Card extends Component {
       }, 0);
     }
 
+    let styleOverride;
+    if (this.state.offset) {
+      styleOverride = {
+        transform: `translateY(${this.state.offset}vh)`
+      }
+    }
+
+
     return (
-      <div className={`card ${this.state.flipped ? `${this.state.suit} faceup` : ""}`} draggable={this.state.flipped} onDragStart={this.drag.bind(this)}>
+      <div style={styleOverride} className={`card ${this.state.flipped ? `${this.state.suit} faceup` : ""}`} draggable={this.state.flipped} onDragStart={this.drag.bind(this)}>
         <div className="cardinner">
           <div className="face">
             <img src={`${process.env.PUBLIC_URL}/cards/fronts/${this.state.suit}_${this.state.rank}.svg`} alt={`${this.state.rank} of ${this.state.suit}`} draggable="false"></img>

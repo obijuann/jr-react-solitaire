@@ -39,26 +39,6 @@
   width: 100%;
 }
 
-/* Offset the cards in the tableau piles */
-#tableau .cardpile .card:nth-child(2) {
-  transform: translateY(5vh);
-}
-#tableau .cardpile .card:nth-child(3) {
-  transform: translateY(10vh);
-}
-#tableau .cardpile .card:nth-child(4) {
-  transform: translateY(15vh);
-}
-#tableau .cardpile .card:nth-child(5) {
-  transform: translateY(20vh);
-}
-#tableau .cardpile .card:nth-child(6) {
-  transform: translateY(25vh);
-}
-#tableau .cardpile .card:nth-child(7) {
-  transform: translateY(30vh);
-}
-
 #timer {
   bottom: 20px;
   color: yellow;
