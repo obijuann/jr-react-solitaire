@@ -10,10 +10,10 @@ const rankMap = {
 };
 
 const suitMap = {
-  "clubs": "&#9827;",
-  "diamonds": "&#9830;",
-  "hearts": "&#9829;",
-  "spades": "&#9824;"
+  "clubs": "♣",
+  "diamonds": "♦",
+  "hearts": "♥",
+  "spades": "♠️"
 };
 
 class Card extends Component {
@@ -67,7 +67,7 @@ class Card extends Component {
           <div className="face">
             <img src={`${process.env.PUBLIC_URL}/cards/fronts/${this.state.suit}_${this.state.rank}.svg`} alt={`${this.state.rank} of ${this.state.suit}`} draggable="false"></img>
             <span className="rank">{rankMap[this.state.rank] || this.state.rank}</span>
-            <span className="suit" dangerouslySetInnerHTML={{ __html: suitMap[this.state.suit] }}></span>
+            <span className="suit">{suitMap[this.state.suit]}</span>
           </div>
           <div className="back">
             <img src={`${process.env.PUBLIC_URL}/cards/backs/red.svg`} alt="card" draggable="false"></img>
