@@ -32,6 +32,9 @@ class Card extends Component {
       cardindex: props.cardindex,
       offset: props.offset || 0
     }
+
+    // Bind helper functions to the class
+    this.drag = this.drag.bind(this);
   }
 
   componentWillUnmount() {
@@ -52,9 +55,14 @@ class Card extends Component {
       }
     }
 
-
     return (
-      <div style={styleOverride} className={`card ${this.state.flipped ? `${this.state.suit} faceup` : ""}`} draggable={this.state.flipped} onDragStart={this.drag.bind(this)}>
+      <div
+        className={`card ${this.state.flipped ? `${this.state.suit} faceup` : ""}`}
+        draggable={this.state.flipped}
+        datacarddata={JSON.stringify(this.state)}
+        onDragStart={this.drag}
+        style={styleOverride}
+      >
         <div className="cardinner">
           <div className="face">
             <img src={`${process.env.PUBLIC_URL}/cards/fronts/${this.state.suit}_${this.state.rank}.svg`} alt={`${this.state.rank} of ${this.state.suit}`} draggable="false"></img>
@@ -62,14 +70,20 @@ class Card extends Component {
             <span className="suit" dangerouslySetInnerHTML={{ __html: suitMap[this.state.suit] }}></span>
           </div>
           <div className="back">
-            <img src={`${process.env.PUBLIC_URL}/cards/backs/red2.svg`} alt="card" draggable="false"></img>
+            <img src={`${process.env.PUBLIC_URL}/cards/backs/red.svg`} alt="card" draggable="false"></img>
           </div>
         </div>
       </div>
     );
   }
 
+  /**
+   * Handler invoked when the card element is dragged
+   * @param {Event} e The dragged element
+   */
   drag(e) {
+    // Write the card data to the data transfer property.
+    // This will be read when the card is dropped on an appropriate card pile
     e.dataTransfer.effectAllowed = "move";
     e.dataTransfer.clearData();
     e.dataTransfer.setData("cardData", JSON.stringify(this.state));

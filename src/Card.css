@@ -18,7 +18,8 @@
     height: 100%;
     position: relative;
     text-align: center;
-    transition: transform .5s;
+    /* Temp disabling card flip animation */
+    /* transition: transform .5s; */
     transform-style: preserve-3d;
     width: 100%;
 }
