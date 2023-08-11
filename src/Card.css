@@ -29,7 +29,6 @@
 }
 
 /* Card flipping animation when turned face up */
-/* .card:hover .cardinner, */
 .card.faceup .cardinner {
     transform: rotateY(180deg);
 }

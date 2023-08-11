@@ -1,6 +1,6 @@
 import './Card.css';
 
-import React, { Component } from 'react';
+import React, { useState } from 'react';
 
 const rankMap = {
   "jack": "J",
@@ -16,78 +16,59 @@ const suitMap = {
   "spades": "♠️"
 };
 
-class Card extends Component {
+export default function Card(props) {
 
-  constructor(props) {
-    super(props)
+  const [flipped, setFlipped] = useState(props.flipped);
 
-    // Set initial state
-    this.state = {
-      suit: props.suit,
-      rank: props.rank,
-      face: props.face || "down",
-      flipped: props.flipped,
-      piletype: props.piletype,
-      pileindex: props.pileindex,
-      cardindex: props.cardindex,
-      offset: props.offset || 0
-    }
-
-    // Bind helper functions to the class
-    this.drag = this.drag.bind(this);
+  // Flip the card over if it hasn't previously been flipped
+  if (props.face === "up" && !flipped) {
+    setTimeout(() => {
+      setFlipped(true);
+    });
   }
 
-  componentWillUnmount() {
-    this.setState({ flipped: false, face: "down" });
+  let styleOverride;
+  if (props.offset) {
+    styleOverride = {
+      transform: `translateY(${props.offset}vh)`
+    }
   }
 
-  render() {
-    if (this.state.face === "up" && !this.state.flipped) {
-      setTimeout(() => {
-        this.setState({ flipped: true })
-      }, 0);
-    }
-
-    let styleOverride;
-    if (this.state.offset) {
-      styleOverride = {
-        transform: `translateY(${this.state.offset}vh)`
-      }
-    }
-
-    return (
-      <div
-        className={`card ${this.state.flipped ? `${this.state.suit} faceup` : ""}`}
-        draggable={this.state.flipped}
-        datacarddata={JSON.stringify(this.state)}
-        onDragStart={this.drag}
-        style={styleOverride}
-      >
-        <div className="cardinner">
-          <div className="face">
-            <img src={`${process.env.PUBLIC_URL}/cards/fronts/${this.state.suit}_${this.state.rank}.svg`} alt={`${this.state.rank} of ${this.state.suit}`} draggable="false"></img>
-            <span className="rank">{rankMap[this.state.rank] || this.state.rank}</span>
-            <span className="suit">{suitMap[this.state.suit]}</span>
-          </div>
-          <div className="back">
-            <img src={`${process.env.PUBLIC_URL}/cards/backs/red.svg`} alt="card" draggable="false"></img>
-          </div>
-        </div>
-      </div>
-    );
+  let className = "card ";
+  if (props.face === "up" && flipped) {
+    className += `${props.suit} faceup`;
   }
 
   /**
    * Handler invoked when the card element is dragged
    * @param {Event} e The dragged element
    */
-  drag(e) {
+  function onDragStart(e) {
     // Write the card data to the data transfer property.
     // This will be read when the card is dropped on an appropriate card pile
     e.dataTransfer.effectAllowed = "move";
     e.dataTransfer.clearData();
-    e.dataTransfer.setData("cardData", JSON.stringify(this.state));
+    e.dataTransfer.setData("cardData", JSON.stringify(props));
   }
-}
 
-export default Card;
+  return (
+    <div
+      className={className}
+      draggable={flipped}
+      datacarddata={JSON.stringify(props)}
+      onDragStart={onDragStart}
+      style={styleOverride}
+    >
+      <div className={`cardinner ${flipped ? "flipped" : "" }`}>
+        <div className="face">
+          <img src={`${process.env.PUBLIC_URL}/cards/fronts/${props.suit}_${props.rank}.svg`} alt={`${props.rank} of ${props.suit}`} draggable="false"></img>
+          <span className="rank">{rankMap[props.rank] || props.rank}</span>
+          <span className="suit">{suitMap[props.suit]}</span>
+        </div>
+        <div className="back">
+          <img src={`${process.env.PUBLIC_URL}/cards/backs/red.svg`} alt="card" draggable="false"></img>
+        </div>
+      </div>
+    </div>
+  );
+}
