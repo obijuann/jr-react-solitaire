@@ -19,6 +19,7 @@ export default function Solitaire(props) {
   // Set up state management
   const shuffledDeck = useRef([]);
   const [isDebug] = useState(props.isDebug);
+  const [gameFinished, setGameFinished] = useState(false);
   const [playfieldState, setPlayfieldState] = useReducer(
     (state, newState) => ({ ...state, ...newState }),
     {
@@ -41,6 +42,11 @@ export default function Solitaire(props) {
       ]
     }
   )
+  
+  // TODO: Remove this in favor of a modal
+  if (gameFinished) {
+    alert("Congratulations, you won!");
+  }
 
   useEffect(() => {
     // Set listeners for various game events
@@ -49,6 +55,9 @@ export default function Solitaire(props) {
     subscribe("exitGame", exitGameHandler);
     subscribe("redoMove", redoMoveHandler);
     subscribe("undoMove", undoMoveHandler);
+
+    // Check to see if the user has won the game
+    checkGameState();
 
     return () => {
       // Remove listeners for game events
@@ -508,7 +517,11 @@ export default function Solitaire(props) {
    * Deals the deck into the draw and tableau piles
    */
   function dealDeck() {
-    // Deal cards into the Tableau piles
+
+    // Turn all cards face down
+    shuffledDeck.current.forEach(cardData => cardData.face = "down");
+
+    // Deal cards into the tableau piles
     // Starting with the leftmost tableau pile, we deal cards accordingly
     // Pile 1: 1 faceup card
     // Pile 2: 1 facedown card + 1 faceup card
@@ -540,6 +553,21 @@ export default function Solitaire(props) {
    */
   function logMessage(message) {
     isDebug && console.log(message);
+  }
+
+  /**
+   * Checks the playfield to see if the game has been won
+   */
+  function checkGameState() {
+    if (playfieldState.foundation.length) {
+
+      let numFoundationCards = 0;
+      playfieldState.foundation.forEach(pileCards => { numFoundationCards += pileCards.length; });
+
+      if (numFoundationCards === 52) {
+        setGameFinished();
+      }
+    }
   }
 
   return (
