@@ -399,8 +399,9 @@ export default function Solitaire(props) {
     } else if (targetPileType === "foundation") {
 
       // Only move cards to the foundation if they're the last card on their pile
-      if ((droppedCardData.pileindex && playfieldState[droppedCardData.pileType][droppedCardData.pileindex].length - 1 > droppedCardData.cardIndex) ||
-        (droppedCardData.pileindex == null && playfieldState[droppedCardData.pileType].length - 1 > droppedCardData.cardIndex)) {
+      const cardIndex = droppedCardData.cardIndex;
+      const pileLength = droppedCardData.pileindex >= 0 ? playfieldState[droppedCardData.pileType][droppedCardData.pileindex].length : playfieldState[droppedCardData.pileType].length;
+      if (pileLength - 1 !== cardIndex) {
         return false;
       }
 
