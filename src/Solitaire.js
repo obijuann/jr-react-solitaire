@@ -86,8 +86,8 @@ export default function Solitaire(props) {
 
     // If the draw pile is empty, and the waste pile has cards, move the waste pile back to the draw pile
     if (!drawPileCardData.length && wastePileCardData.length) {
-      setPlayfieldState({ draw: wastePileCardData.reverse(), waste: []});
-    } else {
+      setPlayfieldState({ draw: wastePileCardData.reverse(), waste: [] });
+    } else if (drawPileCardData.length) {
       // Add the last card from the draw pile to the waste pile
       wastePileCardData.push(drawPileCardData.pop());
       setPlayfieldState({ draw: drawPileCardData, waste: wastePileCardData });
@@ -146,8 +146,8 @@ export default function Solitaire(props) {
                 rank={cardData.rank}
                 suit={cardData.suit}
                 face="down"
-                piletype="draw"
-                cardindex={cardIndex}
+                pileType="draw"
+                cardIndex={cardIndex}
               />
             )
           })
@@ -170,8 +170,8 @@ export default function Solitaire(props) {
               rank={cardData.rank}
               suit={cardData.suit}
               face="up"
-              piletype="waste"
-              cardindex={cardIndex}
+              pileType="waste"
+              cardIndex={cardIndex}
             />
           )
         })
@@ -205,10 +205,10 @@ export default function Solitaire(props) {
                       rank={cardData.rank}
                       suit={cardData.suit}
                       face="up"
-                      piletype="foundation"
+                      pileType="foundation"
                       flipped={true}
                       pileindex={pileIndex}
-                      cardindex={cardIndex}
+                      cardIndex={cardIndex}
                     />
                   )
                 })
@@ -250,9 +250,9 @@ export default function Solitaire(props) {
                       rank={cardData.rank}
                       suit={cardData.suit}
                       face={cardData.face}
-                      piletype="tableau"
+                      pileType="tableau"
                       pileindex={pileIndex}
-                      cardindex={cardIndex}
+                      cardIndex={cardIndex}
                       offset={cardIndex * 3}
                       flipped={flipped}
                     />
@@ -397,6 +397,13 @@ export default function Solitaire(props) {
       }
 
     } else if (targetPileType === "foundation") {
+
+      // Only move cards to the foundation if they're the last card on their pile
+      if ((droppedCardData.pileindex && playfieldState[droppedCardData.pileType][droppedCardData.pileindex].length - 1 > droppedCardData.cardIndex) ||
+        (droppedCardData.pileindex == null && playfieldState[droppedCardData.pileType].length - 1 > droppedCardData.cardIndex)) {
+        return false;
+      }
+
       // Aces are the only card that can be placed on an empty foundation pile
       if (!targetPileCardData && droppedCardData.rank === "ace") {
         return true;
@@ -424,7 +431,7 @@ export default function Solitaire(props) {
     let newWastePileCardData = [...playfieldState.waste];
 
     // Remove the card (and any subsequent cards) from the source pile
-    const { piletype: sourcePileType, pileindex: sourcePileIndex, cardindex: sourceCardIndex } = sourceCardData;
+    const { pileType: sourcePileType, pileindex: sourcePileIndex, cardIndex: sourceCardIndex } = sourceCardData;
     let cardsToMove;
     switch (sourcePileType) {
       case "foundation":
