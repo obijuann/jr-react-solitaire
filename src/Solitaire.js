@@ -341,7 +341,11 @@ export default function Solitaire(props) {
    * Handler for exit game custom event triggers
    */
   function exitGameHandler() {
-    logMessage("not yet implemented");
+    // Remove cards from the shuffled deck
+    shuffledDeck.current = [];    
+
+    // Remove cards from playfield
+    setPlayfieldState({ draw: [], tableau: [[], [], [], [], [], [], []], waste: [], foundation: [[], [], [], []] })
   }
 
   /**

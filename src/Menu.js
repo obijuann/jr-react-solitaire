@@ -1,95 +1,70 @@
 import './Menu.css';
 
-import React, { Component } from 'react';
-import { publish, subscribe, unsubscribe } from './Events';
+import React, { useEffect, useState } from 'react';
+import { eventNames, publish, subscribe, unsubscribe } from './Events';
 
 import { throttle } from './Utils';
 
 const submenuArrowSize = 15;
 const submenuWidth = 300;
 
-class Menu extends Component {
+export default function Menu() {
 
-    constructor(props) {
-        super(props)
+    // Set up state management
+    const [isMenuVisible, setIsMenuVisible] = useState(true);
+    const [submenuId, setSubmenuId] = useState("");
+    const [subMenuPosStyle, setSubMenuPosStyle] = useState(0);
+    const [submenuArrowPos, setSubmenuArrowPos] = useState(0);
 
-        // Set initial state
-        this.state = {
-            isMenuVisible: false,
-            submenuId: "",
-            subMenuPosStyle: 0,
-            submenuArrowPos: 0
-        }
-    }
-
-    componentDidMount() {
-        // Bind helper functions
-        this.toggleMenu = this.toggleMenu.bind(this);
-        this.toggleSubmenu = this.toggleSubmenu.bind(this);
-        this.resizeHandler = this.resizeHandler.bind(this);
-
+    useEffect(() => {
         // Set listener for toggle menu event, which happens in the main Solitaire component
-        subscribe("toggleMenu", this.toggleMenu);
+        subscribe(eventNames.ToggleMenu, toggleMenu);
 
         // Close the submenu on resize
-        window.addEventListener("resize", throttle(this.resizeHandler, 150));
-    }
+        window.addEventListener("resize", throttle(resizeHandler, 150));
 
-    componentWillUnmount() {
-        // Remove listener for toggle menu event
-        unsubscribe("toggleMenu", this.toggleMenu);
+        return () => {
+            // Remove listeners for game events
+            unsubscribe(eventNames.ToggleMenu, toggleMenu);
+            window.removeEventListener("resize", throttle(resizeHandler, 150));
+        };
+    });
 
-        // Remove the resize handler
-        window.removeEventListener("resize", throttle(this.resizeHandler, 150));
-    }
-
-    render() {
-        return (
-            <div id="menu" className={this.state.isMenuVisible ? "visible" : ""}>
-                <button className="primary" id="newgame" onClick={this.toggleSubmenu}>New</button>
-                <button className="primary" id="undo" disabled onClick={this.undoMoveHandler}>Undo</button>
-                <button className="primary" id="redo" disabled onClick={this.redoMoveHandler}>Redo</button>
-                <button className="primary" id="help" onClick={this.toggleSubmenu}>Help</button>
-                {this.renderSubmenu()}
-            </div>
-        );
-    }
-
-    renderSubmenu() {
-        if (!this.state.isMenuVisible) {
+    function renderSubmenu() {
+        if (!isMenuVisible) {
             return;
         }
 
         // Adjust where the submenu arrow is pointing
-        if (this.state.submenuArrowPos) {
-            document.documentElement.style.setProperty('--submenu-icon-pos', `${this.state.submenuArrowPos}px`);
+        if (submenuArrowPos) {
+            document.documentElement.style.setProperty('--submenu-icon-pos', `${submenuArrowPos}px`);
             document.documentElement.style.setProperty('--submenu-icon-size', `${submenuArrowSize}px`);
             document.documentElement.style.setProperty('--submenu-width', `${submenuWidth}px`);
         }
 
-        switch (this.state.submenuId) {
+        switch (submenuId) {
             case "help":
-                return this.renderHelpSubmenu();
-            case "newgame":
-                return this.renderStartSubmenu();
+                return renderHelpSubmenu();
+            case "new-game":
+                return renderStartSubmenu();
             default:
                 return;
         }
     }
 
-    renderStartSubmenu() {
+    function renderStartSubmenu() {
         return (
-            <div id="submenu" className="list" style={this.state.subMenuPosStyle}>
-                <button className="secondary" id="newgame" onClick={this.newGameHandler.bind(this)}>New game</button>
-                <button className="secondary" id="restart" onClick={this.restartGameHandler.bind(this)}>Restart this game</button>
-                <button className="secondary" id="quit" onClick={this.exitGameHandler.bind(this)}>Quit this game</button>
+            <div id="submenu" className="list" style={subMenuPosStyle}>
+                <button className="secondary" id="new-game" onClick={newGameHandler}>New game</button>
+                <button className="secondary" id="restart" onClick={restartGameHandler}>Restart this game</button>
+                <button className="secondary" id="quit" onClick={exitGameHandler}>Quit this game</button>
             </div>
         );
     }
 
-    renderHelpSubmenu() {
+    function renderHelpSubmenu() {
         return (
-            <div id="submenu" className="help" style={this.state.subMenuPosStyle}>
+            <div id="submenu" className="help" style={subMenuPosStyle}>
                 <h2>Object of the game</h2>
                 <p>
                     The first objective is to release and play into position certain cards to build up each foundation, in sequence and in suit, from the ace through the king.
@@ -141,44 +116,49 @@ class Menu extends Component {
     /**
      * Closes the submenu on window resize
      */
-    resizeHandler() {
-        this.setState({ submenuId: "" });
+    function resizeHandler() {
+        setSubmenuId("");
     }
 
     /**
      * Toggling the menu should dismiss the submenu first, then the main menu.
      * Otherwise it should enable the main menu without a submenu
      */
-    toggleMenu(e, hideMenus) {
+    function toggleMenu(e, hideMenus) {
         if (hideMenus) {
-            this.setState({ isMenuVisible: false, submenuId: "" })
-        } else if (this.state.submenuId || !this.state.isMenuVisible) {
-            this.setState({ isMenuVisible: true, submenuId: "" })
+            setIsMenuVisible(false);
+            setSubmenuId("");
+        } else if (submenuId || !isMenuVisible) {
+            setIsMenuVisible(true);
+            setSubmenuId("");
         } else {
-            this.setState({ isMenuVisible: false, submenuId: "" })
+            setIsMenuVisible(false);
+            setSubmenuId("");
         }
     }
 
     /**
      * Toggles the submenu
      */
-    toggleSubmenu(e) {
+    function toggleSubmenu(e) {
 
         // If no menu ID was passed, close any existing submenus
         if (!e || !e.target || !e.target.id) {
-            this.setState({ submenuId: null, subMenuPosStyle: null });
+            setSubmenuId("");
+            setSubMenuPosStyle(0);
             return;
         }
 
-        const submenuId = e.target.id;
+        const newSubmenuId = e.target.id;
 
         // Close any open submenus
-        if (this.state.submenuId) {
-            let oldSubmenuId = this.state.submenuId;
-            this.setState({ submenuId: null, subMenuPosStyle: null });
+        if (submenuId) {
+            let oldSubmenuId = submenuId;
+            setSubmenuId("");
+            setSubMenuPosStyle(0);
 
             // If the same menu button was clicked again, we're done after closing the menu
-            if (oldSubmenuId === submenuId) {
+            if (oldSubmenuId === newSubmenuId) {
                 return;
             }
         }
@@ -205,51 +185,61 @@ class Menu extends Component {
         const submenuArrowPos = parseInt(menuIconCenter - submenuArrowSize);
 
         // Open the submenu
-        this.setState({ submenuId, subMenuPosStyle, submenuArrowPos });
+        setSubmenuId(newSubmenuId);
+        setSubMenuPosStyle(subMenuPosStyle);
+        setSubmenuArrowPos(submenuArrowPos);
     }
 
     /**
      * Handler for clicking on the "New Game" menu option
      * @param {*} e The event
      */
-    newGameHandler(e) {
-        this.toggleMenu(e, true);
-        publish("newGame");
+    function newGameHandler(e) {
+        toggleMenu(e, true);
+        publish(eventNames.NewGame);
     }
 
     /**
      * Handler for clicking on the "Restart Game" menu option
      * @param {*} e The event
      */
-    restartGameHandler(e) {
-        this.toggleMenu(e, true);
-        publish("restartGame");
+    function restartGameHandler(e) {
+        toggleMenu(e, true);
+        publish(eventNames.RestartGame);
     }
 
     /**
      * Handler for clicking on the "Exit Game" menu option
      * @param {*} e The event
      */
-    exitGameHandler(e) {
-        this.toggleMenu(e, true);
-        publish("exitGame");
+    function exitGameHandler(e) {
+        toggleMenu(e, true);
+        publish(eventNames.ExitGame);
     }
 
     /**
      * Handler for clicking on the "redo" menu option
      * @param {*} e The event
      */
-    redoMoveHandler(e) {
-        publish("redoMove");
+    function redoMoveHandler(e) {
+        publish(eventNames.RedoMove);
     }
 
     /**
      * Handler for clicking on the "undo" menu option
      * @param {*} e The event
      */
-    undoMoveHandler(e) {
-        publish("undoMove");
+    function undoMoveHandler(e) {
+        publish(eventNames.UndoMove);
     }
-}
 
-export default Menu;
+    return (
+        <div id="menu" className={isMenuVisible ? "visible" : ""}>
+            <button className="primary" id="new-game" onClick={toggleSubmenu}>New</button>
+            <button className="primary" id="undo" disabled onClick={undoMoveHandler}>Undo</button>
+            <button className="primary" id="redo" disabled onClick={redoMoveHandler}>Redo</button>
+            <button className="primary" id="help" onClick={toggleSubmenu}>Help</button>
+            {renderSubmenu()}
+        </div>
+    );
+}

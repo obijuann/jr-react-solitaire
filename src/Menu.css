@@ -17,8 +17,7 @@
     bottom: 0;
 }
 
-#newmenu,
-#newgame {
+#new-game {
     background-image: url("/public/icons/play.svg");
 }
 
