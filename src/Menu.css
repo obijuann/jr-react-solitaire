@@ -1,0 +1,148 @@
+#menu {
+    --border-radius: 8px;
+    align-items: center;
+    background: rgba(0, 0, 0, .5);
+    bottom: -250px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    left: 0;
+    padding: 15px 0;
+    position: fixed;
+    transition: bottom .5s;
+    width: 100%;
+    z-index: 1
+}
+
+#menu.visible {
+    bottom: 0;
+}
+
+#new-game {
+    background-image: url("/public/icons/play.svg");
+}
+
+#redo {
+    background-image: url("/public/icons/arrow.svg");
+}
+
+#undo {
+    background-image: url("/public/icons/reverse-arrow.svg");
+}
+
+#help {
+    background-image: url("/public/icons/question.svg");
+}
+
+#restart {
+    background-image: url("/public/icons/restart.svg");
+}
+
+#quit {
+    background-image: url("/public/icons/quit.svg");
+}
+
+#submenu {
+    background-color: green;
+    border: 2px solid white;
+    border-radius: var(--border-radius);
+    bottom: 145px;
+    color: white;
+    max-height: 400px;
+    overflow: hidden;
+    padding: 5px;
+    position: absolute;
+    width: var(--submenu-width);
+}
+
+#submenu::after {
+    border-left: var(--submenu-icon-size) solid transparent;
+    border-right: var(--submenu-icon-size) solid transparent;
+    border-top: var(--submenu-icon-size) solid #fff;
+    bottom: 130px;
+    content: "";
+    height: 0;
+    left: var(--submenu-icon-pos);
+    position: fixed;
+    width: 0;
+}
+
+#submenu.list {
+    align-items: stretch;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+}
+
+#submenu.help {
+    padding: 10px;
+}
+
+#submenu.help h2 {
+    margin: 0;
+}
+
+#submenu::-webkit-scrollbar {
+    width: 8px;
+}
+
+#submenu::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+#submenu::-webkit-scrollbar-thumb {
+    border-radius: var(--border-radius);
+    background: rgba(0, 0, 0, .2);
+}
+
+#submenu::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, .5);
+}
+
+#submenu.help {
+    overflow-y: scroll;
+}
+
+button {
+    border: 0;
+    border-radius: var(--border-radius);
+    color: #fff;
+    cursor: pointer;
+    font-size: 24px;
+    margin: 0;
+}
+
+button.primary {
+    background: transparent no-repeat center top;
+    padding-top: 80px;
+    width: 100px;
+}
+
+button:disabled {
+    cursor: unset;
+    opacity: .5;
+}
+
+button.secondary {
+    background: transparent no-repeat left 4px;
+    background-size: 30px;
+    font-size: 18px;
+    height: 40px;
+    padding-inline-start: 35px;
+    padding-inline-end: 10px;
+    text-align: justify;
+}
+
+button:not(:disabled):hover,
+button:not(:disabled):active {
+    background-color: rgba(0, 0, 0, .1);
+}
+
+@media (max-width: 965px) {
+    button.primary {
+        background-size: contain;
+        font-size: 16px;
+        padding-top: 70px;
+        width: 60px;
+    }
+}

@@ -1,0 +1,88 @@
+.card {
+    color: black;
+    filter: drop-shadow(1px 1px 1px black);
+    height: var(--card-height);
+    perspective: 1000px;
+    position: absolute;
+    width: var(--card-width);
+}
+
+.card img {
+    height: var(--card-height);
+    width: var(--card-width);
+}
+
+.card-inner {
+    background-color: white;
+    border-radius: var(--border-radius);
+    height: 100%;
+    position: relative;
+    text-align: center;
+    /* Temp disabling card flip animation */
+    /* transition: transform .5s; */
+    transform-style: preserve-3d;
+    width: 100%;
+}
+
+.card.faceup {
+    cursor: grab;
+}
+
+/* Card flipping animation when turned face up */
+.card.faceup .card-inner {
+    transform: rotateY(180deg);
+}
+
+.card.faceup .back img {
+    opacity: 0;
+    transition: opacity 2s;
+}
+
+.back,
+.face {
+    /* Safari */
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    border: 1px solid black;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    height: 100%;
+    position: absolute;
+    width: 100%;
+}
+
+.face {
+    background-color: white;
+    display: flex;
+    transform: rotateY(180deg);
+}
+
+.face span {
+    display: none;
+}
+
+.diamonds,
+.hearts {
+    color: red;
+}
+
+@media (max-width: 450px) {
+
+    .card.faceup .face {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        padding: 0 3px;
+    }
+
+    .face span {
+        display: block;
+        font-size: 7vw;
+        font-weight: bold;
+    }
+
+    .face img {
+        display: none;
+    }
+}
