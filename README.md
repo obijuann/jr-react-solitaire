@@ -4,6 +4,15 @@ A simple Solitaire App written in React.
 
 Note, this is a personal project just to keep my skills current. It's not intended to be a long-term project, but I plan to add to it as inspiration strikes. 
 
+## TODO
+
+These are some of the changes I'm still planning to make
+
+- Enable Undo/Redo
+- Card animation
+- Configuration of game settings (e.g. timer/no-timer, card back design, etc.)
+- Saving game state to local storage for resumption on next load
+
 ## Available Scripts
 
 In the project directory, you can run:
