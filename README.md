@@ -1,6 +1,8 @@
-# JS React Solitair3
+# JS React Solitaire
 
-A simple Solitaire App written in React
+A simple Solitaire App written in React. 
+
+Note, this is a personal project just to keep my skills current. It's not intended to be a long-term project, but I plan to add to it as inspiration strikes. 
 
 ## Available Scripts
 
@@ -21,8 +23,3 @@ See the section about [running tests](https://facebook.github.io/create-react-ap
 
 Builds the app for production to the `build` folder.\
 It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
