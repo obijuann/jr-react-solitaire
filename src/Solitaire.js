@@ -14,6 +14,12 @@ const suits = {
   "spades": "black"
 };
 const ranks = ["ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "jack", "queen", "king"];
+const emptyPlayArea = {
+  "draw": [],
+  "waste": [],
+  "foundation": [ [], [], [], [] ],
+  "tableau": [ [], [], [], [], [], [], [] ]
+};
 
 export default function Solitaire(props) {
 
@@ -25,25 +31,7 @@ export default function Solitaire(props) {
   const [gameTimer, setGameTimer] = useState(0);
   const [playfieldState, setPlayfieldState] = useReducer(
     (state, newState) => ({ ...state, ...newState }),
-    {
-      "draw": [],
-      "waste": [],
-      "foundation": [
-        [],
-        [],
-        [],
-        [],
-      ],
-      "tableau": [
-        [],
-        [],
-        [],
-        [],
-        [],
-        [],
-        [],
-      ]
-    }
+    emptyPlayArea
   )
 
   useEffect(() => {
@@ -113,7 +101,7 @@ export default function Solitaire(props) {
 
     // Get the card data from the tapped card
     const tappedCardElement = e.target.closest(".card");
-    const tapppedCardData = tappedCardElement && JSON.parse(tappedCardElement.getAttribute("datacarddata"));
+    const tapppedCardData = tappedCardElement && JSON.parse(tappedCardElement.getAttribute("data-carddata"));
 
     if (!tapppedCardData || (tapppedCardData && tapppedCardData.face === "down")) {
       return;
@@ -130,7 +118,7 @@ export default function Solitaire(props) {
     }
 
     // Check to see if this card can be moved to one of the tableau piles
-    result = playfieldState.tableau.findIndex((tableauCardPileData, pileIndex) => {
+    result = playfieldState.tableau.findIndex((tableauCardPileData) => {
       return isValidMove(tapppedCardData, tableauCardPileData.length ? tableauCardPileData.slice(-1)[0] : null, "tableau");
     })
 
@@ -213,7 +201,6 @@ export default function Solitaire(props) {
                       suit={cardData.suit}
                       face="up"
                       pileType="foundation"
-                      flipped={true}
                       pileindex={pileIndex}
                       cardIndex={cardIndex}
                     />
@@ -248,8 +235,6 @@ export default function Solitaire(props) {
                   // Last card should always be up
                   const lastCard = cardIndex + 1 === cardDataList.length;
                   cardData.face = lastCard ? "up" : cardData.face;
-                  // Determine if the card should already appear as flipped
-                  const flipped = cardData.face === "up" && !lastCard;
 
                   return (
                     <Card
@@ -261,7 +246,6 @@ export default function Solitaire(props) {
                       pileindex={pileIndex}
                       cardIndex={cardIndex}
                       offset={cardIndex * 3}
-                      flipped={flipped}
                     />
                   )
                 })
@@ -422,7 +406,7 @@ export default function Solitaire(props) {
     shuffledDeck.current = [];
 
     // Remove cards from playfield
-    setPlayfieldState({ draw: [], tableau: [[], [], [], [], [], [], []], waste: [], foundation: [[], [], [], []] })
+    setPlayfieldState(emptyPlayArea);
   }
 
   /**
@@ -668,7 +652,7 @@ export default function Solitaire(props) {
   }
 
   return (
-    <div id="play-area" onClick={toggleMenu} onKeyDown={keyDownHandler}>
+    <div id="play-area" data-testid="play-area" onClick={toggleMenu} onKeyDown={keyDownHandler}>
       {renderDrawPile()}
       {renderWastePile()}
       {renderFoundation()}
