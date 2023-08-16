@@ -1,6 +1,6 @@
 import './Card.css';
 
-import React, { useState } from 'react';
+import React from 'react';
 
 const rankMap = {
   "jack": "J",
@@ -18,15 +18,6 @@ const suitMap = {
 
 export default function Card(props) {
 
-  const [flipped, setFlipped] = useState(props.flipped);
-
-  // Flip the card over if it hasn't previously been flipped
-  if (props.face === "up" && !flipped) {
-    setTimeout(() => {
-      setFlipped(true);
-    });
-  }
-
   let styleOverride;
   if (props.offset) {
     styleOverride = {
@@ -35,7 +26,7 @@ export default function Card(props) {
   }
 
   let className = "card ";
-  if (props.face === "up" && flipped) {
+  if (props.face === "up") {
     className += `${props.suit} faceup`;
   }
 
@@ -54,12 +45,13 @@ export default function Card(props) {
   return (
     <div
       className={className}
-      draggable={flipped}
-      datacarddata={JSON.stringify(props)}
+      draggable={!!(props.face === "up")}
+      data-carddata={JSON.stringify(props)}
+      data-testid="card"
       onDragStart={onDragStart}
       style={styleOverride}
     >
-      <div className={`card-inner ${flipped ? "flipped" : "" }`}>
+      <div className="card-inner">
         <div className="face">
           <img src={`${process.env.PUBLIC_URL}/cards/fronts/${props.suit}_${props.rank}.svg`} alt={`${props.rank} of ${props.suit}`} draggable="false"></img>
           <span className="rank">{rankMap[props.rank] || props.rank}</span>
