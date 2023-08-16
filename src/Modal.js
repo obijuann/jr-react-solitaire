@@ -35,7 +35,7 @@ export default function Modal(props) {
                 return (
                     <React.Fragment>
                         <span>Congratulations!</span>
-                        <span>Time: NYI</span>
+                        <span>Time: {props.gameTime}</span>
                         <button className="new-game" onClick={newGameHandler}>New Game</button>
                     </React.Fragment>
                 )

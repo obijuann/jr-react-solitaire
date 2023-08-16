@@ -19,8 +19,10 @@ export default function Solitaire(props) {
 
   // Set up state management
   const shuffledDeck = useRef([]);
+  const timerInterval = useRef();
   const [isDebug] = useState(props.isDebug);
-  const [modalTypeDisplayed, setModalTypeDisplayed] = useState("");
+  const [modalTypeDisplayed, setModalTypeDisplayed] = useState();
+  const [gameTimer, setGameTimer] = useState(0);
   const [playfieldState, setPlayfieldState] = useReducer(
     (state, newState) => ({ ...state, ...newState }),
     {
@@ -271,6 +273,67 @@ export default function Solitaire(props) {
   }
 
   /**
+   * Renders the game time elapsed
+   */
+  function renderGameTime() {
+    if (!timerInterval.current) {
+      return;
+    }
+
+    return (
+      <div id="timer">
+        {getTimeElapsed()}
+      </div>
+    )
+  }
+
+  /**
+   * Helper function to display a formatted time string
+   * @returns A formatted string showing the elapsed game time
+   */
+  function getTimeElapsed() {
+    const seconds = Math.floor(gameTimer % 60);
+    const minutes = Math.floor((gameTimer / 60) % 60);
+    const hours = Math.floor((gameTimer / 60 / 60) % 24);
+
+    let gameTimeElapsed = ""
+
+    // Only shows hours for really slow players
+    if (hours) {
+      gameTimeElapsed = `${hours}`.padStart(2, "0") + ":";
+    }
+    gameTimeElapsed += `${minutes}`.padStart(2, "0") + ":" + `${seconds}`.padStart(2, "0");
+
+    return gameTimeElapsed;
+  }
+
+  /**
+   * Resets the game time value and starts the clock
+   */
+  function startTimer() {
+    setGameTimer(0);
+    timerInterval.current = setInterval(() => {
+      setGameTimer(prevGameTimer => prevGameTimer + 1);
+    }, 1000);
+  }
+
+  /**
+   * Resets the game time value and restarts the clock
+   */
+  function restartTimer() {
+    stopTimer();
+    startTimer();
+  }
+
+  /**
+   * Stops the game timer clock
+   */
+  function stopTimer() {
+    clearInterval(timerInterval.current);
+    timerInterval.current = null;
+  }
+
+  /**
    * Renders the "game finished" modal
    */
   function renderModal() {
@@ -279,9 +342,12 @@ export default function Solitaire(props) {
       return;
     }
 
+    const gameTime = getTimeElapsed();
+
     return (
       <Modal
         modalType={modalTypeDisplayed}
+        gameTime={gameTime}
       />
     );
   }
@@ -289,7 +355,7 @@ export default function Solitaire(props) {
   /**
    * Handler to toggle the menu and sub menu
    * @param {Event} e Custom toggle event
-  */
+        */
   function toggleMenu(e) {
     if (!e) {
       return;
@@ -305,7 +371,7 @@ export default function Solitaire(props) {
   /**
    * Handler for keyboard events
    * @param {Event} e Keyboard event
-   */
+        */
   function keyDownHandler(e) {
     if (!e || !e.key) {
       return;
@@ -321,6 +387,9 @@ export default function Solitaire(props) {
    * Handler for new game custom event triggers
    */
   function newGameHandler() {
+    // Stop the timer
+    stopTimer();
+
     // Create a new shuffled deck
     shuffleDeck();
 
@@ -328,21 +397,29 @@ export default function Solitaire(props) {
     dealDeck();
 
     // Start the timer
+    startTimer();
   }
 
   /**
    * Handler for game restart custom event triggers
    */
   function restartGameHandler() {
+    // Re-deal the current deck
     dealDeck();
+
+    // Stop the current timer and reset
+    restartTimer();
   }
 
   /**
    * Handler for exit game custom event triggers
    */
   function exitGameHandler() {
+    // Stop the timer
+    stopTimer();
+
     // Remove cards from the shuffled deck
-    shuffledDeck.current = [];    
+    shuffledDeck.current = [];
 
     // Remove cards from playfield
     setPlayfieldState({ draw: [], tableau: [[], [], [], [], [], [], []], waste: [], foundation: [[], [], [], []] })
@@ -365,9 +442,9 @@ export default function Solitaire(props) {
   /**
    * Handler for the drop event when a card is dropped on a new pile
    * @param {Event} e The drop event target
-   * @param {string} targetPileType The drop target pile type
-   * @param {number} targetPileIndex The drop target pile index
-   */
+        * @param {string} targetPileType The drop target pile type
+        * @param {number} targetPileIndex The drop target pile index
+        */
   function dropHandler(e, targetPileType, targetPileIndex) {
 
     if (!e || !e.dataTransfer || !e.target || !targetPileType) {
@@ -399,9 +476,9 @@ export default function Solitaire(props) {
    * Returns true if the dropped card can be placed atop the pile card
    *
    * @param {cardData} droppedCardData Card data for the dropped or tapped card
-   * @param {cardData} targetPileCardData Card data for the target card
-   * @param {string} targetPileType Pile type the dropped/tapped card is targeting
-   */
+        * @param {cardData} targetPileCardData Card data for the target card
+        * @param {string} targetPileType Pile type the dropped/tapped card is targeting
+        */
   function isValidMove(droppedCardData, targetPileCardData, targetPileType) {
     if (!targetPileCardData && !droppedCardData) {
       return false;
@@ -447,9 +524,9 @@ export default function Solitaire(props) {
   /**
    * Moves the souce card from its origin to the target pile
    * @param {*} sourceCardData Card data for the source card
-   * @param {*} targetPileType The type of target pile
-   * @param {*} targetPileIndex The target pile index
-   */
+        * @param {*} targetPileType The type of target pile
+        * @param {*} targetPileIndex The target pile index
+        */
   function moveCard(sourceCardData, targetPileType, targetPileIndex) {
 
     let newFoundationCardData = [...playfieldState.foundation];
@@ -566,7 +643,7 @@ export default function Solitaire(props) {
   /**
    * Logs the message to the console in debug mode
    * @param {*} message Message to log
-   */
+        */
   function logMessage(message) {
     isDebug && console.log(message);
   }
@@ -581,6 +658,10 @@ export default function Solitaire(props) {
       playfieldState.foundation.forEach(pileCards => { numFoundationCards += pileCards.length; });
 
       if (numFoundationCards === 52) {
+        // Stop the timer
+        stopTimer();
+
+        // Display the "winner" modal
         setModalTypeDisplayed(modalTypes.GameWin);
       }
     }
@@ -592,8 +673,10 @@ export default function Solitaire(props) {
       {renderWastePile()}
       {renderFoundation()}
       {renderTableau()}
-      <Menu />
-      <div id="timer"></div>
+      <Menu
+        gameActive={!!shuffledDeck.current.length}
+      />
+      {renderGameTime()}
       {renderModal()}
     </div>
   );

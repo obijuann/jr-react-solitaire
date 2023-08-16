@@ -8,7 +8,7 @@ import { throttle } from './Utils';
 const submenuArrowSize = 15;
 const submenuWidth = 300;
 
-export default function Menu() {
+export default function Menu(props) {
 
     // Set up state management
     const [isMenuVisible, setIsMenuVisible] = useState(true);
@@ -56,8 +56,8 @@ export default function Menu() {
         return (
             <div id="submenu" className="list" style={subMenuPosStyle}>
                 <button className="secondary" id="new-game" onClick={newGameHandler}>New game</button>
-                <button className="secondary" id="restart" onClick={restartGameHandler}>Restart this game</button>
-                <button className="secondary" id="quit" onClick={exitGameHandler}>Quit this game</button>
+                <button className="secondary" id="restart" onClick={restartGameHandler} disabled={!props.gameActive}>Restart this game</button>
+                <button className="secondary" id="quit" onClick={exitGameHandler} disabled={!props.gameActive}>Quit this game</button>
             </div>
         );
     }

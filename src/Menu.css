@@ -11,6 +11,7 @@
     position: fixed;
     transition: bottom .5s;
     width: 100%;
+    z-index: 1
 }
 
 #menu.visible {
@@ -117,7 +118,7 @@ button.primary {
     width: 100px;
 }
 
-button.primary:disabled {
+button:disabled {
     cursor: unset;
     opacity: .5;
 }
