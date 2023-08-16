@@ -27,7 +27,7 @@ export default function Modal(props) {
 
     /**
      * Renders the inner modal content depending on the type passed
-     * @param {ModalTypes}} modalType Modal type to render
+     * @param {modalTypes}} modalType Modal type to render
      */
     function renderModalContent(modalType) {
         switch (modalType) {
@@ -45,7 +45,7 @@ export default function Modal(props) {
     }
 
     return (
-        <div className="modal-backdrop" onClick={() => setIsModalVisible(false)}>
+        <div data-testid="modal-backdrop" className="modal-backdrop" onClick={() => setIsModalVisible(false)}>
             <div className="modal">
                 {renderModalContent(props.modalType)}
             </div>

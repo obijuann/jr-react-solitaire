@@ -124,17 +124,25 @@ export default function Menu(props) {
      * Toggling the menu should dismiss the submenu first, then the main menu.
      * Otherwise it should enable the main menu without a submenu
      */
+
+    /**
+     * Toggling the menu should dismiss the submenu first, then the main menu.
+     * Otherwise it should enable the main menu without a submenu
+     * @param {Event} e 
+     * @param {boolean} hideMenus Flag to hide all menus
+     */
     function toggleMenu(e, hideMenus) {
+
         if (hideMenus) {
             setIsMenuVisible(false);
-            setSubmenuId("");
         } else if (submenuId || !isMenuVisible) {
             setIsMenuVisible(true);
-            setSubmenuId("");
         } else {
             setIsMenuVisible(false);
-            setSubmenuId("");
         }
+
+        // Clear the submenu ID
+        setSubmenuId("");
     }
 
     /**
@@ -234,7 +242,7 @@ export default function Menu(props) {
     }
 
     return (
-        <div id="menu" className={isMenuVisible ? "visible" : ""}>
+        <div id="menu" data-testid="menu" className={isMenuVisible ? "visible" : ""}>
             <button className="primary" id="new-game" onClick={toggleSubmenu}>New</button>
             <button className="primary" id="undo" disabled onClick={undoMoveHandler}>Undo</button>
             <button className="primary" id="redo" disabled onClick={redoMoveHandler}>Redo</button>
