@@ -1,4 +1,13 @@
-// Custom event handler functions
+// Custom game event handler functions and types
+
+const eventNames = {
+    NewGame: "newGame",
+    RestartGame: "restartGame",
+    ExitGame: "exitGame",
+    RedoMove: "redoMove",
+    UndoMove: "undoMove",
+    ToggleMenu: "toggleMenu"
+};
 
 /**
  * Subscribe to a custom event
@@ -28,4 +37,4 @@ function publish(eventName, data) {
     document.dispatchEvent(event);
 }
 
-export { publish, subscribe, unsubscribe };
+export { publish, subscribe, unsubscribe, eventNames };

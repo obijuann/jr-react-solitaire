@@ -1,7 +1,8 @@
 import "./Solitaire.css";
 
+import Modal, { modalTypes } from "./Modal";
 import React, { useEffect, useReducer, useRef, useState } from 'react';
-import { publish, subscribe, unsubscribe } from "./Events";
+import { eventNames, publish, subscribe, unsubscribe } from "./Events";
 
 import Card from "./Card";
 import Menu from "./Menu";
@@ -19,7 +20,7 @@ export default function Solitaire(props) {
   // Set up state management
   const shuffledDeck = useRef([]);
   const [isDebug] = useState(props.isDebug);
-  const [gameFinished, setGameFinished] = useState(false);
+  const [modalTypeDisplayed, setModalTypeDisplayed] = useState("");
   const [playfieldState, setPlayfieldState] = useReducer(
     (state, newState) => ({ ...state, ...newState }),
     {
@@ -42,30 +43,25 @@ export default function Solitaire(props) {
       ]
     }
   )
-  
-  // TODO: Remove this in favor of a modal
-  if (gameFinished) {
-    alert("Congratulations, you won!");
-  }
 
   useEffect(() => {
     // Set listeners for various game events
-    subscribe("newGame", newGameHandler);
-    subscribe("restartGame", restartGameHandler);
-    subscribe("exitGame", exitGameHandler);
-    subscribe("redoMove", redoMoveHandler);
-    subscribe("undoMove", undoMoveHandler);
+    subscribe(eventNames.NewGame, newGameHandler);
+    subscribe(eventNames.RestartGame, restartGameHandler);
+    subscribe(eventNames.ExitGame, exitGameHandler);
+    subscribe(eventNames.RedoMove, redoMoveHandler);
+    subscribe(eventNames.undoMoveHandler, undoMoveHandler);
 
     // Check to see if the user has won the game
     checkGameState();
 
     return () => {
       // Remove listeners for game events
-      unsubscribe("newGame", newGameHandler);
-      unsubscribe("restartGame", restartGameHandler);
-      unsubscribe("exitGame", exitGameHandler);
-      unsubscribe("redoMove", redoMoveHandler);
-      unsubscribe("undoMove", undoMoveHandler);
+      unsubscribe(eventNames.NewGame, newGameHandler);
+      unsubscribe(eventNames.RestartGame, restartGameHandler);
+      unsubscribe(eventNames.ExitGame, exitGameHandler);
+      unsubscribe(eventNames.RedoMove, redoMoveHandler);
+      unsubscribe(eventNames.undoMoveHandler, undoMoveHandler);
     };
   });
 
@@ -147,7 +143,7 @@ export default function Solitaire(props) {
   function renderDrawPile() {
     return (
       <div id="stock">
-        <div id="draw" className="cardpile" onClick={drawCardHandler}>
+        <div id="draw" className="card-pile" onClick={drawCardHandler}>
           {playfieldState.draw.map((cardData, cardIndex) => {
             return (
               <Card
@@ -198,7 +194,7 @@ export default function Solitaire(props) {
         {playfieldState.foundation.map((cardDataList, pileIndex) => {
           return (
             <div
-              className="cardpile"
+              className="card-pile"
               id={`fpile${pileIndex}`}
               key={`fpile${pileIndex}`}
               onClick={pileClickHandler}
@@ -237,7 +233,7 @@ export default function Solitaire(props) {
         {playfieldState.tableau.map((cardDataList, pileIndex) => {
           return (
             <div
-              className="cardpile"
+              className="card-pile"
               id={`tabpile${pileIndex}`}
               key={`pile${pileIndex}`}
               onClick={pileClickHandler}
@@ -275,6 +271,22 @@ export default function Solitaire(props) {
   }
 
   /**
+   * Renders the "game finished" modal
+   */
+  function renderModal() {
+
+    if (!modalTypeDisplayed) {
+      return;
+    }
+
+    return (
+      <Modal
+        modalType={modalTypeDisplayed}
+      />
+    );
+  }
+
+  /**
    * Handler to toggle the menu and sub menu
    * @param {Event} e Custom toggle event
   */
@@ -285,8 +297,8 @@ export default function Solitaire(props) {
 
     e.preventDefault();
 
-    if (e.target && e.target && (e.target.id === "playarea" || e.target.id === "menu")) {
-      publish("toggleMenu", true);
+    if (e.target && e.target && (e.target.id === "play-area" || e.target.id === "menu")) {
+      publish(eventNames.ToggleMenu, true);
     }
   }
 
@@ -301,7 +313,7 @@ export default function Solitaire(props) {
 
     // Toggle the menu on Esc or m/M
     if (e.keyCode === 27 || e.keyCode === 77) {
-      publish("toggleMenu", true);
+      publish(eventNames.ToggleMenu, true);
     }
   }
 
@@ -565,19 +577,20 @@ export default function Solitaire(props) {
       playfieldState.foundation.forEach(pileCards => { numFoundationCards += pileCards.length; });
 
       if (numFoundationCards === 52) {
-        setGameFinished();
+        setModalTypeDisplayed(modalTypes.GameWin);
       }
     }
   }
 
   return (
-    <div id="playarea" onClick={toggleMenu} onKeyDown={keyDownHandler}>
+    <div id="play-area" onClick={toggleMenu} onKeyDown={keyDownHandler}>
       {renderDrawPile()}
       {renderWastePile()}
       {renderFoundation()}
       {renderTableau()}
       <Menu />
       <div id="timer"></div>
+      {renderModal()}
     </div>
   );
 }

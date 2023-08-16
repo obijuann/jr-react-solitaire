@@ -1,4 +1,4 @@
-#playarea {
+#play-area {
   --border-radius: 12px;
   --card-height: 175px;
   --card-width: 125px;
@@ -47,7 +47,7 @@
   position: fixed;
 }
 
-.cardpile {
+.card-pile {
   border: 1px solid black;
   border-radius: var(--border-radius);
   box-shadow: inset 1px 1px 1px 0 rgba(255,255,255,0.5), inset -1px -1px 1px 0 rgba(0,0,0,0.5);
@@ -57,12 +57,12 @@
 }
 
 @media (max-width: 965px) {
-  #playarea {
+  #play-area {
     --card-width: calc(100vw / 8);
     --card-height: calc(var(--card-width) * 1.4);
   }
 
-  .cardpile {
+  .card-pile {
     --border-radius: 6px;
   }
 }

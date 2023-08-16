@@ -59,7 +59,7 @@ export default function Card(props) {
       onDragStart={onDragStart}
       style={styleOverride}
     >
-      <div className={`cardinner ${flipped ? "flipped" : "" }`}>
+      <div className={`card-inner ${flipped ? "flipped" : "" }`}>
         <div className="face">
           <img src={`${process.env.PUBLIC_URL}/cards/fronts/${props.suit}_${props.rank}.svg`} alt={`${props.rank} of ${props.suit}`} draggable="false"></img>
           <span className="rank">{rankMap[props.rank] || props.rank}</span>
