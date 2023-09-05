@@ -17,8 +17,8 @@ const ranks = ["ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "jack", "que
 const emptyPlayArea = {
   "draw": [],
   "waste": [],
-  "foundation": [ [], [], [], [] ],
-  "tableau": [ [], [], [], [], [], [], [] ]
+  "foundation": [[], [], [], []],
+  "tableau": [[], [], [], [], [], [], []]
 };
 
 export default function Solitaire(props) {
@@ -26,13 +26,15 @@ export default function Solitaire(props) {
   // Set up state management
   const shuffledDeck = useRef([]);
   const timerInterval = useRef();
-  const [isDebug] = useState(props.isDebug);
   const [modalTypeDisplayed, setModalTypeDisplayed] = useState();
   const [gameTimer, setGameTimer] = useState(0);
   const [playfieldState, setPlayfieldState] = useReducer(
     (state, newState) => ({ ...state, ...newState }),
     emptyPlayArea
-  )
+  );
+  const undoQueue = useRef([]);
+  const redoQueue = useRef([]);
+
 
   useEffect(() => {
     // Set listeners for various game events
@@ -40,7 +42,7 @@ export default function Solitaire(props) {
     subscribe(eventNames.RestartGame, restartGameHandler);
     subscribe(eventNames.ExitGame, exitGameHandler);
     subscribe(eventNames.RedoMove, redoMoveHandler);
-    subscribe(eventNames.undoMoveHandler, undoMoveHandler);
+    subscribe(eventNames.UndoMove, undoMoveHandler);
 
     // Check to see if the user has won the game
     checkGameState();
@@ -51,7 +53,7 @@ export default function Solitaire(props) {
       unsubscribe(eventNames.RestartGame, restartGameHandler);
       unsubscribe(eventNames.ExitGame, exitGameHandler);
       unsubscribe(eventNames.RedoMove, redoMoveHandler);
-      unsubscribe(eventNames.undoMoveHandler, undoMoveHandler);
+      unsubscribe(eventNames.UndoMove, undoMoveHandler);
     };
   });
 
@@ -77,16 +79,29 @@ export default function Solitaire(props) {
   function drawCardHandler(e) {
     e.preventDefault();
 
-    const { draw: drawPileCardData, waste: wastePileCardData } = playfieldState;
+    // Add the current draw and waste pile information to the Undo queue, so it can be reversed
+    const undoPileData =
+    {
+      draw: structuredClone(playfieldState.draw),
+      waste: structuredClone(playfieldState.waste)
+    };;
+
+    undoQueue.current.push(undoPileData);
+
+    // Update the draw and waste piles
+    const newPlayfieldState = structuredClone(playfieldState);
 
     // If the draw pile is empty, and the waste pile has cards, move the waste pile back to the draw pile
-    if (!drawPileCardData.length && wastePileCardData.length) {
-      setPlayfieldState({ draw: wastePileCardData.reverse(), waste: [] });
-    } else if (drawPileCardData.length) {
+    if (!newPlayfieldState.draw.length && newPlayfieldState.waste.length) {
+      newPlayfieldState.draw = newPlayfieldState.waste.reverse();
+      newPlayfieldState.waste = [];
+    } else if (newPlayfieldState.draw.length) {
       // Add the last card from the draw pile to the waste pile
-      wastePileCardData.push(drawPileCardData.pop());
-      setPlayfieldState({ draw: drawPileCardData, waste: wastePileCardData });
+      newPlayfieldState.waste.push(newPlayfieldState.draw.pop());
     }
+
+    // Update the playfield
+    setPlayfieldState(newPlayfieldState);
   }
 
   /**
@@ -413,14 +428,59 @@ export default function Solitaire(props) {
    * Handler for redo move custom event triggers
    */
   function redoMoveHandler() {
-    logMessage("not yet implemented");
+    if (!redoQueue.current.length) {
+      return;
+    }
+
+    const lastMoveData = redoQueue.current.pop();
+    const newPlayfieldState = structuredClone(playfieldState);
+    const undoMoveData = [];
+
+    if (lastMoveData) {
+      Object.keys(lastMoveData).forEach(key => {
+        // Save the undo data from the current state
+        undoMoveData[key] = structuredClone(playfieldState[key]);
+
+        // Update the new state object with the data from the last move
+        newPlayfieldState[key] = structuredClone(lastMoveData[key]);
+      });
+    }
+
+    // Add undo move data to undo queue
+    undoQueue.current.push(undoMoveData);
+
+    // Update the playfield
+    setPlayfieldState(newPlayfieldState);
   }
 
   /**
    * Handler for undo move custom event triggers
    */
   function undoMoveHandler() {
-    logMessage("not yet implemented");
+
+    if (!undoQueue.current.length) {
+      return;
+    }
+
+    const lastMoveData = undoQueue.current.pop();
+    const newPlayfieldState = structuredClone(playfieldState);
+    const redoMoveData = [];
+
+    if (lastMoveData) {
+      Object.keys(lastMoveData).forEach(key => {
+        // Save the redo data from the current state
+        redoMoveData[key] = structuredClone(playfieldState[key]);
+
+        // Update the new state object with the data from the last move
+        newPlayfieldState[key] = structuredClone(lastMoveData[key]);
+      });
+    }
+
+    // Add redo move data to redo queue
+    redoQueue.current.push(redoMoveData);
+
+    // Update the playfield
+    setPlayfieldState(newPlayfieldState);
   }
 
   /**
@@ -507,31 +567,26 @@ export default function Solitaire(props) {
 
   /**
    * Moves the souce card from its origin to the target pile
-   * @param {*} sourceCardData Card data for the source card
-        * @param {*} targetPileType The type of target pile
-        * @param {*} targetPileIndex The target pile index
-        */
+   * @param {cardData} sourceCardData Card data for the source card
+   * @param {string} targetPileType The type of target pile
+   * @param {number} targetPileIndex The target pile index
+   */
   function moveCard(sourceCardData, targetPileType, targetPileIndex) {
 
-    let newFoundationCardData = [...playfieldState.foundation];
-    let newTableauCardData = [...playfieldState.tableau];
-    let newWastePileCardData = [...playfieldState.waste];
-
+    const newPlayfieldState = structuredClone(playfieldState);
+ 
     // Remove the card (and any subsequent cards) from the source pile
     const { pileType: sourcePileType, pileindex: sourcePileIndex, cardIndex: sourceCardIndex } = sourceCardData;
     let cardsToMove;
     switch (sourcePileType) {
       case "foundation":
-        cardsToMove = newFoundationCardData[sourcePileIndex].slice(sourceCardIndex);
-        newFoundationCardData[sourcePileIndex] = newFoundationCardData[sourcePileIndex].slice(0, sourceCardIndex);
-        break;
       case "tableau":
-        cardsToMove = newTableauCardData[sourcePileIndex].slice(sourceCardIndex);
-        newTableauCardData[sourcePileIndex] = newTableauCardData[sourcePileIndex].slice(0, sourceCardIndex);
+        cardsToMove = newPlayfieldState[sourcePileType][sourcePileIndex].slice(sourceCardIndex);
+        newPlayfieldState[sourcePileType][sourcePileIndex] = newPlayfieldState[sourcePileType][sourcePileIndex].slice(0, sourceCardIndex);
         break;
       case "waste":
-        cardsToMove = newWastePileCardData.slice(sourceCardIndex);
-        newWastePileCardData = newWastePileCardData.slice(0, sourceCardIndex);
+        cardsToMove = newPlayfieldState.waste.slice(sourceCardIndex);
+        newPlayfieldState.waste = newPlayfieldState.waste.slice(0, sourceCardIndex);
         break;
       default:
         return;
@@ -540,24 +595,34 @@ export default function Solitaire(props) {
     // Move cards to target pile
     switch (targetPileType) {
       case "foundation":
-        newFoundationCardData[targetPileIndex] = newFoundationCardData[targetPileIndex].concat(cardsToMove);
-        break;
       case "tableau":
-        newTableauCardData[targetPileIndex] = newTableauCardData[targetPileIndex].concat(cardsToMove);
+        newPlayfieldState[targetPileType][targetPileIndex] = newPlayfieldState[targetPileType][targetPileIndex].concat(cardsToMove);
         break;
       case "waste":
-        newWastePileCardData = newWastePileCardData.concat(cardsToMove);
+        newPlayfieldState.waste = newPlayfieldState.waste.concat(cardsToMove);
         break;
       default:
         return;
     }
 
-    // Update state
-    setPlayfieldState({
-      foundation: newFoundationCardData,
-      tableau: newTableauCardData,
-      waste: newWastePileCardData
-    });
+    // Add this information to the Undo queue, so it can be reversed
+    const undoPileData = {};
+
+    // Always include the source pile data
+    undoPileData[sourcePileType] = structuredClone(playfieldState[sourcePileType]);
+
+    // if the target pile was different than the source, include that too
+    if (sourcePileType !== targetPileType) {
+      undoPileData[targetPileType] = structuredClone(playfieldState[targetPileType]);
+    }
+
+    undoQueue.current.push(undoPileData);
+
+    // Reset the redo queue
+    redoQueue.current = [];
+
+    // Update the playfield state
+    setPlayfieldState(newPlayfieldState);
   }
 
   /**
@@ -620,16 +685,12 @@ export default function Solitaire(props) {
     // Add the rest of the cards to the draw pile
     const drawPileCardData = shuffledDeck.current.slice(cardIndex).reverse();
 
+    // Reset the undo/redo queues
+    undoQueue.current = [];
+    redoQueue.current = [];
+
     // Update the game state
     setPlayfieldState({ draw: drawPileCardData, tableau: tableauCardData, waste: [], foundation: [[], [], [], []] })
-  }
-
-  /**
-   * Logs the message to the console in debug mode
-   * @param {*} message Message to log
-        */
-  function logMessage(message) {
-    isDebug && console.log(message);
   }
 
   /**
@@ -659,6 +720,8 @@ export default function Solitaire(props) {
       {renderTableau()}
       <Menu
         gameActive={!!shuffledDeck.current.length}
+        undoAvailable={!!undoQueue.current.length}
+        redoAvailable={!!redoQueue.current.length}
       />
       {renderGameTime()}
       {renderModal()}

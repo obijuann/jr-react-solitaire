@@ -244,8 +244,8 @@ export default function Menu(props) {
     return (
         <div id="menu" data-testid="menu" className={isMenuVisible ? "visible" : ""}>
             <button className="primary" id="new-game" onClick={toggleSubmenu}>New</button>
-            <button className="primary" id="undo" disabled onClick={undoMoveHandler}>Undo</button>
-            <button className="primary" id="redo" disabled onClick={redoMoveHandler}>Redo</button>
+            <button className="primary" id="undo" disabled={!props.undoAvailable} onClick={undoMoveHandler}>Undo</button>
+            <button className="primary" id="redo" disabled={!props.redoAvailable} onClick={redoMoveHandler}>Redo</button>
             <button className="primary" id="help" onClick={toggleSubmenu}>Help</button>
             {renderSubmenu()}
         </div>
