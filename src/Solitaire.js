@@ -106,25 +106,6 @@ export default function Solitaire(props) {
   }
 
   /**
-   * Handles clicks on the waste card pile to automatically move card the top card to new piles
-   * @param {Event} e The click event
-   */
-  function wastePileClickHandler(e) {
-
-    if (!e || !e.target) {
-      return;
-    }
-
-    // Get the card data from the last card on the waste pile
-    const tappedCardElement = e.target.closest(".card");
-    const tapppedCardData = tappedCardElement && JSON.parse(tappedCardElement.getAttribute("data-carddata"));
-
-    if (tapppedCardData && tappedCardElement.getAttribute("draggable") === "true") {
-      checkAndMoveCard(tapppedCardData);
-    }
-  }
-
-  /**
    * Handles clicks on card piles to automatically move cards to new piles
    * @param {Event} e The click event
    */
@@ -138,33 +119,25 @@ export default function Solitaire(props) {
     const tappedCardElement = e.target.closest(".card");
     const tapppedCardData = tappedCardElement && JSON.parse(tappedCardElement.getAttribute("data-carddata"));
 
-    if (tapppedCardData && tapppedCardData.face === "up") {
-      checkAndMoveCard(tapppedCardData);
-    }
-  }
+    if (tapppedCardData && tapppedCardData.face === "up" && tappedCardElement.getAttribute("draggable") === "true") {
+      // Check to see if the card can be moved to one of the foundation piles
+      let result = playfieldState.foundation.findIndex((foundationCardPileData) => {
+        return isValidMove(tapppedCardData, foundationCardPileData.length ? foundationCardPileData.slice(-1)[0] : null, "foundation");
+      })
 
-  /**
-   * Checks for a valid move for a card and moves it if it finds one
-   * @param {*} cardData Card data to check
-   */
-  function checkAndMoveCard(cardData) {
-    // Check to see if the card can be moved to one of the foundation piles
-    let result = playfieldState.foundation.findIndex((foundationCardPileData) => {
-      return isValidMove(cardData, foundationCardPileData.length ? foundationCardPileData.slice(-1)[0] : null, "foundation");
-    })
+      if (result !== -1) {
+        moveCard(tapppedCardData, "foundation", result);
+        return;
+      }
 
-    if (result !== -1) {
-      moveCard(cardData, "foundation", result);
-      return;
-    }
+      // Check to see if this card can be moved to one of the tableau piles
+      result = playfieldState.tableau.findIndex((tableauCardPileData) => {
+        return isValidMove(tapppedCardData, tableauCardPileData.length ? tableauCardPileData.slice(-1)[0] : null, "tableau");
+      })
 
-    // Check to see if this card can be moved to one of the tableau piles
-    result = playfieldState.tableau.findIndex((tableauCardPileData) => {
-      return isValidMove(cardData, tableauCardPileData.length ? tableauCardPileData.slice(-1)[0] : null, "tableau");
-    })
-
-    if (result !== -1) {
-      moveCard(cardData, "tableau", result);
+      if (result !== -1) {
+        moveCard(tapppedCardData, "tableau", result);
+      }
     }
   }
 
@@ -209,7 +182,7 @@ export default function Solitaire(props) {
     }
 
     return (
-      <div id="waste" onClick={wastePileClickHandler} className={className}>
+      <div id="waste" onClick={pileClickHandler} className={className}>
         {playfieldState.waste.map((cardData, cardIndex) => {
           const lastCard = cardIndex + 1 === playfieldState.waste.length;
           return (
