@@ -93,7 +93,8 @@ export default function Solitaire(props) {
 
     // If the draw pile is empty, and the waste pile has cards, move the waste pile back to the draw pile
     if (!newPlayfieldState.draw.length && newPlayfieldState.waste.length) {
-      newPlayfieldState.draw = newPlayfieldState.waste.reverse();
+      // Also set the cards face down
+      newPlayfieldState.draw = newPlayfieldState.waste.reverse().map(cardData => { cardData.face = "down"; return cardData; });
       newPlayfieldState.waste = [];
     } else if (newPlayfieldState.draw.length) {
       // Add the last card from the draw pile to the waste pile
@@ -118,27 +119,25 @@ export default function Solitaire(props) {
     const tappedCardElement = e.target.closest(".card");
     const tapppedCardData = tappedCardElement && JSON.parse(tappedCardElement.getAttribute("data-carddata"));
 
-    if (!tapppedCardData || (tapppedCardData && tapppedCardData.face === "down")) {
-      return;
-    }
+    if (tapppedCardData && tapppedCardData.face === "up" && tappedCardElement.getAttribute("draggable") === "true") {
+      // Check to see if the card can be moved to one of the foundation piles
+      let result = playfieldState.foundation.findIndex((foundationCardPileData) => {
+        return isValidMove(tapppedCardData, foundationCardPileData.length ? foundationCardPileData.slice(-1)[0] : null, "foundation");
+      })
 
-    // Check to see if the card can be moved to one of the foundation piles
-    let result = playfieldState.foundation.findIndex((foundationCardPileData) => {
-      return isValidMove(tapppedCardData, foundationCardPileData.length ? foundationCardPileData.slice(-1)[0] : null, "foundation");
-    })
+      if (result !== -1) {
+        moveCard(tapppedCardData, "foundation", result);
+        return;
+      }
 
-    if (result !== -1) {
-      moveCard(tapppedCardData, "foundation", result);
-      return;
-    }
+      // Check to see if this card can be moved to one of the tableau piles
+      result = playfieldState.tableau.findIndex((tableauCardPileData) => {
+        return isValidMove(tapppedCardData, tableauCardPileData.length ? tableauCardPileData.slice(-1)[0] : null, "tableau");
+      })
 
-    // Check to see if this card can be moved to one of the tableau piles
-    result = playfieldState.tableau.findIndex((tableauCardPileData) => {
-      return isValidMove(tapppedCardData, tableauCardPileData.length ? tableauCardPileData.slice(-1)[0] : null, "tableau");
-    })
-
-    if (result !== -1) {
-      moveCard(tapppedCardData, "tableau", result);
+      if (result !== -1) {
+        moveCard(tapppedCardData, "tableau", result);
+      }
     }
   }
 
@@ -152,10 +151,11 @@ export default function Solitaire(props) {
           {playfieldState.draw.map((cardData, cardIndex) => {
             return (
               <Card
-                key={`${cardData.rank}_${cardData.suit}_${cardData.face}_draw_${cardIndex}`}
+                key={`${cardData.rank}_${cardData.suit}`}
+                draggable={false}
                 rank={cardData.rank}
                 suit={cardData.suit}
-                face="down"
+                face={cardData.face}
                 pileType="draw"
                 cardIndex={cardIndex}
               />
@@ -171,15 +171,27 @@ export default function Solitaire(props) {
    * Renders the waste pile of cards
    */
   function renderWastePile() {
+
+    let className = "";
+    const wasteCardCount = playfieldState.waste.length;
+
+    if (wasteCardCount >= 3) {
+      className = "offset-two";
+    } else if (wasteCardCount === 2) {
+      className = "offset-one";
+    }
+
     return (
-      <div id="waste" onClick={pileClickHandler}>
+      <div id="waste" onClick={pileClickHandler} className={className}>
         {playfieldState.waste.map((cardData, cardIndex) => {
+          const lastCard = cardIndex + 1 === playfieldState.waste.length;
           return (
             <Card
-              key={`${cardData.rank}_${cardData.suit}_${cardData.face}_waste_${cardIndex}`}
+              key={`${cardData.rank}_${cardData.suit}`}
+              draggable={lastCard}
               rank={cardData.rank}
               suit={cardData.suit}
-              face="up"
+              face={cardData.face}
               pileType="waste"
               cardIndex={cardIndex}
             />
@@ -211,10 +223,11 @@ export default function Solitaire(props) {
                 cardDataList.map((cardData, cardIndex) => {
                   return (
                     <Card
-                      key={`${cardData.rank}_${cardData.suit}_${cardData.face}_foundation_${pileIndex}_${cardIndex}`}
+                      key={`${cardData.rank}_${cardData.suit}`}
+                      draggable={!!(cardData.face === "up")}
                       rank={cardData.rank}
                       suit={cardData.suit}
-                      face="up"
+                      face={cardData.face}
                       pileType="foundation"
                       pileindex={pileIndex}
                       cardIndex={cardIndex}
@@ -247,13 +260,10 @@ export default function Solitaire(props) {
             >
               {
                 cardDataList.map((cardData, cardIndex) => {
-                  // Last card should always be up
-                  const lastCard = cardIndex + 1 === cardDataList.length;
-                  cardData.face = lastCard ? "up" : cardData.face;
-
                   return (
                     <Card
-                      key={`${cardData.rank}_${cardData.suit}_${cardData.face}_tableau_${pileIndex}_${cardIndex}`}
+                      key={`${cardData.rank}_${cardData.suit}`}
+                      draggable={!!(cardData.face === "up")}
                       rank={cardData.rank}
                       suit={cardData.suit}
                       face={cardData.face}
@@ -574,7 +584,7 @@ export default function Solitaire(props) {
   function moveCard(sourceCardData, targetPileType, targetPileIndex) {
 
     const newPlayfieldState = structuredClone(playfieldState);
- 
+
     // Remove the card (and any subsequent cards) from the source pile
     const { pileType: sourcePileType, pileindex: sourcePileIndex, cardIndex: sourceCardIndex } = sourceCardData;
     let cardsToMove;
@@ -591,6 +601,9 @@ export default function Solitaire(props) {
       default:
         return;
     }
+
+    // Make sure any cards being moved are set to be face up
+    cardsToMove.forEach(cardData => cardData.face = "up");
 
     // Move cards to target pile
     switch (targetPileType) {
@@ -694,21 +707,60 @@ export default function Solitaire(props) {
   }
 
   /**
-   * Checks the playfield to see if the game has been won
+   * Checks the game state to see if any updates are needed
    */
   function checkGameState() {
-    if (playfieldState.foundation.length) {
 
-      let numFoundationCards = 0;
-      playfieldState.foundation.forEach(pileCards => { numFoundationCards += pileCards.length; });
+    // Checks the playfield to see if the game has been won
+    let numFoundationCards = 0;
+    playfieldState.foundation.forEach(pileCards => { numFoundationCards += pileCards.length; });
 
-      if (numFoundationCards === 52) {
-        // Stop the timer
-        stopTimer();
+    if (numFoundationCards === 52) {
+      // Stop the timer
+      stopTimer();
 
-        // Display the "winner" modal
-        setModalTypeDisplayed(modalTypes.GameWin);
+      // Display the "winner" modal
+      setModalTypeDisplayed(modalTypes.GameWin);
+
+      return;
+    }
+
+    // Check to see which cards need to be flipped
+    // This step is needed so that the card flipping animation has something to transition to (face down => face up)
+    let updatePlayfield = false;
+    let newPlayfieldState = structuredClone(playfieldState);
+
+    // Flip the last card on each tableau pile
+    newPlayfieldState.tableau = playfieldState.tableau.map((cardDataList) => {
+      return cardDataList.map((cardData, cardIndex) => {
+        // Last card should always be up
+        const lastCard = cardIndex + 1 === cardDataList.length;
+
+        if (lastCard && cardData.face !== "up") {
+          updatePlayfield = true;
+          cardData.face = "up";
+        }
+
+        return cardData;
+      });
+    });
+
+    // Flip the last card on the waste pile
+    newPlayfieldState.waste = playfieldState.waste.map((cardData, cardIndex) => {
+      // Last card should always be up
+      const lastCard = cardIndex + 1 === playfieldState.waste.length;
+
+      if (lastCard && cardData.face !== "up") {
+        updatePlayfield = true;
+        cardData.face = "up";
       }
+
+      return cardData;
+    });
+
+    // Update the playfield if any cards need to be updated
+    if (updatePlayfield) {
+      setPlayfieldState(newPlayfieldState);
     }
   }
 
