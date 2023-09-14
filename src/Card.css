@@ -18,9 +18,6 @@
     height: 100%;
     position: relative;
     text-align: center;
-    /* Temp disabling card flip animation */
-    /* transition: transform .5s; */
-    transform-style: preserve-3d;
     width: 100%;
 }
 
@@ -31,11 +28,8 @@
 /* Card flipping animation when turned face up */
 .card.faceup .card-inner {
     transform: rotateY(180deg);
-}
-
-.card.faceup .back img {
-    opacity: 0;
-    transition: opacity 2s;
+    transform-style: preserve-3d;
+    transition: transform .5s;
 }
 
 .back,
