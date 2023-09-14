@@ -31,6 +31,19 @@
   grid-column: 2/3;
 }
 
+#waste > div {
+  transition: transform .5s;
+}
+
+#waste.offset-two > div:nth-last-child(1) {
+  transform: translatex(8vw);
+}
+
+#waste.offset-one > div:nth-last-child(1), 
+#waste.offset-two > div:nth-last-child(2) {
+  transform: translatex(4vw);
+}
+
 #tableau {
   grid-column: 1/8;
   grid-row: 2;

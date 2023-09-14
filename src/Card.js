@@ -45,7 +45,7 @@ export default function Card(props) {
   return (
     <div
       className={className}
-      draggable={!!(props.face === "up")}
+      draggable={props.draggable}
       data-carddata={JSON.stringify(props)}
       data-testid="card"
       onDragStart={onDragStart}
