@@ -396,6 +396,10 @@ export default function Solitaire(props) {
    * Handler for new game custom event triggers
    */
   function newGameHandler() {
+
+    // Close any open modal
+    setModalTypeDisplayed();
+
     // Stop the timer
     stopTimer();
 
@@ -413,6 +417,9 @@ export default function Solitaire(props) {
    * Handler for game restart custom event triggers
    */
   function restartGameHandler() {
+    // Close any open modal
+    setModalTypeDisplayed();
+
     // Re-deal the current deck
     dealDeck();
 
@@ -424,6 +431,9 @@ export default function Solitaire(props) {
    * Handler for exit game custom event triggers
    */
   function exitGameHandler() {
+    // Close any open modal
+    setModalTypeDisplayed();
+
     // Stop the timer
     stopTimer();
 
