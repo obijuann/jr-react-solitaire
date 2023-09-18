@@ -26,8 +26,10 @@ test("clicking the 'new game' button publishes a new game event", () => {
     expect(newGameListener).toHaveBeenCalled();
 });
 
-test("clicking the backdrop closes the modal", () => {
+test("clicking the modal backdrop publishes a new game event", () => {
     // Arrange
+    const newGameListener = jest.fn();
+    subscribe(eventNames.NewGame, newGameListener);
     render(<Modal modalType={modalTypes.GameWin} gameTime="09:99" />);
 
     // Act
@@ -35,5 +37,5 @@ test("clicking the backdrop closes the modal", () => {
     fireEvent.click(backdrop);
 
     // Assert
-    expect(screen.queryByTestId("modal-backdrop")).not.toBeInTheDocument();
+    expect(newGameListener).toHaveBeenCalled();
 });

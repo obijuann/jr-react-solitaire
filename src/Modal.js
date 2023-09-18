@@ -1,7 +1,6 @@
 import './Modal.css';
 
-import React, { useState } from 'react';
-
+import React from 'react';
 import { publish } from './Events';
 
 export const modalTypes = {
@@ -10,20 +9,14 @@ export const modalTypes = {
 
 export default function Modal(props) {
 
-    const [isModalVisible, setIsModalVisible] = useState(true);
-
-    if (!isModalVisible) {
-        return;
-    }
-
     /**
      * Handler for clicking on the "New Game" menu option
      * @param {*} e The event
      */
     function newGameHandler(e) {
-        setIsModalVisible(false);
         publish("newGame");
     }
+
 
     /**
      * Renders the inner modal content depending on the type passed
@@ -45,7 +38,7 @@ export default function Modal(props) {
     }
 
     return (
-        <div data-testid="modal-backdrop" className="modal-backdrop" onClick={() => setIsModalVisible(false)}>
+        <div data-testid="modal-backdrop" className="modal-backdrop" onClick={newGameHandler}>
             <div className="modal">
                 {renderModalContent(props.modalType)}
             </div>

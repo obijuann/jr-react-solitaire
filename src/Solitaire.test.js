@@ -2,6 +2,9 @@ import { render, screen } from '@testing-library/react';
 
 import Solitaire from './Solitaire';
 
+// Add a polyfill for structured clone
+global.structuredClone = (val) => JSON.parse(JSON.stringify(val))
+
 test('renders the play area', () => {
   // Arrange + Act
   render(<Solitaire />);
