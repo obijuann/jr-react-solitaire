@@ -19,27 +19,27 @@
 }
 
 #new-game {
-    background-image: url("/public/icons/play.svg");
+    background-image: url("/icons/play.svg");
 }
 
 #redo {
-    background-image: url("/public/icons/arrow.svg");
+    background-image: url("/icons/arrow.svg");
 }
 
 #undo {
-    background-image: url("/public/icons/reverse-arrow.svg");
+    background-image: url("/icons/reverse-arrow.svg");
 }
 
 #help {
-    background-image: url("/public/icons/question.svg");
+    background-image: url("/icons/question.svg");
 }
 
 #restart {
-    background-image: url("/public/icons/restart.svg");
+    background-image: url("/icons/restart.svg");
 }
 
 #quit {
-    background-image: url("/public/icons/quit.svg");
+    background-image: url("/icons/quit.svg");
 }
 
 #submenu {
