@@ -1,30 +1,31 @@
+import { expect, it, vi } from 'vitest';
 import { publish, subscribe, unsubscribe } from "./Events";
 
-test("subscribe and publish functions", () => {
+it("subscribe and publish functions", () => {
     // Arrange
-    const listener = jest.fn();
-    subscribe("test", listener);
+    const listener = vi.fn();
+    subscribe("newGame", listener);
 
     // Act
-    publish("test", "test data");
+    publish("newGame", "test data");
 
     // Assert
     expect(listener).toHaveBeenCalledWith(
         expect.objectContaining({
-            type: "test",
+            type: "newGame",
             detail: "test data",
         })
     );
 });
 
-test("unsubscribe function", () => {
+it("unsubscribe function", () => {
     // Arrange
-    const listener = jest.fn();
-    subscribe("test", listener);
+    const listener = vi.fn();
+    subscribe("newGame", listener);
 
     // Act
-    unsubscribe("test", listener);
-    publish("test", "test data");
+    unsubscribe("newGame", listener);
+    publish("newGame", "test data");
 
     // Assert
     expect(listener).not.toHaveBeenCalled();
