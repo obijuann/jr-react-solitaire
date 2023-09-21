@@ -1,22 +1,24 @@
 import './Card.css';
 
-import React from 'react';
+import { CardProps } from './@types/CardProps';
+import { Ranks } from './@types/Ranks';
+import { Suits } from './@types/Suits';
 
-const rankMap = {
+const rankMap: Partial<Record<Ranks, string>> = {
   "jack": "J",
   "queen": "Q",
   "king": "K",
   "ace": "A"
 };
 
-const suitMap = {
+const suitMap: Record<Suits, string> = {
   "clubs": "♣",
   "diamonds": "♦",
   "hearts": "♥",
   "spades": "♠️"
 };
 
-export default function Card(props) {
+export default function Card(props: CardProps) {
 
   let styleOverride;
   if (props.offset) {
@@ -32,14 +34,14 @@ export default function Card(props) {
 
   /**
    * Handler invoked when the card element is dragged
-   * @param {Event} e The dragged element
+   * @param {DragEvent} dragEvent Drag event
    */
-  function onDragStart(e) {
+  function onDragStart(dragEvent: React.DragEvent<HTMLDivElement>): void {
     // Write the card data to the data transfer property.
     // This will be read when the card is dropped on an appropriate card pile
-    e.dataTransfer.effectAllowed = "move";
-    e.dataTransfer.clearData();
-    e.dataTransfer.setData("cardData", JSON.stringify(props));
+    dragEvent.dataTransfer.effectAllowed = "move";
+    dragEvent.dataTransfer.clearData();
+    dragEvent.dataTransfer.setData("cardData", JSON.stringify(props));
   }
 
   return (
