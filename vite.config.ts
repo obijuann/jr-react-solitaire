@@ -10,4 +10,7 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: './src/tests/setup.js',
   },
+  build: {
+    outDir: './build'
+  }
 })
