@@ -7,7 +7,7 @@ import { EventNames } from "./@types/EventNames";
  * @param {eventNames} eventName Event name to subscribe
  * @param {EventListener} listener Callback that will be invoked when the event is dispatched
  */
-function subscribe(eventName: EventNames, listener: EventListener) {
+function subscribe(eventName: EventNames, listener: any) {
     document.addEventListener(eventName, listener);
 }
 
@@ -16,7 +16,7 @@ function subscribe(eventName: EventNames, listener: EventListener) {
  * @param {eventNames} eventName Event name to unsubscribe
  * @param {EventListener} listener Callback that will be invoked when the event is dispatched
  */
-function unsubscribe(eventName: EventNames, listener: EventListener) {
+function unsubscribe(eventName: EventNames, listener: any) {
     document.removeEventListener(eventName, listener);
 }
 
@@ -25,7 +25,7 @@ function unsubscribe(eventName: EventNames, listener: EventListener) {
  * @param {eventNames} eventName Event name to dispatch
  * @param {any} data Data to pass to listeners
  */
-function publish(eventName: EventNames, data: any) {
+function publish(eventName: EventNames, data?: any) {
     const event = new CustomEvent(eventName, { detail: data });
     document.dispatchEvent(event);
 }

@@ -1,10 +1,11 @@
-import Modal, { modalTypes } from './Modal';
-import { eventNames, subscribe } from './Events';
 import { fireEvent, render, screen } from '@testing-library/react';
+
+import Modal from './Modal';
+import { subscribe } from './Events';
 
 test("renders game win modal", () => {
     // Arrange + Act
-    render(<Modal modalType={modalTypes.GameWin} gameTime="09:99" />);
+    render(<Modal modalType={"gameWin"} gameTime="09:99" />);
 
     // Assert
     expect(screen.getByText(/congratulations/i)).toBeInTheDocument();
@@ -15,8 +16,8 @@ test("renders game win modal", () => {
 test("clicking the 'new game' button publishes a new game event", () => {
     // Arrange
     const newGameListener = jest.fn();
-    subscribe(eventNames.NewGame, newGameListener);
-    render(<Modal modalType={modalTypes.GameWin} gameTime="09:99" />);
+    subscribe("newGame", newGameListener);
+    render(<Modal modalType="gamewin" gameTime="09:99" />);
 
     // Act
     const newGameButton = screen.getByRole('button', { name: 'New Game' })
@@ -29,8 +30,8 @@ test("clicking the 'new game' button publishes a new game event", () => {
 test("clicking the modal backdrop publishes a new game event", () => {
     // Arrange
     const newGameListener = jest.fn();
-    subscribe(eventNames.NewGame, newGameListener);
-    render(<Modal modalType={modalTypes.GameWin} gameTime="09:99" />);
+    subscribe("newGame", newGameListener);
+    render(<Modal modalType="gamewin" gameTime="09:99" />);
 
     // Act
     const backdrop = screen.getByTestId("modal-backdrop")

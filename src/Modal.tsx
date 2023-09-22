@@ -1,30 +1,28 @@
 import './Modal.css';
 
+import { ModalComponentProps } from './@types/ModalComponentProps';
+import { ModalTypes } from './@types/ModalTypes';
 import React from 'react';
 import { publish } from './Events';
 
-export const modalTypes = {
-    GameWin: "gamewin"
-};
-
-export default function Modal(props) {
+export default function Modal(props: ModalComponentProps) {
 
     /**
      * Handler for clicking on the "New Game" menu option
      * @param {*} e The event
      */
-    function newGameHandler(e) {
+    function newGameHandler(e: React.MouseEvent) {
+        e.preventDefault();
         publish("newGame");
     }
 
-
     /**
      * Renders the inner modal content depending on the type passed
-     * @param {modalTypes}} modalType Modal type to render
+     * @param {ModalTypes} modalType Modal type to render
      */
-    function renderModalContent(modalType) {
+    function renderModalContent(modalType: ModalTypes) {
         switch (modalType) {
-            case modalTypes.GameWin:
+            case "gamewin":
                 return (
                     <React.Fragment>
                         <span>Congratulations!</span>

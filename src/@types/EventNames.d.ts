@@ -1,1 +1,1 @@
-export type EventNames = "newGame" | "restartGame" | "exitGame" | "redoMove" | "undoMove" | "toggleMenu";
+export type EventNames = "newGame" | "restartGame" | "exitGame" | "redoMove" | "undoMove" | "toggleMenu"

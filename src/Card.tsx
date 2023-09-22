@@ -1,6 +1,6 @@
 import './Card.css';
 
-import { CardProps } from './@types/CardProps';
+import { CardComponentProps } from './@types/CardComponentProps';
 import { Ranks } from './@types/Ranks';
 import { Suits } from './@types/Suits';
 
@@ -18,7 +18,7 @@ const suitMap: Record<Suits, string> = {
   "spades": "♠️"
 };
 
-export default function Card(props: CardProps) {
+export default function Card(props: CardComponentProps) {
 
   let styleOverride;
   if (props.offset) {

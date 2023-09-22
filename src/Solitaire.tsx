@@ -1,59 +1,67 @@
 import "./Solitaire.css";
 
-import Modal, { modalTypes } from "./Modal";
-import React, { useEffect, useReducer, useRef, useState } from 'react';
-import { eventNames, publish, subscribe, unsubscribe } from "./Events";
+import { publish, subscribe, unsubscribe } from "./Events";
+import { useEffect, useReducer, useRef, useState } from 'react';
 
 import Card from "./Card";
+import { CardData } from "./@types/CardData";
 import Menu from "./Menu";
+import Modal from "./Modal";
+import { ModalTypes } from "./@types/ModalTypes";
+import { PlayfieldState } from "./@types/PlayfieldState";
+import { Ranks } from "./@types/Ranks";
+import { Suits } from "./@types/Suits";
 
-const suits = {
+const suits: Partial<Record<Suits, string>> = {
   "clubs": "black",
   "diamonds": "red",
   "hearts": "red",
   "spades": "black"
 };
-const ranks = ["ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "jack", "queen", "king"];
-const emptyPlayArea = {
+const ranks: Ranks[] = ["ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "jack", "queen", "king"];
+
+const emptyPlayArea: PlayfieldState = {
   "draw": [],
   "waste": [],
   "foundation": [[], [], [], []],
   "tableau": [[], [], [], [], [], [], []]
 };
 
-export default function Solitaire(props) {
+export default function Solitaire() {
 
   // Set up state management
-  const shuffledDeck = useRef([]);
-  const timerInterval = useRef();
-  const [modalTypeDisplayed, setModalTypeDisplayed] = useState();
-  const [gameTimer, setGameTimer] = useState(0);
+  const shuffledDeck = useRef<CardData[]>([]);
+  const timerInterval = useRef<ReturnType<typeof setInterval>>();
+  const [modalTypeDisplayed, setModalTypeDisplayed] = useState<ModalTypes>();
+  const [gameTimer, setGameTimer] = useState<number>(0);
   const [playfieldState, setPlayfieldState] = useReducer(
-    (state, newState) => ({ ...state, ...newState }),
+    (state: PlayfieldState, newState: Partial<PlayfieldState>) => ({ ...state, ...newState }),
     emptyPlayArea
   );
-  const undoQueue = useRef([]);
-  const redoQueue = useRef([]);
+
+
+  const undoQueue = useRef<Partial<PlayfieldState>[]>([]);
+  const redoQueue = useRef<Partial<PlayfieldState>[]>([]);
 
 
   useEffect(() => {
     // Set listeners for various game events
-    subscribe(eventNames.NewGame, newGameHandler);
-    subscribe(eventNames.RestartGame, restartGameHandler);
-    subscribe(eventNames.ExitGame, exitGameHandler);
-    subscribe(eventNames.RedoMove, redoMoveHandler);
-    subscribe(eventNames.UndoMove, undoMoveHandler);
+    subscribe("newGame", newGameHandler);
+    subscribe("restartGame", restartGameHandler);
+    subscribe("exitGame", exitGameHandler);
+    subscribe("redoMove", redoMoveHandler);
+    subscribe("undoMove", undoMoveHandler);
 
     // Check to see if the user has won the game
     checkGameState();
 
     return () => {
       // Remove listeners for game events
-      unsubscribe(eventNames.NewGame, newGameHandler);
-      unsubscribe(eventNames.RestartGame, restartGameHandler);
-      unsubscribe(eventNames.ExitGame, exitGameHandler);
-      unsubscribe(eventNames.RedoMove, redoMoveHandler);
-      unsubscribe(eventNames.UndoMove, undoMoveHandler);
+      unsubscribe("newGame", newGameHandler);
+      unsubscribe("restartGame", restartGameHandler);
+      unsubscribe("exitGame", exitGameHandler);
+      unsubscribe("redoMove", redoMoveHandler);
+      unsubscribe("undoMove", undoMoveHandler);
     };
   });
 
@@ -61,7 +69,7 @@ export default function Solitaire(props) {
    * Prevents default actions on drag enter
    * @param {Event} e Drag enter event
    */
-  function dragEnterHandler(e) {
+  function dragEnterHandler(e: React.DragEvent) {
     e.preventDefault();
   }
 
@@ -69,27 +77,27 @@ export default function Solitaire(props) {
    * Prevents default actions on drag over
    * @param {Event} e Drag over event
    */
-  function dragOverHander(e) {
+  function dragOverHander(e: React.DragEvent) {
     e.preventDefault();
   }
 
   /**
    * Invoked when drawing cards from the draw pile
    */
-  function drawCardHandler(e) {
+  function drawCardHandler(e: React.MouseEvent) {
     e.preventDefault();
 
     // Add the current draw and waste pile information to the Undo queue, so it can be reversed
-    const undoPileData =
+    const undoPileData: Partial<PlayfieldState> =
     {
       draw: structuredClone(playfieldState.draw),
       waste: structuredClone(playfieldState.waste)
-    };;
+    };
 
     undoQueue.current.push(undoPileData);
 
     // Update the draw and waste piles
-    const newPlayfieldState = structuredClone(playfieldState);
+    const newPlayfieldState: PlayfieldState = structuredClone(playfieldState);
 
     // If the draw pile is empty, and the waste pile has cards, move the waste pile back to the draw pile
     if (!newPlayfieldState.draw.length && newPlayfieldState.waste.length) {
@@ -109,20 +117,27 @@ export default function Solitaire(props) {
    * Handles clicks on card piles to automatically move cards to new piles
    * @param {Event} e The click event
    */
-  function pileClickHandler(e) {
+  function pileClickHandler(e: React.MouseEvent<HTMLDivElement>) {
 
-    if (!e || !e.target) {
+    const target = e.target as HTMLDivElement;
+
+    if (!target) {
       return;
     }
 
     // Get the card data from the tapped card
-    const tappedCardElement = e.target.closest(".card");
-    const tapppedCardData = tappedCardElement && JSON.parse(tappedCardElement.getAttribute("data-carddata"));
+    const tappedCardElement = target.closest(".card");
+
+    if (!tappedCardElement) {
+      return;
+    }
+
+    const tapppedCardData = JSON.parse(tappedCardElement.getAttribute("data-carddata") || "");
 
     if (tapppedCardData && tapppedCardData.face === "up" && tappedCardElement.getAttribute("draggable") === "true") {
       // Check to see if the card can be moved to one of the foundation piles
-      let result = playfieldState.foundation.findIndex((foundationCardPileData) => {
-        return isValidMove(tapppedCardData, foundationCardPileData.length ? foundationCardPileData.slice(-1)[0] : null, "foundation");
+      let result = playfieldState.foundation.findIndex((foundationCardPileData: CardData[]) => {
+        return isValidMove(tapppedCardData, foundationCardPileData.length ? foundationCardPileData.slice(-1)[0] : undefined, "foundation");
       })
 
       if (result !== -1) {
@@ -220,7 +235,7 @@ export default function Solitaire(props) {
               onDrop={(event) => dropHandler(event, "foundation", pileIndex)}
             >
               {
-                cardDataList.map((cardData, cardIndex) => {
+                cardDataList.map((cardData: CardData, cardIndex: number) => {
                   return (
                     <Card
                       key={`${cardData.rank}_${cardData.suit}`}
@@ -229,7 +244,7 @@ export default function Solitaire(props) {
                       suit={cardData.suit}
                       face={cardData.face}
                       pileType="foundation"
-                      pileindex={pileIndex}
+                      pileIndex={pileIndex}
                       cardIndex={cardIndex}
                     />
                   )
@@ -259,7 +274,7 @@ export default function Solitaire(props) {
               onDrop={(event) => dropHandler(event, "tableau", pileIndex)}
             >
               {
-                cardDataList.map((cardData, cardIndex) => {
+                cardDataList.map((cardData: CardData, cardIndex: number) => {
                   return (
                     <Card
                       key={`${cardData.rank}_${cardData.suit}`}
@@ -268,7 +283,7 @@ export default function Solitaire(props) {
                       suit={cardData.suit}
                       face={cardData.face}
                       pileType="tableau"
-                      pileindex={pileIndex}
+                      pileIndex={pileIndex}
                       cardIndex={cardIndex}
                       offset={cardIndex * 3}
                     />
@@ -339,7 +354,7 @@ export default function Solitaire(props) {
    */
   function stopTimer() {
     clearInterval(timerInterval.current);
-    timerInterval.current = null;
+    timerInterval.current = undefined;
   }
 
   /**
@@ -365,15 +380,13 @@ export default function Solitaire(props) {
    * Handler to toggle the menu and sub menu
    * @param {Event} e Custom toggle event
         */
-  function toggleMenu(e) {
-    if (!e) {
-      return;
-    }
-
+  function toggleMenu(e: React.MouseEvent) {
     e.preventDefault();
 
-    if (e.target && e.target && (e.target.id === "play-area" || e.target.id === "menu")) {
-      publish(eventNames.ToggleMenu, true);
+    const target = e.target as HTMLDivElement;
+
+    if (target && (target.id === "play-area" || target.id === "menu")) {
+      publish("toggleMenu", true);
     }
   }
 
@@ -381,14 +394,14 @@ export default function Solitaire(props) {
    * Handler for keyboard events
    * @param {Event} e Keyboard event
         */
-  function keyDownHandler(e) {
+  function keyDownHandler(e: React.KeyboardEvent) {
     if (!e || !e.key) {
       return;
     }
 
     // Toggle the menu on Esc or m/M
-    if (e.keyCode === 27 || e.keyCode === 77) {
-      publish(eventNames.ToggleMenu, true);
+    if (e.key === "m" || e.key === "M" || e.key === "Esc") {
+      publish("toggleMenu", true);
     }
   }
 
@@ -398,7 +411,7 @@ export default function Solitaire(props) {
   function newGameHandler() {
 
     // Close any open modal
-    setModalTypeDisplayed();
+    setModalTypeDisplayed(undefined);
 
     // Stop the timer
     stopTimer();
@@ -418,7 +431,7 @@ export default function Solitaire(props) {
    */
   function restartGameHandler() {
     // Close any open modal
-    setModalTypeDisplayed();
+    setModalTypeDisplayed(undefined);
 
     // Re-deal the current deck
     dealDeck();
@@ -432,7 +445,7 @@ export default function Solitaire(props) {
    */
   function exitGameHandler() {
     // Close any open modal
-    setModalTypeDisplayed();
+    setModalTypeDisplayed(undefined);
 
     // Stop the timer
     stopTimer();
@@ -452,17 +465,17 @@ export default function Solitaire(props) {
       return;
     }
 
-    const lastMoveData = redoQueue.current.pop();
-    const newPlayfieldState = structuredClone(playfieldState);
-    const undoMoveData = [];
+    const lastMoveData = redoQueue.current.pop() as Partial<PlayfieldState>;
+    const newPlayfieldState: Partial<PlayfieldState> = structuredClone(playfieldState);
+    const undoMoveData: Partial<PlayfieldState> = {};
 
     if (lastMoveData) {
       Object.keys(lastMoveData).forEach(key => {
         // Save the undo data from the current state
-        undoMoveData[key] = structuredClone(playfieldState[key]);
+        undoMoveData[key as keyof PlayfieldState] = structuredClone(playfieldState[key as keyof PlayfieldState]);
 
         // Update the new state object with the data from the last move
-        newPlayfieldState[key] = structuredClone(lastMoveData[key]);
+        newPlayfieldState[key as keyof PlayfieldState] = structuredClone(lastMoveData[key as keyof PlayfieldState]);
       });
     }
 
@@ -482,17 +495,17 @@ export default function Solitaire(props) {
       return;
     }
 
-    const lastMoveData = undoQueue.current.pop();
-    const newPlayfieldState = structuredClone(playfieldState);
-    const redoMoveData = [];
+    const lastMoveData = undoQueue.current.pop() as Partial<PlayfieldState>;
+    const newPlayfieldState: Partial<PlayfieldState> = structuredClone(playfieldState);
+    const redoMoveData: Partial<PlayfieldState> = {};
 
     if (lastMoveData) {
       Object.keys(lastMoveData).forEach(key => {
         // Save the redo data from the current state
-        redoMoveData[key] = structuredClone(playfieldState[key]);
+        redoMoveData[key as keyof PlayfieldState] = structuredClone(playfieldState[key as keyof PlayfieldState]);
 
         // Update the new state object with the data from the last move
-        newPlayfieldState[key] = structuredClone(lastMoveData[key]);
+        newPlayfieldState[key as keyof PlayfieldState] = structuredClone(lastMoveData[key as keyof PlayfieldState]);
       });
     }
 
@@ -509,7 +522,7 @@ export default function Solitaire(props) {
         * @param {string} targetPileType The drop target pile type
         * @param {number} targetPileIndex The drop target pile index
         */
-  function dropHandler(e, targetPileType, targetPileIndex) {
+  function dropHandler(e: React.DragEvent, targetPileType: string, targetPileIndex: number) {
 
     if (!e || !e.dataTransfer || !e.target || !targetPileType) {
       return;
@@ -524,7 +537,7 @@ export default function Solitaire(props) {
 
     // Get the last card in the pile
     let targetCardData;
-    const cardDataList = playfieldState[targetPileType][targetPileIndex];
+    const cardDataList = playfieldState[targetPileType as keyof PlayfieldState][targetPileIndex];
 
     if (cardDataList && cardDataList.length) {
       targetCardData = cardDataList.slice(-1)[0];
@@ -543,7 +556,7 @@ export default function Solitaire(props) {
         * @param {cardData} targetPileCardData Card data for the target card
         * @param {string} targetPileType Pile type the dropped/tapped card is targeting
         */
-  function isValidMove(droppedCardData, targetPileCardData, targetPileType) {
+  function isValidMove(droppedCardData: CardData, targetPileCardData: CardData | undefined, targetPileType: string) {
     if (!targetPileCardData && !droppedCardData) {
       return false;
     }
@@ -565,8 +578,10 @@ export default function Solitaire(props) {
     } else if (targetPileType === "foundation") {
 
       // Only move cards to the foundation if they're the last card on their pile
-      const cardIndex = droppedCardData.cardIndex;
-      const pileLength = droppedCardData.pileindex >= 0 ? playfieldState[droppedCardData.pileType][droppedCardData.pileindex].length : playfieldState[droppedCardData.pileType].length;
+      const cardIndex = droppedCardData.cardIndex as number;
+      const pileIndex = droppedCardData.pileIndex as number;
+      const pileType = droppedCardData.pileType as keyof PlayfieldState;
+      const pileLength = pileIndex >= 0 ? playfieldState[pileType][pileIndex].length : playfieldState[pileType].length;
       if (pileLength - 1 !== cardIndex) {
         return false;
       }
@@ -591,12 +606,15 @@ export default function Solitaire(props) {
    * @param {string} targetPileType The type of target pile
    * @param {number} targetPileIndex The target pile index
    */
-  function moveCard(sourceCardData, targetPileType, targetPileIndex) {
+  function moveCard(sourceCardData: CardData, targetPileType: string, targetPileIndex: number) {
 
     const newPlayfieldState = structuredClone(playfieldState);
 
     // Remove the card (and any subsequent cards) from the source pile
-    const { pileType: sourcePileType, pileindex: sourcePileIndex, cardIndex: sourceCardIndex } = sourceCardData;
+    const sourcePileType = sourceCardData.pileType as keyof PlayfieldState;
+    const sourcePileIndex = sourceCardData.pileIndex as number;
+    const sourceCardIndex = sourceCardData.cardIndex as number;
+
     let cardsToMove;
     switch (sourcePileType) {
       case "foundation":
@@ -613,7 +631,7 @@ export default function Solitaire(props) {
     }
 
     // Make sure any cards being moved are set to be face up
-    cardsToMove.forEach(cardData => cardData.face = "up");
+    cardsToMove.forEach((cardData: CardData) => cardData.face = "up");
 
     // Move cards to target pile
     switch (targetPileType) {
@@ -629,7 +647,7 @@ export default function Solitaire(props) {
     }
 
     // Add this information to the Undo queue, so it can be reversed
-    const undoPileData = {};
+    const undoPileData: Partial<PlayfieldState> = {};
 
     // Always include the source pile data
     undoPileData[sourcePileType] = structuredClone(playfieldState[sourcePileType]);
@@ -653,13 +671,13 @@ export default function Solitaire(props) {
    */
   function shuffleDeck() {
     // Reset the deck
-    let newDeck = [];
+    const newDeck: CardData[] = [];
 
     // Create an unshuffled deck of cards.
-    const suitsList = Object.keys(suits);
+    const suitsList = Object.keys(suits) as Suits[];
     for (let si = 0; si < suitsList.length; si++) {
       for (let ri = 0; ri < ranks.length; ri++) {
-        let card = { rank: ranks[ri], suit: suitsList[si], face: "down" };
+        const card: CardData = { rank: ranks[ri], suit: suitsList[si], face: "down" };
         newDeck.push(card);
       }
     }
@@ -667,10 +685,10 @@ export default function Solitaire(props) {
     // Shuffle the cards in the deck
     for (let i = newDeck.length - 1; i > 0; i--) {
       // Pick a random card from the deck
-      let j = Math.floor(Math.random() * i);
+      const j = Math.floor(Math.random() * i);
 
       // Swap the card at the current index with the randomly chosen one
-      let temp = newDeck[i];
+      const temp = newDeck[i];
       newDeck[i] = newDeck[j];
       newDeck[j] = temp;
     }
@@ -694,9 +712,9 @@ export default function Solitaire(props) {
     // etc.
     let cardsToDeal = 1;
     let cardIndex = 0;
-    let tableauCardData = []
+    const tableauCardData = []
     for (let i = 0; i < playfieldState.tableau.length; i++) {
-      let cardDataList = [];
+      const cardDataList = [];
       for (let i = 0; i < cardsToDeal; i++) {
         // Create a card element and add it to the pile
         cardDataList.push(shuffledDeck.current[cardIndex++]);
@@ -730,7 +748,7 @@ export default function Solitaire(props) {
       stopTimer();
 
       // Display the "winner" modal
-      setModalTypeDisplayed(modalTypes.GameWin);
+      setModalTypeDisplayed("gamewin");
 
       return;
     }
@@ -738,11 +756,11 @@ export default function Solitaire(props) {
     // Check to see which cards need to be flipped
     // This step is needed so that the card flipping animation has something to transition to (face down => face up)
     let updatePlayfield = false;
-    let newPlayfieldState = structuredClone(playfieldState);
+    const newPlayfieldState = structuredClone(playfieldState);
 
     // Flip the last card on each tableau pile
     newPlayfieldState.tableau = playfieldState.tableau.map((cardDataList) => {
-      return cardDataList.map((cardData, cardIndex) => {
+      return cardDataList.map((cardData: CardData, cardIndex: number) => {
         // Last card should always be up
         const lastCard = cardIndex + 1 === cardDataList.length;
 

@@ -1,0 +1,1 @@
+export type PileTypes = "draw" | "waste" | "foundation" | "tableau"

@@ -1,31 +1,37 @@
 import './Menu.css';
 
-import React, { useEffect, useState } from 'react';
-import { eventNames, publish, subscribe, unsubscribe } from './Events';
+import { publish, subscribe, unsubscribe } from './Events';
+import { useEffect, useState } from 'react';
 
+import { MenuComponentProps } from './@types/MenuComponentProps';
 import { throttle } from './Utils';
 
-const submenuArrowSize = 15;
-const submenuWidth = 300;
+const submenuArrowSize: number = 15;
+const submenuWidth: number = 300;
 
-export default function Menu(props) {
+interface SubMenuPosStyle {
+    left?: string
+    right?: string
+};
+
+export default function Menu(props: MenuComponentProps) {
 
     // Set up state management
     const [isMenuVisible, setIsMenuVisible] = useState(true);
     const [submenuId, setSubmenuId] = useState("");
-    const [subMenuPosStyle, setSubMenuPosStyle] = useState(0);
+    const [subMenuPosStyle, setSubMenuPosStyle] = useState({});
     const [submenuArrowPos, setSubmenuArrowPos] = useState(0);
 
     useEffect(() => {
         // Set listener for toggle menu event, which happens in the main Solitaire component
-        subscribe(eventNames.ToggleMenu, toggleMenu);
+        subscribe("toggleMenu", toggleMenu);
 
         // Close the submenu on resize
         window.addEventListener("resize", throttle(resizeHandler, 150));
 
         return () => {
             // Remove listeners for game events
-            unsubscribe(eventNames.ToggleMenu, toggleMenu);
+            unsubscribe("toggleMenu", toggleMenu);
             window.removeEventListener("resize", throttle(resizeHandler, 150));
         };
     });
@@ -131,7 +137,8 @@ export default function Menu(props) {
      * @param {Event} e 
      * @param {boolean} hideMenus Flag to hide all menus
      */
-    function toggleMenu(e, hideMenus) {
+    function toggleMenu(e: React.MouseEvent, hideMenus: boolean): void {
+        e.preventDefault();
 
         if (hideMenus) {
             setIsMenuVisible(false);
@@ -148,20 +155,22 @@ export default function Menu(props) {
     /**
      * Toggles the submenu
      */
-    function toggleSubmenu(e) {
+    function toggleSubmenu(e: React.MouseEvent) {
 
         // If no menu ID was passed, close any existing submenus
-        if (!e || !e.target || !e.target.id) {
+        const buttonTarget = e.target as HTMLButtonElement;
+
+        if (!buttonTarget || !buttonTarget.id) {
             setSubmenuId("");
             setSubMenuPosStyle(0);
             return;
         }
 
-        const newSubmenuId = e.target.id;
+        const newSubmenuId = buttonTarget.id;
 
         // Close any open submenus
         if (submenuId) {
-            let oldSubmenuId = submenuId;
+            const oldSubmenuId = submenuId;
             setSubmenuId("");
             setSubMenuPosStyle(0);
 
@@ -173,7 +182,7 @@ export default function Menu(props) {
 
         // Calculate the positions of the submenu element and the arrow
         const submenuViewportOffset = 20;
-        const clientRect = e.target.getBoundingClientRect();
+        const clientRect = buttonTarget.getBoundingClientRect();
         const menuIconCenter = clientRect.left + (clientRect.width / 2);
         const viewportWidth = window.innerWidth;
 
@@ -181,8 +190,8 @@ export default function Menu(props) {
         // Submenus positioned over the leftmost edge of the viewport is reset to the base offset from the left
         // Otherwise, they should be positioned over the center of the button
         // Note: This isn't super precise because we're not accounting for padding or scroll bars, but it's close enough
-        let subMenuPos = menuIconCenter - submenuWidth / 2;
-        let subMenuPosStyle = { left: `${subMenuPos < 1 ? submenuViewportOffset : subMenuPos}px` }
+        const subMenuPos = menuIconCenter - submenuWidth / 2;
+        let subMenuPosStyle: SubMenuPosStyle = { left: `${subMenuPos < 1 ? submenuViewportOffset : subMenuPos}px` }
 
         // Submenus positioned over the rightmost edge of the viewport is reset to the base offset from the right
         if (subMenuPos + submenuWidth + submenuViewportOffset > viewportWidth) {
@@ -190,7 +199,7 @@ export default function Menu(props) {
         }
 
         // The submenu arrow should point to the middle of the parent menu element
-        const submenuArrowPos = parseInt(menuIconCenter - submenuArrowSize);
+        const submenuArrowPos = Math.floor(menuIconCenter - submenuArrowSize);
 
         // Open the submenu
         setSubmenuId(newSubmenuId);
@@ -202,43 +211,43 @@ export default function Menu(props) {
      * Handler for clicking on the "New Game" menu option
      * @param {*} e The event
      */
-    function newGameHandler(e) {
+    function newGameHandler(e: React.MouseEvent) {
+        e.preventDefault();
         toggleMenu(e, true);
-        publish(eventNames.NewGame);
+        publish("newGame");
     }
 
     /**
      * Handler for clicking on the "Restart Game" menu option
      * @param {*} e The event
      */
-    function restartGameHandler(e) {
+    function restartGameHandler(e: React.MouseEvent) {
+        e.preventDefault();
         toggleMenu(e, true);
-        publish(eventNames.RestartGame);
+        publish("restartGame");
     }
 
     /**
      * Handler for clicking on the "Exit Game" menu option
-     * @param {*} e The event
+     * @param {*} e React mouse event
      */
-    function exitGameHandler(e) {
+    function exitGameHandler(e: React.MouseEvent) {
         toggleMenu(e, true);
-        publish(eventNames.ExitGame);
+        publish("exitGame");
     }
 
     /**
      * Handler for clicking on the "redo" menu option
-     * @param {*} e The event
      */
-    function redoMoveHandler(e) {
-        publish(eventNames.RedoMove);
+    function redoMoveHandler() {
+        publish("redoMove");
     }
 
     /**
      * Handler for clicking on the "undo" menu option
-     * @param {*} e The event
      */
-    function undoMoveHandler(e) {
-        publish(eventNames.UndoMove);
+    function undoMoveHandler() {
+        publish("undoMove");
     }
 
     return (

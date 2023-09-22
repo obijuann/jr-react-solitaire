@@ -40,7 +40,7 @@ test("firing the 'toggleMenu' event hides the menu component", () => {
     // Act
     act(() => {
         // Wrapped in an act call since this is render-affecting
-        publish(eventNames.ToggleMenu);
+        publish("toggleMenu");
     });
 
     // Assert
@@ -60,7 +60,7 @@ test("firing the 'toggleMenu' event hides the submenu", () => {
     expect(screen.getByRole('button', { name: 'Restart this game' })).toBeInTheDocument();
     act(() => {
         // Wrapped in an act call since this is render-affecting
-        publish(eventNames.ToggleMenu);
+        publish("toggleMenu");
     });
 
     // Assert
@@ -96,7 +96,7 @@ test("renders the new game submenu", () => {
 test("clicking the restart game button publishes a new game event and closes all menus", () => {
     // Arrange
     const restartGameListener = jest.fn();
-    subscribe(eventNames.RestartGame, restartGameListener);
+    subscribe("restartGame", restartGameListener);
 
     // Act
     render(<Menu gameActive={true} />);
@@ -123,7 +123,7 @@ test("clicking the restart game button publishes a new game event and closes all
 test("clicking the quit game button publishes a new game event and closes all menus", () => {
     // Arrange
     const quitGameListener = jest.fn();
-    subscribe(eventNames.ExitGame, quitGameListener);
+    subscribe("exitGame", quitGameListener);
 
     // Act
     render(<Menu gameActive={true} />);
