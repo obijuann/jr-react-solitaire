@@ -62,21 +62,23 @@
 
 @media (max-width: 450px) {
 
-    .card.faceup .face {
-        display: flex;
-        flex-direction: row;
-        flex-wrap: wrap;
-        justify-content: space-between;
-        padding: 0 3px;
+    .face img {
+        display: none;
     }
 
     .face span {
         display: block;
-        font-size: 7vw;
+        font-size: 5vw;
         font-weight: bold;
+        position: absolute;
     }
 
-    .face img {
-        display: none;
+    .face span.rank {
+        margin: 0 3px;
+    }
+
+    .face span.suit {
+        font-size: 9vw;
+        transform: translate(50%, 25%);
     }
 }
