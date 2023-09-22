@@ -1,3 +1,6 @@
+import '@testing-library/jest-dom/vitest';
+
+import { expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
 
 import Solitaire from './Solitaire';
@@ -5,7 +8,7 @@ import Solitaire from './Solitaire';
 // Add a polyfill for structured clone
 global.structuredClone = (val) => JSON.parse(JSON.stringify(val))
 
-test('renders the play area', () => {
+it('renders the play area', () => {
   // Arrange + Act
   render(<Solitaire />);
 

@@ -1,22 +1,24 @@
 import './Card.css';
 
-import React from 'react';
+import { CardComponentProps } from './@types/CardComponentProps';
+import { Ranks } from './@types/Ranks';
+import { Suits } from './@types/Suits';
 
-const rankMap = {
+const rankMap: Partial<Record<Ranks, string>> = {
   "jack": "J",
   "queen": "Q",
   "king": "K",
   "ace": "A"
 };
 
-const suitMap = {
+const suitMap: Record<Suits, string> = {
   "clubs": "♣",
   "diamonds": "♦",
   "hearts": "♥",
   "spades": "♠️"
 };
 
-export default function Card(props) {
+export default function Card(props: CardComponentProps) {
 
   let styleOverride;
   if (props.offset) {
@@ -32,14 +34,14 @@ export default function Card(props) {
 
   /**
    * Handler invoked when the card element is dragged
-   * @param {Event} e The dragged element
+   * @param {DragEvent} dragEvent Drag event
    */
-  function onDragStart(e) {
+  function onDragStart(dragEvent: React.DragEvent<HTMLDivElement>): void {
     // Write the card data to the data transfer property.
     // This will be read when the card is dropped on an appropriate card pile
-    e.dataTransfer.effectAllowed = "move";
-    e.dataTransfer.clearData();
-    e.dataTransfer.setData("cardData", JSON.stringify(props));
+    dragEvent.dataTransfer.effectAllowed = "move";
+    dragEvent.dataTransfer.clearData();
+    dragEvent.dataTransfer.setData("cardData", JSON.stringify(props));
   }
 
   return (
@@ -53,12 +55,12 @@ export default function Card(props) {
     >
       <div className="card-inner">
         <div className="face">
-          <img src={`${process.env.PUBLIC_URL}/cards/fronts/${props.suit}_${props.rank}.svg`} alt={`${props.rank} of ${props.suit}`} draggable="false"></img>
+          <img src={`/cards/fronts/${props.suit}_${props.rank}.svg`} alt={`${props.rank} of ${props.suit}`} draggable="false"></img>
           <span className="rank">{rankMap[props.rank] || props.rank}</span>
           <span className="suit">{suitMap[props.suit]}</span>
         </div>
         <div className="back">
-          <img src={`${process.env.PUBLIC_URL}/cards/backs/red.svg`} alt="card" draggable="false"></img>
+          <img src={`/cards/backs/red.svg`} alt="card" draggable="false"></img>
         </div>
       </div>
     </div>

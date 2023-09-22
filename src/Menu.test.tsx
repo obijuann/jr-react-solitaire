@@ -1,9 +1,12 @@
+import '@testing-library/jest-dom/vitest';
+
 import { act, fireEvent, render, screen } from '@testing-library/react';
-import { eventNames, publish, subscribe } from './Events';
+import { expect, it, vi } from 'vitest';
+import { publish, subscribe } from './Events';
 
 import Menu from './Menu';
 
-test("renders the base menu component", () => {
+it("renders the base menu component", () => {
     // Arrange + Act
     render(<Menu gameActive={false} />);
 
@@ -29,7 +32,7 @@ test("renders the base menu component", () => {
     expect(screen.queryByText(/object of the game/i)).not.toBeInTheDocument();
 });
 
-test("firing the 'toggleMenu' event hides the menu component", () => {
+it("firing the 'toggleMenu' event hides the menu component", () => {
     // Arrange + Act
     render(<Menu gameActive={false} />);
 
@@ -40,14 +43,14 @@ test("firing the 'toggleMenu' event hides the menu component", () => {
     // Act
     act(() => {
         // Wrapped in an act call since this is render-affecting
-        publish(eventNames.ToggleMenu);
+        publish("toggleMenu");
     });
 
     // Assert
     expect(screen.getByTestId("menu").className).not.toEqual("visible");
 });
 
-test("firing the 'toggleMenu' event hides the submenu", () => {
+it("firing the 'toggleMenu' event hides the submenu", () => {
     // Arrange + Act
     render(<Menu gameActive={false} />);
 
@@ -60,7 +63,7 @@ test("firing the 'toggleMenu' event hides the submenu", () => {
     expect(screen.getByRole('button', { name: 'Restart this game' })).toBeInTheDocument();
     act(() => {
         // Wrapped in an act call since this is render-affecting
-        publish(eventNames.ToggleMenu);
+        publish("toggleMenu");
     });
 
     // Assert
@@ -68,7 +71,7 @@ test("firing the 'toggleMenu' event hides the submenu", () => {
     expect(screen.getByTestId("menu").className).toEqual("visible");
 });
 
-test("renders the new game submenu", () => {
+it("renders the new game submenu", () => {
     // Arrange + Act
     render(<Menu gameActive={false} />);
 
@@ -93,10 +96,10 @@ test("renders the new game submenu", () => {
     expect(quitGameButton.hasAttribute("disabled")).toBeTruthy();
 });
 
-test("clicking the restart game button publishes a new game event and closes all menus", () => {
+it("clicking the restart game button publishes a new game event and closes all menus", () => {
     // Arrange
-    const restartGameListener = jest.fn();
-    subscribe(eventNames.RestartGame, restartGameListener);
+    const restartGameListener = vi.fn();
+    subscribe("restartGame", restartGameListener);
 
     // Act
     render(<Menu gameActive={true} />);
@@ -120,10 +123,10 @@ test("clicking the restart game button publishes a new game event and closes all
     expect(screen.getByTestId("menu").className).not.toEqual("visible");
 });
 
-test("clicking the quit game button publishes a new game event and closes all menus", () => {
+it("clicking the quit game button publishes a new game event and closes all menus", () => {
     // Arrange
-    const quitGameListener = jest.fn();
-    subscribe(eventNames.ExitGame, quitGameListener);
+    const quitGameListener = vi.fn();
+    subscribe("exitGame", quitGameListener);
 
     // Act
     render(<Menu gameActive={true} />);
@@ -147,7 +150,7 @@ test("clicking the quit game button publishes a new game event and closes all me
     expect(screen.getByTestId("menu").className).not.toEqual("visible");
 });
 
-test("renders the help submenu", () => {
+it("renders the help submenu", () => {
     // Arrange + Act
     render(<Menu gameActive={false} />);
 

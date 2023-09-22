@@ -1,0 +1,1 @@
+export type Suits = "clubs"| "diamonds"| "hearts" | "spades"
