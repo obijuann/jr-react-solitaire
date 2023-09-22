@@ -1,3 +1,5 @@
+import '@testing-library/jest-dom/vitest';
+
 import { expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
 
@@ -9,7 +11,7 @@ it("renders facedown card", () => {
 
     // Assert
     const cardElement = screen.getByTestId("card");
-    expect(cardElement).toBeDefined();
+    expect(cardElement).toBeInTheDocument();
     expect(cardElement.className).toEqual("card ");
     const cardData = cardElement.getAttribute("data-carddata") || "";
     expect(JSON.parse(cardData)).toEqual({ rank: "10", suit: "hearts", face: "down" });
@@ -22,7 +24,7 @@ it("renders face up card", () => {
 
     // Assert
     const cardElement = screen.getByTestId("card");
-    expect(cardElement).toBeDefined();
+    expect(cardElement).toBeInTheDocument();
     expect(cardElement.className).toEqual("card hearts faceup");
     const cardData = cardElement.getAttribute("data-carddata") || "";
     expect(JSON.parse(cardData)).toEqual({ rank: "10", suit: "hearts", face: "up", draggable: true });
@@ -35,6 +37,6 @@ it("renders offset card", () => {
 
     // Assert
     const cardElement = screen.getByTestId("card");
-    expect(cardElement).toBeDefined();
+    expect(cardElement).toBeInTheDocument();
     expect(cardElement.style.transform).toEqual("translateY(12vh)");
 });

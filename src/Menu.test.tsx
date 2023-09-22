@@ -1,3 +1,5 @@
+import '@testing-library/jest-dom/vitest';
+
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { expect, it, vi } from 'vitest';
 import { publish, subscribe } from './Events';
@@ -10,24 +12,24 @@ it("renders the base menu component", () => {
 
     // Assert
     const newButton = screen.getByRole('button', { name: 'New' });
-    expect(newButton).toBeDefined();
+    expect(newButton).toBeInTheDocument();
     expect(newButton.hasAttribute("disabled")).toBeFalsy();
 
     const undoButton = screen.getByRole('button', { name: 'Undo' });
-    expect(undoButton).toBeDefined();
+    expect(undoButton).toBeInTheDocument();
     expect(undoButton.hasAttribute("disabled")).toBeTruthy();
 
     const redoButton = screen.getByRole('button', { name: 'Redo' });
-    expect(redoButton).toBeDefined();
+    expect(redoButton).toBeInTheDocument();
     expect(redoButton.hasAttribute("disabled")).toBeTruthy();
 
     const helpButton = screen.getByRole('button', { name: 'Help' });
-    expect(helpButton).toBeDefined();
+    expect(helpButton).toBeInTheDocument();
     expect(helpButton.hasAttribute("disabled")).toBeFalsy();
 
     // Assert no submenus are present
-    expect(screen.queryByRole('button', { name: 'New Game' })).toBeFalsy();
-    expect(screen.queryByText(/object of the game/i)).toBeFalsy();
+    expect(screen.queryByRole('button', { name: 'New Game' })).not.toBeInTheDocument();
+    expect(screen.queryByText(/object of the game/i)).not.toBeInTheDocument();
 });
 
 it("firing the 'toggleMenu' event hides the menu component", () => {
@@ -36,7 +38,7 @@ it("firing the 'toggleMenu' event hides the menu component", () => {
 
     // Assert
     const newButton = screen.getByRole('button', { name: 'New' });
-    expect(newButton).toBeDefined();
+    expect(newButton).toBeInTheDocument();
 
     // Act
     act(() => {
@@ -54,18 +56,18 @@ it("firing the 'toggleMenu' event hides the submenu", () => {
 
     // Assert
     const newButton = screen.getByRole('button', { name: 'New' });
-    expect(newButton).toBeDefined();
+    expect(newButton).toBeInTheDocument();
 
     // Act
     fireEvent.click(newButton);
-    expect(screen.getByRole('button', { name: 'Restart this game' })).toBeDefined();
+    expect(screen.getByRole('button', { name: 'Restart this game' })).toBeInTheDocument();
     act(() => {
         // Wrapped in an act call since this is render-affecting
         publish("toggleMenu");
     });
 
     // Assert
-    expect(screen.queryByRole('button', { name: 'Restart this game' })).toBeFalsy();
+    expect(screen.queryByRole('button', { name: 'Restart this game' })).not.toBeInTheDocument();
     expect(screen.getByTestId("menu").className).toEqual("visible");
 });
 
@@ -75,22 +77,22 @@ it("renders the new game submenu", () => {
 
     // Assert
     const newButton = screen.getByRole('button', { name: 'New' });
-    expect(newButton).toBeDefined();
+    expect(newButton).toBeInTheDocument();
 
     // Act
     fireEvent.click(newButton);
 
     // Assert
     const newGameButton = screen.getByRole('button', { name: 'New game' });
-    expect(newGameButton).toBeDefined();
+    expect(newGameButton).toBeInTheDocument();
     expect(newGameButton.hasAttribute("disabled")).toBeFalsy();
 
     const restartGameButton = screen.getByRole('button', { name: 'Restart this game' });
-    expect(restartGameButton).toBeDefined();
+    expect(restartGameButton).toBeInTheDocument();
     expect(restartGameButton.hasAttribute("disabled")).toBeTruthy();
 
     const quitGameButton = screen.getByRole('button', { name: 'Quit this game' });
-    expect(quitGameButton).toBeDefined();
+    expect(quitGameButton).toBeInTheDocument();
     expect(quitGameButton.hasAttribute("disabled")).toBeTruthy();
 });
 
@@ -104,7 +106,7 @@ it("clicking the restart game button publishes a new game event and closes all m
 
     // Assert
     const newButton = screen.getByRole('button', { name: 'New' });
-    expect(newButton).toBeDefined();
+    expect(newButton).toBeInTheDocument();
 
     // Act
     fireEvent.click(newButton);
@@ -117,7 +119,7 @@ it("clicking the restart game button publishes a new game event and closes all m
 
     // Assert
     expect(restartGameListener).toHaveBeenCalled();
-    expect(screen.queryByRole('button', { name: 'Restart this game' })).toBeFalsy();
+    expect(screen.queryByRole('button', { name: 'Restart this game' })).not.toBeInTheDocument();
     expect(screen.getByTestId("menu").className).not.toEqual("visible");
 });
 
@@ -131,7 +133,7 @@ it("clicking the quit game button publishes a new game event and closes all menu
 
     // Assert
     const newButton = screen.getByRole('button', { name: 'New' });
-    expect(newButton).toBeDefined();
+    expect(newButton).toBeInTheDocument();
 
     // Act
     fireEvent.click(newButton);
@@ -144,7 +146,7 @@ it("clicking the quit game button publishes a new game event and closes all menu
 
     // Assert
     expect(quitGameListener).toHaveBeenCalled();
-    expect(screen.queryByRole('button', { name: 'Quit this game' })).toBeFalsy();
+    expect(screen.queryByRole('button', { name: 'Quit this game' })).not.toBeInTheDocument();
     expect(screen.getByTestId("menu").className).not.toEqual("visible");
 });
 
@@ -154,11 +156,11 @@ it("renders the help submenu", () => {
 
     // Assert
     const helpButton = screen.getByRole('button', { name: 'Help' });
-    expect(helpButton).toBeDefined();
+    expect(helpButton).toBeInTheDocument();
 
     // Act
     fireEvent.click(helpButton);
 
     // Assert
-    expect(screen.getByText(/object of the game/i)).toBeDefined();
+    expect(screen.getByText(/object of the game/i)).toBeInTheDocument();
 });
