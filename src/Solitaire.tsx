@@ -106,7 +106,8 @@ export default function Solitaire() {
       newPlayfieldState.waste = [];
     } else if (newPlayfieldState.draw.length) {
       // Add the last card from the draw pile to the waste pile
-      newPlayfieldState.waste.push(newPlayfieldState.draw.pop());
+      const lastCardData = newPlayfieldState.draw.pop();
+      lastCardData && newPlayfieldState.waste.push(lastCardData);
     }
 
     // Update the playfield

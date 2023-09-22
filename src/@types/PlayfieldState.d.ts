@@ -1,6 +1,8 @@
+import { CardData } from "./CardData"
+
 export interface PlayfieldState {
-    draw: any[]
-    waste: any[]
-    foundation: any[]
-    tableau: any[]
+    draw: CardData[]
+    waste: CardData[]
+    foundation: Array[]
+    tableau: Array[]
 }

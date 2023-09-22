@@ -12,7 +12,7 @@ const submenuWidth: number = 300;
 interface SubMenuPosStyle {
     left?: string
     right?: string
-};
+}
 
 export default function Menu(props: MenuComponentProps) {
 
