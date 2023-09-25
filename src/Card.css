@@ -33,7 +33,7 @@
 }
 
 .card.faceup .back {
-    display: none;
+    transform: rotateY(0deg);
 }
 
 .back,

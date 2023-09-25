@@ -23,7 +23,7 @@ export default function Card(props: CardComponentProps) {
   let styleOverride;
   if (props.offset) {
     styleOverride = {
-      transform: `translateY(${props.offset}vh)`
+      top: `${props.offset}vh`
     }
   }
 
