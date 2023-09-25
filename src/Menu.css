@@ -1,11 +1,7 @@
 #menu {
     --border-radius: 8px;
-    align-items: center;
     background: rgba(0, 0, 0, .5);
     bottom: -250px;
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-around;
     left: 0;
     padding: 15px 0;
     position: fixed;
@@ -40,6 +36,16 @@
 
 #quit {
     background-image: url("/icons/quit.svg");
+}
+
+#primary-menu {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    margin: 0 auto; 
+    max-width: 1100px;
+    padding: 0 30px;
 }
 
 #submenu {
