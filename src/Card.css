@@ -32,6 +32,10 @@
     transition: transform .5s;
 }
 
+.card.faceup .back {
+    display: none;
+}
+
 .back,
 .face {
     /* Safari */
