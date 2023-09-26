@@ -38,5 +38,5 @@ it("renders offset card", () => {
     // Assert
     const cardElement = screen.getByTestId("card");
     expect(cardElement).toBeInTheDocument();
-    expect(cardElement.style.transform).toEqual("translateY(12vh)");
+    expect(cardElement.style.top).toEqual("12vh");
 });
