@@ -32,92 +32,107 @@
 }
 
 .back,
-.face {
+.front {
     /* Safari */
     -webkit-backface-visibility: hidden;
     backface-visibility: hidden;
-    /* border: 1px solid black;
-    border-radius: var(--border-radius); */
+    border: 1px solid black;
+    border-radius: var(--border-radius);
     overflow: hidden;
     height: 100%;
     position: absolute;
     width: 100%;
 }
 
-.face {
-    background-image: url("/public/cards/anglo.svg");
+.front {
     background-repeat: no-repeat;
-    background-size: 1300%;
+    background-color: white;
     display: flex;
     transform: rotateY(180deg);
 }
 
-.face.clubs {
-  background-position-y: 0;
-}
-
-.face.diamonds {
-    background-position-y: 25%;
-}
-
-.face.hearts {
-    background-position-y: 50%;
-}
-
-.face.spades {
-    background-position-y: 75%;
-}
-
-.face.rank_ace {
+.front.face.clubs {
     background-position-x: 0;
 }
 
-.face.rank_2 {
-    background-position-x: 8.3%;
+.front.face.diamonds {
+    background-position-x: 25%;
 }
 
-.face.rank_3 {
-    background-position-x: 16.6%;
+.front.face.hearts {
+    background-position-x: 48.5%;
 }
 
-.face.rank_4 {
-    background-position-x: 24.9%;
+.front.face.spades {
+    background-position-x: 73%;
 }
 
-.face.rank_5 {
-    background-position-x: 33.2%;
+.front.pip.clubs {
+    background-position-y: 0;
 }
 
-.face.rank_6 {
-    background-position-x: 41.5%;
+.front.pip.diamonds {
+    background-position-y: 33%;
 }
 
-.face.rank_7 {
-    background-position-x: 49.8%;
+.front.pip.hearts {
+    background-position-y: 67%;
 }
 
-.face.rank_8 {
-    background-position-x: 58.1%;
+.front.pip.spades {
+    background-position-y: 100%;
 }
 
-.face.rank_9 {
-    background-position-x: 66.4%;
+.front.rank_ace {
+    background-position-x: 0;
 }
 
-.face.rank_10 {
-    background-position-x: 74.7%;
+.front.rank_2 {
+    background-position-x: 11%;
 }
 
-.face.rank_jack {
-    background-position-x: 83%;
+.front.rank_3 {
+    background-position-x: 21.6%;
 }
 
-.face.rank_queen {
-    background-position-x: 91.3%;
+.front.rank_4 {
+    background-position-x: 32.5%;
 }
 
-.face.rank_king {
-    background-position-x: 99.6%;
+.front.rank_5 {
+    background-position-x: 43.3%;
+}
+
+.front.rank_6 {
+    background-position-x: 54.2%;
+}
+
+.front.rank_7 {
+    background-position-x: 64.8%;
+}
+
+.front.rank_8 {
+    background-position-x: 75.8%;
+}
+
+.front.rank_9 {
+    background-position-x: 86.7%;
+}
+
+.front.rank_10 {
+    background-position-x: 97.4%;
+}
+
+.front.rank_jack {
+    background-position-y: 0;
+}
+
+.front.rank_queen {
+    background-position-y: 41%;
+}
+
+.front.rank_king {
+    background-position-y: 83%;
 }
 
 .back {
@@ -125,7 +140,7 @@
     background-size: 100%;
 }
 
-.face span {
+.front span {
     display: none;
 }
 
@@ -134,25 +149,32 @@
     color: red;
 }
 
-@media (max-width: 450px) {
-
-    .face img {
-        display: none;
+@media (min-width: 961px) {
+    .front.face {
+        background-image: url("/public/cards/face_classic_en_1920.png");
     }
 
-    .face span {
-        display: block;
-        font-size: 5vw;
-        font-weight: bold;
-        position: absolute;
+    .front.pip {
+        background-image: url("/public/cards/pip_classic_1920.png");
+    }
+}
+
+@media (min-width: 491px) and (max-width: 960px) {
+    .front.face {
+        background-image: url("/public/cards/face_classic_en_960.png");
     }
 
-    .face span.rank {
-        margin: 0 3px;
+    .front.pip {
+        background-image: url("/public/cards/pip_classic_960.png");
+    }
+}
+
+@media (max-width: 480px) {
+    .front.face {
+        background-image: url("/public/cards/face_480.png");
     }
 
-    .face span.suit {
-        font-size: 9vw;
-        transform: translate(50%, 25%);
+    .front.pip {
+        background-image: url("/public/cards/pip_480.png");
     }
 }
