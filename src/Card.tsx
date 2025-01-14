@@ -54,13 +54,14 @@ export default function Card(props: CardComponentProps) {
       style={styleOverride}
     >
       <div className="card-inner">
-        <div className="face">
-          <img src={`/cards/fronts/${props.suit}_${props.rank}.svg`} alt={`${props.rank} of ${props.suit}`} draggable="false"></img>
+        <div className={`face rank_${props.rank} ${props.suit}`}>
+          {/* <img src={`/cards/fronts/${props.suit}_${props.rank}.svg`} alt={`${props.rank} of ${props.suit}`} draggable="false"></img> */}
+          {/* <img className={`rank_${props.rank} ${props.suit}`} src={`/cards/anglo.svg`} alt={`${props.rank} of ${props.suit}`} draggable="false"></img> */}
           <span className="rank">{rankMap[props.rank] || props.rank}</span>
           <span className="suit">{suitMap[props.suit]}</span>
         </div>
         <div className="back">
-          <img src={`/cards/backs/red.svg`} alt="card" draggable="false"></img>
+          {/* <img src={`/cards/backs/red.svg`} alt="card" draggable="false"></img> */}
         </div>
       </div>
     </div>
