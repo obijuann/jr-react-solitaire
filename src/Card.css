@@ -122,19 +122,13 @@
     background-position-x: 100%;
 }
 
-@media (min-width: 1900px) {
-    .front {
-        background-image: url("/public/cards/fronts/2600_classic_en-min.png");
-    }
-}
-
-@media (min-width: 800px) and (max-width: 1899px) {
+@media (min-width: 890px) {
     .front {
         background-image: url("/public/cards/fronts/1300_classic_en-min.png");
     }
 }
 
-@media (max-width: 799px) {
+@media (max-width: 889px) {
     .front {
         background-image: url("/public/cards/fronts/650_simple-min.png");
     }

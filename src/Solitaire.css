@@ -6,8 +6,6 @@
   height: calc(100vh - 20px);
   justify-content: space-between;
   margin: 10px auto;
-  max-width: 1100px;
-  width: 95%;
 }
 
 #foundation,
@@ -29,16 +27,16 @@
   grid-column: 2/3;
 }
 
-#waste > div {
+#waste>div {
   transition: transform .5s;
 }
 
-#waste.offset-two > div:nth-last-child(1) {
+#waste.offset-two>div:nth-last-child(1) {
   transform: translatex(6vw);
 }
 
-#waste.offset-one > div:nth-last-child(1), 
-#waste.offset-two > div:nth-last-child(2) {
+#waste.offset-one>div:nth-last-child(1),
+#waste.offset-two>div:nth-last-child(2) {
   transform: translatex(3vw);
 }
 
@@ -61,30 +59,27 @@
 .card-pile {
   border: 1px solid black;
   border-radius: var(--border-radius);
-  box-shadow: inset 1px 1px 1px 0 rgba(255,255,255,0.5), inset -1px -1px 1px 0 rgba(0,0,0,0.5);
+  box-shadow: inset 1px 1px 1px 0 rgba(255, 255, 255, 0.5), inset -1px -1px 1px 0 rgba(0, 0, 0, 0.5);
   height: var(--card-height);
   position: relative;
   width: var(--card-width);
 }
 
-@media (min-width: 1900px) {
-  #play-area {
-    --card-height: 300px;
-    --card-width: 200px;
-  }
-}
-
-@media (min-width: 800px) and (max-width: 1899px) {
+@media (min-width: 890px) {
   #play-area {
     --card-height: 150px;
     --card-width: 100px;
+    max-width: 900px;
+    width: 80%;
   }
 }
 
-@media (max-width: 799px) {
+@media (max-width: 889px) {
   #play-area {
     --card-height: 75px;
     --card-width: 50px;
     --border-radius: 6px;
+    max-width: 500px;
+    width: 95%;
   }
 }
