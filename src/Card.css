@@ -7,17 +7,9 @@
     width: var(--card-width);
 }
 
-.card img {
-    height: var(--card-height);
-    width: var(--card-width);
-}
-
 .card-inner {
-    background-color: white;
-    border-radius: var(--border-radius);
     height: 100%;
     position: relative;
-    text-align: center;
     width: 100%;
 }
 
@@ -37,52 +29,107 @@
 }
 
 .back,
-.face {
+.front {
     /* Safari */
     -webkit-backface-visibility: hidden;
     backface-visibility: hidden;
     border: 1px solid black;
     border-radius: var(--border-radius);
-    overflow: hidden;
     height: 100%;
+    overflow: hidden;
     position: absolute;
     width: 100%;
 }
 
-.face {
+.back {
+    background-image: url("/public/cards/backs/blue.svg");
+    background-repeat: no-repeat;
+    background-size: 100%;
+}
+
+.front {
+    background-repeat: no-repeat;
     background-color: white;
     display: flex;
     transform: rotateY(180deg);
 }
 
-.face span {
-    display: none;
+.front.clubs {
+    background-position-y: 0;
 }
 
-.diamonds,
-.hearts {
-    color: red;
+.front.diamonds {
+    background-position-y: 33.33%;
 }
 
-@media (max-width: 450px) {
+.front.hearts {
+    background-position-y: 66.66%;
+}
 
-    .face img {
-        display: none;
+.front.spades {
+    background-position-y: 100%;
+}
+
+.front.rank_ace {
+    background-position-x: 0;
+}
+
+.front.rank_2 {
+    background-position-x: 8.33%;
+}
+
+.front.rank_3 {
+    background-position-x: 16.67%;
+}
+
+.front.rank_4 {
+    background-position-x: 25%;
+}
+
+.front.rank_5 {
+    background-position-x: 33.33%;
+}
+
+.front.rank_6 {
+    background-position-x: 41.65%;
+}
+
+.front.rank_7 {
+    background-position-x: 50%;
+}
+
+.front.rank_8 {
+    background-position-x: 58.33%;
+}
+
+.front.rank_9 {
+    background-position-x: 66.67%;
+}
+
+.front.rank_10 {
+    background-position-x: 75%;
+}
+
+.front.rank_jack {
+    background-position-x: 83.33%;
+}
+
+.front.rank_queen {
+    background-position-x: 91.65%;
+}
+
+.front.rank_king {
+    background-position-x: 100%;
+}
+
+@media (min-width: 890px) {
+    .front {
+        background-image: url("/public/cards/fronts/1300_classic_en-min.png");
     }
+}
 
-    .face span {
-        display: block;
-        font-size: 5vw;
-        font-weight: bold;
-        position: absolute;
-    }
-
-    .face span.rank {
-        margin: 0 3px;
-    }
-
-    .face span.suit {
-        font-size: 9vw;
-        transform: translate(50%, 25%);
+@media (max-width: 889px) {
+    .front {
+        background-image: url("/public/cards/fronts/650_simple-min.png");
     }
 }
