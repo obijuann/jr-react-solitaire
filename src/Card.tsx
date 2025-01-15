@@ -2,20 +2,6 @@ import './Card.css';
 
 import { CardComponentProps } from './@types/CardComponentProps';
 
-// const rankMap: Partial<Record<Ranks, string>> = {
-//   "jack": "J",
-//   "queen": "Q",
-//   "king": "K",
-//   "ace": "A"
-// };
-
-// const suitMap: Record<Suits, string> = {
-//   "clubs": "♣",
-//   "diamonds": "♦",
-//   "hearts": "♥",
-//   "spades": "♠️"
-// };
-
 export default function Card(props: CardComponentProps) {
 
   let styleOverride;
@@ -52,14 +38,9 @@ export default function Card(props: CardComponentProps) {
       style={styleOverride}
     >
       <div className="card-inner">
-        <div className={`front ${['jack', 'queen', 'king'].includes(props.rank) ? "face" : "pip"} rank_${props.rank} ${props.suit}`}>
-          {/* <img src={`/cards/fronts/${props.suit}_${props.rank}.svg`} alt={`${props.rank} of ${props.suit}`} draggable="false"></img> */}
-          {/* <img className={`rank_${props.rank} ${props.suit}`} src={`/cards/anglo.svg`} alt={`${props.rank} of ${props.suit}`} draggable="false"></img> */}
-          {/* <span className="rank">{rankMap[props.rank] || props.rank}</span> */}
-          {/* <span className="suit">{suitMap[props.suit]}</span> */}
+        <div className={`front rank_${props.rank} ${props.suit}`}>
         </div>
         <div className="back">
-          {/* <img src={`/cards/backs/red.svg`} alt="card" draggable="false"></img> */}
         </div>
       </div>
     </div>

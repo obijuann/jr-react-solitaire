@@ -1,7 +1,5 @@
 #play-area {
   --border-radius: 12px;
-  --card-height: 175px;
-  --card-width: 125px;
   display: grid;
   grid-template-rows: var(--card-height) 1fr;
   grid-gap: 30px;
@@ -69,34 +67,24 @@
   width: var(--card-width);
 }
 
-/* @media (max-width: 965px) {
+@media (min-width: 1900px) {
   #play-area {
-    --card-width: calc(100vw / 8);
-    --card-height: calc(var(--card-width) * 1.4);
-  }
-
-  .card-pile {
-    --border-radius: 6px;
-  }
-} */
-
-@media (min-width: 961px) {
-  #play-area {
-    --card-width: 200px;
     --card-height: 300px;
+    --card-width: 200px;
   }
 }
 
-@media (min-width: 491px) and (max-width: 960px) {
+@media (min-width: 800px) and (max-width: 1899px) {
   #play-area {
-    --card-width: 100px;
     --card-height: 150px;
+    --card-width: 100px;
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 799px) {
   #play-area {
-    --card-width: 50px;
     --card-height: 75px;
+    --card-width: 50px;
+    --border-radius: 6px;
   }
 }
