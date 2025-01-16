@@ -32,12 +32,12 @@
 }
 
 #waste.offset-two>div:nth-last-child(1) {
-  transform: translatex(6vw);
+  transform: translatex(min(6vw, 120px));
 }
 
 #waste.offset-one>div:nth-last-child(1),
 #waste.offset-two>div:nth-last-child(2) {
-  transform: translatex(3vw);
+  transform: translatex(min(3vw, 80px));
 }
 
 #tableau {

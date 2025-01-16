@@ -38,10 +38,8 @@ export default function Card(props: CardComponentProps) {
       style={styleOverride}
     >
       <div className="card-inner">
-        <div className={`front rank_${props.rank} ${props.suit}`}>
-        </div>
-        <div className="back">
-        </div>
+        <div className="back" />
+        <div className={`front rank_${props.rank} ${props.suit}`} />
       </div>
     </div>
   );

@@ -2,7 +2,6 @@
     color: black;
     filter: drop-shadow(1px 1px 1px black);
     height: var(--card-height);
-    perspective: 1000px;
     position: absolute;
     width: var(--card-width);
 }
