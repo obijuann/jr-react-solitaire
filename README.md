@@ -8,11 +8,14 @@ Note, this is a personal project just to keep my skills current. It's not intend
 
 ## TODO
 
-These are some of the changes I'm still planning to make:
+These are some of the features that are coming in the future:
 
-- Card animation
+- Enable state management
+  - Restore from previous session
+  - Preferences
+- Enable card animation via preferences
+- Enable autocomplete via preferences
 - Configuration of game settings (e.g. timer/no-timer, card back design, etc.)
-- Saving game state to local storage for resumption on next load
 
 ## Available Scripts
 
