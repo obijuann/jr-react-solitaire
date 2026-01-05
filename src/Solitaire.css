@@ -27,7 +27,7 @@
   grid-column: 2/3;
 }
 
-#waste>div {
+#waste.anim>div {
   transition: transform .5s;
 }
 

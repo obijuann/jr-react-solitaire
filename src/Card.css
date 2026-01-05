@@ -17,10 +17,13 @@
 }
 
 /* Card flipping animation when turned face up */
+.card.anim.faceup .card-inner {
+    transition: transform .5s;
+}
+
 .card.faceup .card-inner {
     transform: rotateY(180deg);
     transform-style: preserve-3d;
-    transition: transform .5s;
 }
 
 .card.faceup .back {
