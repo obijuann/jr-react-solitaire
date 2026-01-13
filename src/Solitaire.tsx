@@ -11,6 +11,7 @@ import { ModalTypes } from "./@types/ModalTypes";
 import { PlayfieldState } from "./@types/PlayfieldState";
 import { Ranks } from "./@types/Ranks";
 import { Suits } from "./@types/Suits";
+import { PileTypes } from "./@types/PileTypes";
 
 const suits: Partial<Record<Suits, string>> = {
   "clubs": "black",
@@ -159,6 +160,40 @@ export default function Solitaire() {
   }
 
   /**
+   * Renders a card component
+   * @param cardData The card data props
+   * @param cardIndex The card index
+   * @param pileType The pile type
+   * @param pileIndex The pile index
+   * @returns 
+   */
+  function renderCard(cardData: CardData, cardIndex: number, pileType: PileTypes, pileIndex?: number) {
+
+    // Cards are only draggable if they are face up
+    let draggable = !!(cardData.face === "up");
+
+    // Only the last card on the waste pile should be draggable
+    if (pileType == "waste") {
+      draggable = cardIndex + 1 === playfieldState.waste.length;
+    }
+
+    return (
+      <Card
+        key={`${cardData.rank}_${cardData.suit}`}
+        rank={cardData.rank}
+        suit={cardData.suit}
+        face={cardData.face}
+        pileType={pileType}
+        pileIndex={pileIndex}
+        cardIndex={cardIndex}
+        draggable={draggable}
+        // We only care about offsets in the tableau pile
+        offset={pileType == "tableau" ? cardIndex * 3 : 0}
+      />
+    )
+  }
+
+  /**
    * Renders the draw pile of cards
    */
   function renderDrawPile() {
@@ -166,17 +201,7 @@ export default function Solitaire() {
       <div id="stock">
         <div id="draw" className="card-pile" onClick={drawCardHandler}>
           {playfieldState.draw.map((cardData, cardIndex) => {
-            return (
-              <Card
-                key={`${cardData.rank}_${cardData.suit}`}
-                draggable={false}
-                rank={cardData.rank}
-                suit={cardData.suit}
-                face={cardData.face}
-                pileType="draw"
-                cardIndex={cardIndex}
-              />
-            )
+            return renderCard(cardData, cardIndex, "draw");
           })
           }
         </div>
@@ -201,18 +226,7 @@ export default function Solitaire() {
     return (
       <div id="waste" onClick={pileClickHandler} className={className}>
         {playfieldState.waste.map((cardData, cardIndex) => {
-          const lastCard = cardIndex + 1 === playfieldState.waste.length;
-          return (
-            <Card
-              key={`${cardData.rank}_${cardData.suit}`}
-              draggable={lastCard}
-              rank={cardData.rank}
-              suit={cardData.suit}
-              face={cardData.face}
-              pileType="waste"
-              cardIndex={cardIndex}
-            />
-          )
+          return renderCard(cardData, cardIndex, "waste");
         })
         }
       </div>
@@ -238,18 +252,7 @@ export default function Solitaire() {
             >
               {
                 cardDataList.map((cardData: CardData, cardIndex: number) => {
-                  return (
-                    <Card
-                      key={`${cardData.rank}_${cardData.suit}`}
-                      draggable={!!(cardData.face === "up")}
-                      rank={cardData.rank}
-                      suit={cardData.suit}
-                      face={cardData.face}
-                      pileType="foundation"
-                      pileIndex={pileIndex}
-                      cardIndex={cardIndex}
-                    />
-                  )
+                  return renderCard(cardData, cardIndex, "foundation", pileIndex);
                 })
               }
             </div>)
@@ -277,19 +280,7 @@ export default function Solitaire() {
             >
               {
                 cardDataList.map((cardData: CardData, cardIndex: number) => {
-                  return (
-                    <Card
-                      key={`${cardData.rank}_${cardData.suit}`}
-                      draggable={!!(cardData.face === "up")}
-                      rank={cardData.rank}
-                      suit={cardData.suit}
-                      face={cardData.face}
-                      pileType="tableau"
-                      pileIndex={pileIndex}
-                      cardIndex={cardIndex}
-                      offset={cardIndex * 3}
-                    />
-                  )
+                  return renderCard(cardData, cardIndex, "tableau", pileIndex);
                 })
               }
             </div>)

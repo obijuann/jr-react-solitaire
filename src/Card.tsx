@@ -20,21 +20,21 @@ export default function Card(props: CardComponentProps) {
    * Handler invoked when the card element is dragged
    * @param {DragEvent} dragEvent Drag event
    */
-  // function onDragStart(dragEvent: React.DragEvent<HTMLDivElement>): void {
-  //   // Write the card data to the data transfer property.
-  //   // This will be read when the card is dropped on an appropriate card pile
-  //   dragEvent.dataTransfer.effectAllowed = "move";
-  //   dragEvent.dataTransfer.clearData();
-  //   dragEvent.dataTransfer.setData("cardData", JSON.stringify(props));
-  // }
+  function onDragStart(dragEvent: React.DragEvent<HTMLDivElement>): void {
+    // Write the card data to the data transfer property.
+    // This will be read when the card is dropped on an appropriate card pile
+    dragEvent.dataTransfer.effectAllowed = "move";
+    dragEvent.dataTransfer.clearData();
+    dragEvent.dataTransfer.setData("cardData", JSON.stringify(props));
+  }
 
   return (
     <div
       className={className}
-      // draggable={props.draggable}
+      draggable={props.draggable}
       data-carddata={JSON.stringify(props)}
       data-testid="card"
-      // onDragStart={onDragStart}
+      onDragStart={onDragStart}
       style={styleOverride}
     >
       <div className="card-inner">
