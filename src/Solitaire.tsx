@@ -83,6 +83,23 @@ export default function Solitaire() {
   }
 
   /**
+   * Handler invoked when the card element is dragged
+   * @param {DragEvent} dragEvent Drag event
+   */
+  function dragStartHandler(dragEvent: React.DragEvent<HTMLDivElement>): void {
+    // Write the card data to the data transfer property.
+    // This will be read when the card is dropped on an appropriate card pile
+    dragEvent.dataTransfer.effectAllowed = "move";
+    dragEvent.dataTransfer.clearData();
+
+    if (dragEvent?.target) {
+      let cardElement = dragEvent.target as HTMLDivElement;
+      let cardData = cardElement.getAttribute("data-carddata")
+      cardData && dragEvent.dataTransfer.setData("cardData", cardData);
+    }
+  }
+
+  /**
    * Invoked when drawing cards from the draw pile
    */
   function drawCardHandler(e: React.MouseEvent) {
@@ -186,6 +203,7 @@ export default function Solitaire() {
         pileType={pileType}
         pileIndex={pileIndex}
         cardIndex={cardIndex}
+        onDragStart={dragStartHandler}
         draggable={draggable}
         // We only care about offsets in the tableau pile
         offset={pileType == "tableau" ? cardIndex * 3 : 0}
