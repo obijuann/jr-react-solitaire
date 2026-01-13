@@ -44,7 +44,7 @@
 }
 
 .back {
-    background-image: url("/public/cards/backs/blue.svg");
+    background-image: url("/cards/backs/blue.svg");
     background-repeat: no-repeat;
     background-size: 100%;
 }
@@ -126,12 +126,12 @@
 
 @media (min-width: 890px) {
     .front {
-        background-image: url("/public/cards/fronts/1300_classic_en-min.png");
+        background-image: url("/cards/fronts/1300_classic_en-min.png");
     }
 }
 
 @media (max-width: 889px) {
     .front {
-        background-image: url("/public/cards/fronts/650_simple-min.png");
+        background-image: url("/cards/fronts/650_simple-min.png");
     }
 }
