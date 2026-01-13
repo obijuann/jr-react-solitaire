@@ -135,7 +135,8 @@ export default function Solitaire() {
 
     const tapppedCardData = JSON.parse(tappedCardElement.getAttribute("data-carddata") || "");
 
-    if (tapppedCardData && tapppedCardData.face === "up" && tappedCardElement.getAttribute("draggable") === "true") {
+    // TODO: Refactor this to traverse the stack to find the first valid move instead of using only the tapped card
+    if (tapppedCardData && tapppedCardData.face === "up") {
       // Check to see if the card can be moved to one of the foundation piles
       let result = playfieldState.foundation.findIndex((foundationCardPileData: CardData[]) => {
         return isValidMove(tapppedCardData, foundationCardPileData.length ? foundationCardPileData.slice(-1)[0] : undefined, "foundation");
