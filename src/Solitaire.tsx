@@ -139,39 +139,74 @@ export default function Solitaire() {
   function pileClickHandler(e: React.MouseEvent<HTMLDivElement>) {
 
     const target = e.target as HTMLDivElement;
-
     if (!target) {
       return;
     }
 
     // Get the card data from the tapped card
     const tappedCardElement = target.closest(".card");
-
-    if (!tappedCardElement) {
+    if (!tappedCardElement ||
+      tappedCardElement.getAttribute("draggable") === "false" ||
+      !tappedCardElement.hasAttribute("data-carddata")) {
       return;
     }
 
     const tapppedCardData = JSON.parse(tappedCardElement.getAttribute("data-carddata") || "");
+    if (!tapppedCardData) {
+      return;
+    }
 
-    // TODO: Refactor this to traverse the stack to find the first valid move instead of using only the tapped card
-    if (tapppedCardData && tapppedCardData.face === "up") {
-      // Check to see if the card can be moved to one of the foundation piles
-      let result = playfieldState.foundation.findIndex((foundationCardPileData: CardData[]) => {
-        return isValidMove(tapppedCardData, foundationCardPileData.length ? foundationCardPileData.slice(-1)[0] : undefined, "foundation");
+    // Check to see if the card can be moved to one of the foundation piles
+    let targetPileIndex = playfieldState.foundation.findIndex((foundationCardPileData: CardData[]) => {
+      return isValidMove(tapppedCardData, foundationCardPileData.length ? foundationCardPileData.slice(-1)[0] : undefined, "foundation");
+    })
+
+    if (targetPileIndex !== -1) {
+      moveCard(tapppedCardData, "foundation", targetPileIndex);
+      return;
+    }
+
+    // Check to see if this card can be moved to one of the tableau piles
+    let sourceCardIndex = -1;
+    if (tapppedCardData.pileType === "tableau") {
+
+      // If the tapped card was from a tableau pile, find the first valid move for any card in the tapped card's pile
+      targetPileIndex = playfieldState.tableau.findIndex((tableauCardPileDataList, tableauCardPileIndex) => {
+
+        // Skip checking the tapped card's pile
+        if (tapppedCardData.pileIndex === tableauCardPileIndex) {
+          return;
+        }
+
+        // Get the last card in the pile
+        let potentialTargetCardData = undefined;
+        if (tableauCardPileDataList && tableauCardPileDataList.length) {
+          potentialTargetCardData = tableauCardPileDataList.slice(-1)[0];
+        }
+
+        // Check the cards in the tapped card's pile to see if any can be moved to the potential target card
+        sourceCardIndex = playfieldState["tableau"][tapppedCardData.pileIndex].findLastIndex((cardData: CardData) => {
+          return cardData.face === "up" && isValidMove(cardData, potentialTargetCardData, "tableau")
+        });
+
+        // If a valid move was found, this will be target pile index
+        if (sourceCardIndex >= 0) {
+          return true;
+        }
       })
 
-      if (result !== -1) {
-        moveCard(tapppedCardData, "foundation", result);
-        return;
+      // If we have a valid source card and target pile, move that card and any subsequent cards
+      if (targetPileIndex >= 0 && sourceCardIndex >= 0) {
+        let cardToMove: CardData = playfieldState["tableau"][tapppedCardData.pileIndex][sourceCardIndex];
+        moveCard(cardToMove, "tableau", targetPileIndex, tapppedCardData.pileType, tapppedCardData.pileIndex, sourceCardIndex);
       }
-
-      // Check to see if this card can be moved to one of the tableau piles
-      result = playfieldState.tableau.findIndex((tableauCardPileData) => {
+    } else {
+      targetPileIndex = playfieldState.tableau.findIndex((tableauCardPileData) => {
         return isValidMove(tapppedCardData, tableauCardPileData.length ? tableauCardPileData.slice(-1)[0] : null, "tableau");
       })
 
-      if (result !== -1) {
-        moveCard(tapppedCardData, "tableau", result);
+      if (targetPileIndex !== -1) {
+        moveCard(tapppedCardData, "tableau", targetPileIndex);
       }
     }
   }
@@ -203,23 +238,16 @@ export default function Solitaire() {
       targetCardData = cardDataList.slice(-1)[0];
     }
 
-    // If moving cards between tableau piles, we need to traverse the entire target pile and find the first valid move
+    // If moving cards between tableau piles, we traverse the entire target pile and find the first valid move
     if (targetPileType == "tableau" && droppedCardData.pileType === "tableau" && !!droppedCardData.pileIndex) {
-      let validMoveCardIndex = playfieldState["tableau"][droppedCardData.pileIndex]
-        .findLastIndex((c: CardData) => {
-          return c.face === "up" && isValidMove(c, targetCardData, targetPileType)
-        });
+      let validMoveCardIndex = playfieldState["tableau"][droppedCardData.pileIndex].findLastIndex((cardData: CardData) => {
+        return cardData.face === "up" && isValidMove(cardData, targetCardData, targetPileType)
+      });
 
       // If a valid move was found, move that card and any subsequent cards
       if (validMoveCardIndex >= 0) {
         let cardToMove: CardData = playfieldState["tableau"][droppedCardData.pileIndex][validMoveCardIndex];
-
-        // Augment the card to move with the properties needed to move it
-        cardToMove.pileIndex = droppedCardData.pileIndex;
-        cardToMove.pileType = droppedCardData.pileType;
-        cardToMove.cardIndex = validMoveCardIndex;
-
-        moveCard(cardToMove, targetPileType, targetPileIndex);
+        moveCard(cardToMove, targetPileType, targetPileIndex, droppedCardData.pileType, droppedCardData.pileIndex, validMoveCardIndex);
       }
     } else {
       // See if this is a valid move for the dropped card
@@ -636,16 +664,24 @@ export default function Solitaire() {
    * @param {cardData} sourceCardData Card data for the source card
    * @param {string} targetPileType The type of target pile
    * @param {number} targetPileIndex The target pile index
+   * @param {string} sourcePileType The source pile type
+   * @param {number} sourcePileIndex The source pile index
+   * @param {number} sourceCardIndex The source card index
    */
-  function moveCard(sourceCardData: CardData, targetPileType: string, targetPileIndex: number) {
+  function moveCard(sourceCardData: CardData,
+    targetPileType: string,
+    targetPileIndex: number,
+    sourcePileType: string = sourceCardData.pileType,
+    sourcePileIndex: number = sourceCardData.pileIndex || 0,
+    sourceCardIndex: number = sourceCardData.cardIndex || 0) {
+
+    if (!sourcePileType || sourcePileIndex < 0 || sourceCardIndex < 0) {
+      return;
+    }
 
     const newPlayfieldState = structuredClone(playfieldState);
 
     // Remove the card (and any subsequent cards) from the source pile
-    const sourcePileType = sourceCardData.pileType as keyof PlayfieldState;
-    const sourcePileIndex = sourceCardData.pileIndex as number;
-    const sourceCardIndex = sourceCardData.cardIndex as number;
-
     let cardsToMove;
     switch (sourcePileType) {
       case "foundation":
