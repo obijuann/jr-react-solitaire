@@ -11,6 +11,7 @@ import { ModalTypes } from "./@types/ModalTypes";
 import { PlayfieldState } from "./@types/PlayfieldState";
 import { Ranks } from "./@types/Ranks";
 import { Suits } from "./@types/Suits";
+import { PileTypes } from "./@types/PileTypes";
 
 const suits: Partial<Record<Suits, string>> = {
   "clubs": "black",
@@ -82,6 +83,23 @@ export default function Solitaire() {
   }
 
   /**
+   * Handler invoked when the card element is dragged
+   * @param {DragEvent} dragEvent Drag event
+   */
+  function dragStartHandler(dragEvent: React.DragEvent<HTMLDivElement>): void {
+    // Write the card data to the data transfer property.
+    // This will be read when the card is dropped on an appropriate card pile
+    dragEvent.dataTransfer.effectAllowed = "move";
+    dragEvent.dataTransfer.clearData();
+
+    if (dragEvent?.target) {
+      let cardElement = dragEvent.target as HTMLDivElement;
+      let cardData = cardElement.getAttribute("data-carddata")
+      cardData && dragEvent.dataTransfer.setData("cardData", cardData);
+    }
+  }
+
+  /**
    * Invoked when drawing cards from the draw pile
    */
   function drawCardHandler(e: React.MouseEvent) {
@@ -121,40 +139,157 @@ export default function Solitaire() {
   function pileClickHandler(e: React.MouseEvent<HTMLDivElement>) {
 
     const target = e.target as HTMLDivElement;
-
     if (!target) {
       return;
     }
 
     // Get the card data from the tapped card
     const tappedCardElement = target.closest(".card");
-
-    if (!tappedCardElement) {
+    if (!tappedCardElement ||
+      tappedCardElement.getAttribute("draggable") === "false" ||
+      !tappedCardElement.hasAttribute("data-carddata")) {
       return;
     }
 
     const tapppedCardData = JSON.parse(tappedCardElement.getAttribute("data-carddata") || "");
+    if (!tapppedCardData) {
+      return;
+    }
 
-    if (tapppedCardData && tapppedCardData.face === "up" && tappedCardElement.getAttribute("draggable") === "true") {
-      // Check to see if the card can be moved to one of the foundation piles
-      let result = playfieldState.foundation.findIndex((foundationCardPileData: CardData[]) => {
-        return isValidMove(tapppedCardData, foundationCardPileData.length ? foundationCardPileData.slice(-1)[0] : undefined, "foundation");
+    // Check to see if the card can be moved to one of the foundation piles
+    let targetPileIndex = playfieldState.foundation.findIndex((foundationCardPileData: CardData[]) => {
+      return isValidMove(tapppedCardData, foundationCardPileData.length ? foundationCardPileData.slice(-1)[0] : undefined, "foundation");
+    })
+
+    if (targetPileIndex !== -1) {
+      moveCard(tapppedCardData, "foundation", targetPileIndex);
+      return;
+    }
+
+    // Check to see if this card can be moved to one of the tableau piles
+    let sourceCardIndex = -1;
+    if (tapppedCardData.pileType === "tableau") {
+
+      // If the tapped card was from a tableau pile, find the first valid move for any card in the tapped card's pile
+      targetPileIndex = playfieldState.tableau.findIndex((tableauCardPileDataList, tableauCardPileIndex) => {
+
+        // Skip checking the tapped card's pile
+        if (tapppedCardData.pileIndex === tableauCardPileIndex) {
+          return;
+        }
+
+        // Get the last card in the pile
+        let potentialTargetCardData: CardData | undefined = undefined;
+        if (tableauCardPileDataList && tableauCardPileDataList.length) {
+          potentialTargetCardData = tableauCardPileDataList.slice(-1)[0];
+        }
+
+        // Check the cards in the tapped card's pile to see if any can be moved to the potential target card
+        sourceCardIndex = playfieldState["tableau"][tapppedCardData.pileIndex].findLastIndex((cardData: CardData) => {
+          return cardData.face === "up" && isValidMove(cardData, potentialTargetCardData, "tableau")
+        });
+
+        // If a valid move was found, this will be target pile index
+        if (sourceCardIndex >= 0) {
+          return true;
+        }
       })
 
-      if (result !== -1) {
-        moveCard(tapppedCardData, "foundation", result);
-        return;
+      // If we have a valid source card and target pile, move that card and any subsequent cards
+      if (targetPileIndex >= 0 && sourceCardIndex >= 0) {
+        let cardToMove: CardData = playfieldState["tableau"][tapppedCardData.pileIndex][sourceCardIndex];
+        moveCard(cardToMove, "tableau", targetPileIndex, tapppedCardData.pileType, tapppedCardData.pileIndex, sourceCardIndex);
       }
-
-      // Check to see if this card can be moved to one of the tableau piles
-      result = playfieldState.tableau.findIndex((tableauCardPileData) => {
+    } else {
+      targetPileIndex = playfieldState.tableau.findIndex((tableauCardPileData) => {
         return isValidMove(tapppedCardData, tableauCardPileData.length ? tableauCardPileData.slice(-1)[0] : null, "tableau");
       })
 
-      if (result !== -1) {
-        moveCard(tapppedCardData, "tableau", result);
+      if (targetPileIndex !== -1) {
+        moveCard(tapppedCardData, "tableau", targetPileIndex);
       }
     }
+  }
+
+  /**
+   * Handler for the drop event when a card is dropped on a new pile
+   * @param {Event} e The drop event target
+   * @param {string} targetPileType The drop target pile type
+   * @param {number} targetPileIndex The drop target pile index
+   */
+  function dropHandler(e: React.DragEvent, targetPileType: string, targetPileIndex: number) {
+
+    if (!e || !e.dataTransfer || !e.target || !targetPileType) {
+      return;
+    }
+
+    // Get card data from the dropped card
+    const droppedCardDataString = e.dataTransfer.getData("cardData");
+    const droppedCardData = droppedCardDataString ? JSON.parse(droppedCardDataString) as CardData : null;
+    if (!droppedCardData || !droppedCardData.suit || !droppedCardData.rank) {
+      return;
+    }
+
+    // Get the last card in the pile
+    let targetCardData: CardData | undefined = undefined;
+    const cardDataList = playfieldState[targetPileType as keyof PlayfieldState][targetPileIndex];
+
+    if (cardDataList && cardDataList.length) {
+      targetCardData = cardDataList.slice(-1)[0];
+    }
+
+    // If moving cards between tableau piles, we traverse the entire target pile and find the first valid move
+    if (targetPileType == "tableau" && droppedCardData.pileType === "tableau" && !!droppedCardData.pileIndex) {
+      let validMoveCardIndex = playfieldState["tableau"][droppedCardData.pileIndex].findLastIndex((cardData: CardData) => {
+        return cardData.face === "up" && isValidMove(cardData, targetCardData, targetPileType)
+      });
+
+      // If a valid move was found, move that card and any subsequent cards
+      if (validMoveCardIndex >= 0) {
+        let cardToMove: CardData = playfieldState["tableau"][droppedCardData.pileIndex][validMoveCardIndex];
+        moveCard(cardToMove, targetPileType, targetPileIndex, droppedCardData.pileType, droppedCardData.pileIndex, validMoveCardIndex);
+      }
+    } else {
+      // See if this is a valid move for the dropped card
+      if (isValidMove(droppedCardData, targetCardData, targetPileType)) {
+        moveCard(droppedCardData, targetPileType, targetPileIndex);
+      }
+    }
+  }
+
+  /**
+   * Renders a card component
+   * @param cardData The card data props
+   * @param cardIndex The card index
+   * @param pileType The pile type
+   * @param pileIndex The pile index
+   * @returns 
+   */
+  function renderCard(cardData: CardData, cardIndex: number, pileType: PileTypes, pileIndex?: number) {
+
+    // Cards are only draggable if they are face up
+    let draggable = !!(cardData.face === "up");
+
+    // Only the last card on the waste pile should be draggable
+    if (pileType == "waste") {
+      draggable = cardIndex + 1 === playfieldState.waste.length;
+    }
+
+    return (
+      <Card
+        key={`${cardData.rank}_${cardData.suit}`}
+        rank={cardData.rank}
+        suit={cardData.suit}
+        face={cardData.face}
+        pileType={pileType}
+        pileIndex={pileIndex}
+        cardIndex={cardIndex}
+        onDragStart={dragStartHandler}
+        draggable={draggable}
+        // We only care about offsets in the tableau pile
+        offset={pileType == "tableau" ? cardIndex * 3 : 0}
+      />
+    )
   }
 
   /**
@@ -165,17 +300,7 @@ export default function Solitaire() {
       <div id="stock">
         <div id="draw" className="card-pile" onClick={drawCardHandler}>
           {playfieldState.draw.map((cardData, cardIndex) => {
-            return (
-              <Card
-                key={`${cardData.rank}_${cardData.suit}`}
-                draggable={false}
-                rank={cardData.rank}
-                suit={cardData.suit}
-                face={cardData.face}
-                pileType="draw"
-                cardIndex={cardIndex}
-              />
-            )
+            return renderCard(cardData, cardIndex, "draw");
           })
           }
         </div>
@@ -200,18 +325,7 @@ export default function Solitaire() {
     return (
       <div id="waste" onClick={pileClickHandler} className={className}>
         {playfieldState.waste.map((cardData, cardIndex) => {
-          const lastCard = cardIndex + 1 === playfieldState.waste.length;
-          return (
-            <Card
-              key={`${cardData.rank}_${cardData.suit}`}
-              draggable={lastCard}
-              rank={cardData.rank}
-              suit={cardData.suit}
-              face={cardData.face}
-              pileType="waste"
-              cardIndex={cardIndex}
-            />
-          )
+          return renderCard(cardData, cardIndex, "waste");
         })
         }
       </div>
@@ -237,18 +351,7 @@ export default function Solitaire() {
             >
               {
                 cardDataList.map((cardData: CardData, cardIndex: number) => {
-                  return (
-                    <Card
-                      key={`${cardData.rank}_${cardData.suit}`}
-                      draggable={!!(cardData.face === "up")}
-                      rank={cardData.rank}
-                      suit={cardData.suit}
-                      face={cardData.face}
-                      pileType="foundation"
-                      pileIndex={pileIndex}
-                      cardIndex={cardIndex}
-                    />
-                  )
+                  return renderCard(cardData, cardIndex, "foundation", pileIndex);
                 })
               }
             </div>)
@@ -276,19 +379,7 @@ export default function Solitaire() {
             >
               {
                 cardDataList.map((cardData: CardData, cardIndex: number) => {
-                  return (
-                    <Card
-                      key={`${cardData.rank}_${cardData.suit}`}
-                      draggable={!!(cardData.face === "up")}
-                      rank={cardData.rank}
-                      suit={cardData.suit}
-                      face={cardData.face}
-                      pileType="tableau"
-                      pileIndex={pileIndex}
-                      cardIndex={cardIndex}
-                      offset={cardIndex * 3}
-                    />
-                  )
+                  return renderCard(cardData, cardIndex, "tableau", pileIndex);
                 })
               }
             </div>)
@@ -518,39 +609,6 @@ export default function Solitaire() {
   }
 
   /**
-   * Handler for the drop event when a card is dropped on a new pile
-   * @param {Event} e The drop event target
-        * @param {string} targetPileType The drop target pile type
-        * @param {number} targetPileIndex The drop target pile index
-        */
-  function dropHandler(e: React.DragEvent, targetPileType: string, targetPileIndex: number) {
-
-    if (!e || !e.dataTransfer || !e.target || !targetPileType) {
-      return;
-    }
-
-    // Get card data from the dropped card
-    const droppedCardDataString = e.dataTransfer.getData("cardData");
-    const droppedCardData = droppedCardDataString ? JSON.parse(droppedCardDataString) : null;
-    if (!droppedCardData || !droppedCardData.suit || !droppedCardData.rank) {
-      return;
-    }
-
-    // Get the last card in the pile
-    let targetCardData;
-    const cardDataList = playfieldState[targetPileType as keyof PlayfieldState][targetPileIndex];
-
-    if (cardDataList && cardDataList.length) {
-      targetCardData = cardDataList.slice(-1)[0];
-    }
-
-    // See if this is a valid move
-    if (isValidMove(droppedCardData, targetCardData, targetPileType)) {
-      moveCard(droppedCardData, targetPileType, targetPileIndex);
-    }
-  }
-
-  /**
    * Returns true if the dropped card can be placed atop the pile card
    *
    * @param {cardData} droppedCardData Card data for the dropped or tapped card
@@ -606,16 +664,24 @@ export default function Solitaire() {
    * @param {cardData} sourceCardData Card data for the source card
    * @param {string} targetPileType The type of target pile
    * @param {number} targetPileIndex The target pile index
+   * @param {string} sourcePileType The source pile type
+   * @param {number} sourcePileIndex The source pile index
+   * @param {number} sourceCardIndex The source card index
    */
-  function moveCard(sourceCardData: CardData, targetPileType: string, targetPileIndex: number) {
+  function moveCard(sourceCardData: CardData,
+    targetPileType: string,
+    targetPileIndex: number,
+    sourcePileType: string = sourceCardData.pileType,
+    sourcePileIndex: number = sourceCardData.pileIndex || 0,
+    sourceCardIndex: number = sourceCardData.cardIndex || 0) {
+
+    if (!sourcePileType || sourcePileIndex < 0 || sourceCardIndex < 0) {
+      return;
+    }
 
     const newPlayfieldState = structuredClone(playfieldState);
 
     // Remove the card (and any subsequent cards) from the source pile
-    const sourcePileType = sourceCardData.pileType as keyof PlayfieldState;
-    const sourcePileIndex = sourceCardData.pileIndex as number;
-    const sourceCardIndex = sourceCardData.cardIndex as number;
-
     let cardsToMove;
     switch (sourcePileType) {
       case "foundation":
