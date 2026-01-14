@@ -177,6 +177,59 @@ export default function Solitaire() {
   }
 
   /**
+   * Handler for the drop event when a card is dropped on a new pile
+   * @param {Event} e The drop event target
+   * @param {string} targetPileType The drop target pile type
+   * @param {number} targetPileIndex The drop target pile index
+   */
+  function dropHandler(e: React.DragEvent, targetPileType: string, targetPileIndex: number) {
+
+    if (!e || !e.dataTransfer || !e.target || !targetPileType) {
+      return;
+    }
+
+    // Get card data from the dropped card
+    const droppedCardDataString = e.dataTransfer.getData("cardData");
+    const droppedCardData = droppedCardDataString ? JSON.parse(droppedCardDataString) as CardData : null;
+    if (!droppedCardData || !droppedCardData.suit || !droppedCardData.rank) {
+      return;
+    }
+
+    // Get the last card in the pile
+    let targetCardData = undefined;
+    const cardDataList = playfieldState[targetPileType as keyof PlayfieldState][targetPileIndex];
+
+    if (cardDataList && cardDataList.length) {
+      targetCardData = cardDataList.slice(-1)[0];
+    }
+
+    // If moving cards between tableau piles, we need to traverse the entire target pile and find the first valid move
+    if (targetPileType == "tableau" && droppedCardData.pileType === "tableau" && !!droppedCardData.pileIndex) {
+      let validMoveCardIndex = playfieldState["tableau"][droppedCardData.pileIndex]
+        .findLastIndex((c: CardData) => {
+          return c.face === "up" && isValidMove(c, targetCardData, targetPileType)
+        });
+
+      // If a valid move was found, move that card and any subsequent cards
+      if (validMoveCardIndex >= 0) {
+        let cardToMove: CardData = playfieldState["tableau"][droppedCardData.pileIndex][validMoveCardIndex];
+
+        // Augment the card to move with the properties needed to move it
+        cardToMove.pileIndex = droppedCardData.pileIndex;
+        cardToMove.pileType = droppedCardData.pileType;
+        cardToMove.cardIndex = validMoveCardIndex;
+
+        moveCard(cardToMove, targetPileType, targetPileIndex);
+      }
+    } else {
+      // See if this is a valid move for the dropped card
+      if (isValidMove(droppedCardData, targetCardData, targetPileType)) {
+        moveCard(droppedCardData, targetPileType, targetPileIndex);
+      }
+    }
+  }
+
+  /**
    * Renders a card component
    * @param cardData The card data props
    * @param cardIndex The card index
@@ -525,39 +578,6 @@ export default function Solitaire() {
 
     // Update the playfield
     setPlayfieldState(newPlayfieldState);
-  }
-
-  /**
-   * Handler for the drop event when a card is dropped on a new pile
-   * @param {Event} e The drop event target
-        * @param {string} targetPileType The drop target pile type
-        * @param {number} targetPileIndex The drop target pile index
-        */
-  function dropHandler(e: React.DragEvent, targetPileType: string, targetPileIndex: number) {
-
-    if (!e || !e.dataTransfer || !e.target || !targetPileType) {
-      return;
-    }
-
-    // Get card data from the dropped card
-    const droppedCardDataString = e.dataTransfer.getData("cardData");
-    const droppedCardData = droppedCardDataString ? JSON.parse(droppedCardDataString) : null;
-    if (!droppedCardData || !droppedCardData.suit || !droppedCardData.rank) {
-      return;
-    }
-
-    // Get the last card in the pile
-    let targetCardData;
-    const cardDataList = playfieldState[targetPileType as keyof PlayfieldState][targetPileIndex];
-
-    if (cardDataList && cardDataList.length) {
-      targetCardData = cardDataList.slice(-1)[0];
-    }
-
-    // See if this is a valid move
-    if (isValidMove(droppedCardData, targetCardData, targetPileType)) {
-      moveCard(droppedCardData, targetPileType, targetPileIndex);
-    }
   }
 
   /**
