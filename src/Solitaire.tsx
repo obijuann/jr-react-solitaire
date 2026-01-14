@@ -179,7 +179,7 @@ export default function Solitaire() {
         }
 
         // Get the last card in the pile
-        let potentialTargetCardData = undefined;
+        let potentialTargetCardData: CardData | undefined = undefined;
         if (tableauCardPileDataList && tableauCardPileDataList.length) {
           potentialTargetCardData = tableauCardPileDataList.slice(-1)[0];
         }
@@ -231,7 +231,7 @@ export default function Solitaire() {
     }
 
     // Get the last card in the pile
-    let targetCardData = undefined;
+    let targetCardData: CardData | undefined = undefined;
     const cardDataList = playfieldState[targetPileType as keyof PlayfieldState][targetPileIndex];
 
     if (cardDataList && cardDataList.length) {
