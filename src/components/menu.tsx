@@ -36,6 +36,7 @@ export default function Menu(props: MenuComponentProps) {
     });
 
     // Ensure submenus are cleared when the main menu is closed
+    // TODO: Make this logic work with the global state
     useEffect(() => {
         if (!isMenuVisible) {
             setSubmenuId("");

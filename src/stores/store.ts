@@ -172,8 +172,8 @@ export const useStore = create<StoreState>((set, get) => ({
             draw: structuredClone(playfield.draw),
             waste: structuredClone(playfield.waste),
         };
-        const undoQ = structuredClone(get().undoQueue || []);
-        undoQ.push(undoPileData);
+        const undoQueue = structuredClone(get().undoQueue || []);
+        undoQueue.push(undoPileData);
 
         if (!playfield.draw.length && playfield.waste.length) {
             playfield.draw = playfield.waste.reverse().map((c: CardData) => {
@@ -186,7 +186,7 @@ export const useStore = create<StoreState>((set, get) => ({
             last && playfield.waste.push(last);
         }
 
-        set(() => ({ playfield, undoQueue: undoQ }));
+        set(() => ({ playfield, undoQueue: undoQueue }));
         get().checkGameState();
     },
 
@@ -231,19 +231,19 @@ export const useStore = create<StoreState>((set, get) => ({
             undoPileData[targetPileType] = structuredClone(get().playfield[targetPileType]);
         }
 
-        const undoQ = structuredClone(get().undoQueue || []);
-        undoQ.push(undoPileData);
+        const undoQueue = structuredClone(get().undoQueue || []);
+        undoQueue.push(undoPileData);
 
-        set(() => ({ playfield: newPlayfield, undoQueue: undoQ, redoQueue: [] }));
+        set(() => ({ playfield: newPlayfield, undoQueue: undoQueue, redoQueue: [] }));
         get().checkGameState();
     },
 
     /** Undo the last recorded move. */
     undo: () => {
-        const undoQ = structuredClone(get().undoQueue || []);
-        if (!undoQ.length) return;
+        const undoQueue = structuredClone(get().undoQueue || []);
+        if (!undoQueue.length) return;
 
-        const lastMoveData = undoQ.pop() as Partial<PlayfieldState>;
+        const lastMoveData = undoQueue.pop() as Partial<PlayfieldState>;
         const current = structuredClone(get().playfield);
         const redoMoveData: Partial<PlayfieldState> = {};
 
@@ -255,18 +255,18 @@ export const useStore = create<StoreState>((set, get) => ({
             });
         }
 
-        const redoQ = structuredClone(get().redoQueue || []);
-        redoQ.push(redoMoveData);
+        const redoQueue = structuredClone(get().redoQueue || []);
+        redoQueue.push(redoMoveData);
 
-        set(() => ({ playfield: current, undoQueue: undoQ, redoQueue: redoQ }));
+        set(() => ({ playfield: current, undoQueue: undoQueue, redoQueue: redoQueue }));
     },
 
     /** Redo the last undone move. */
     redo: () => {
-        const redoQ = structuredClone(get().redoQueue || []);
-        if (!redoQ.length) return;
+        const redoQueue = structuredClone(get().redoQueue || []);
+        if (!redoQueue.length) return;
 
-        const lastMoveData = redoQ.pop() as Partial<PlayfieldState>;
+        const lastMoveData = redoQueue.pop() as Partial<PlayfieldState>;
         const current = structuredClone(get().playfield);
         const undoMoveData: Partial<PlayfieldState> = {};
 
@@ -278,10 +278,10 @@ export const useStore = create<StoreState>((set, get) => ({
             });
         }
 
-        const undoQ = structuredClone(get().undoQueue || []);
-        undoQ.push(undoMoveData);
+        const undoQueue = structuredClone(get().undoQueue || []);
+        undoQueue.push(undoMoveData);
 
-        set(() => ({ playfield: current, undoQueue: undoQ, redoQueue: redoQ }));
+        set(() => ({ playfield: current, undoQueue: undoQueue, redoQueue: redoQueue }));
     },
 
     /** Start the game timer and reset the elapsed time. */

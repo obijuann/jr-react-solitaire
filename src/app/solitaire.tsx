@@ -1,7 +1,5 @@
 import "./solitaire.css";
 
-import { useEffect } from 'react';
-
 import Card from "../components/card";
 import { CardData } from "../types/card-data";
 import Menu from "../components/menu";
@@ -18,8 +16,8 @@ const suits: Partial<Record<Suits, string>> = {
   "hearts": "red",
   "spades": "black"
 };
-const ranks: Ranks[] = ["ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "jack", "queen", "king"];
 
+const ranks: Ranks[] = ["ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "jack", "queen", "king"];
 
 export default function Solitaire() {
   const playfieldState = useStore(state => state.playfield);
@@ -41,18 +39,18 @@ export default function Solitaire() {
     stopTimer: state.stopTimer,
   }));
 
-  useEffect(() => {
-    actions.checkGameState();
-    // no event bus subscriptions required with store-driven actions
-    return () => {};
-    // run once
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
+  /**
+   * Prevents default actions on drag enter
+   * @param {Event} e Drag enter event
+   */
   function dragEnterHandler(e: React.DragEvent) {
     e.preventDefault();
   }
 
+  /**
+   * Prevents default actions on drag over
+   * @param {Event} e Drag over event
+   */
   function dragOverHander(e: React.DragEvent) {
     e.preventDefault();
   }
@@ -346,6 +344,7 @@ export default function Solitaire() {
 
   /**
    * Keyboard handler to close menus with 'm', 'M' or 'Esc'
+   * TODO: Get this working again
    */
   function keyDownHandler(e: React.KeyboardEvent) {
     if (!e || !e.key) {
@@ -357,7 +356,7 @@ export default function Solitaire() {
     }
   }
 
-  
+
 
   /**
    * Validate whether the dropped card can be placed onto the target pile
@@ -402,7 +401,7 @@ export default function Solitaire() {
     return false;
   }
 
-  
+
   return (
     <div id="play-area" data-testid="play-area" onClick={toggleMenu} onKeyDown={keyDownHandler}>
       {renderDrawPile()}
