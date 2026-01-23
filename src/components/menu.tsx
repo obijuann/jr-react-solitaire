@@ -1,4 +1,4 @@
-import './Menu.css';
+import './menu.css';
 
 import { useEffect, useState } from 'react';
 import useStore from '../stores/store';

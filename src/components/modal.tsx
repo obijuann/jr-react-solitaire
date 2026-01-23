@@ -1,4 +1,4 @@
-import './Modal.css';
+import './modal.css';
 
 import { ModalTypes } from '../types/modal-types';
 import React from 'react';

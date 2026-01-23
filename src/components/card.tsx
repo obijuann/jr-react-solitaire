@@ -1,4 +1,4 @@
-import './Card.css';
+import './card.css';
 
 import { CardData } from '../types/card-data';
 import { DragEventHandler } from 'react';
