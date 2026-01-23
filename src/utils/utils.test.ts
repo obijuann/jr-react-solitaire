@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { throttle } from './Utils';
+import { throttle } from './utils';
 
 /**
  * Unit tests for throttle utility ensuring it limits calls.

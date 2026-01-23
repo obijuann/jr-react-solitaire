@@ -1,6 +1,13 @@
 import './Card.css';
 
-import { CardComponentProps } from './@types/CardComponentProps';
+import { CardData } from '../types/card-data';
+import { DragEventHandler } from 'react';
+
+interface CardComponentProps extends CardData {
+    draggable?: boolean
+    onDragStart?: DragEventHandler
+    offset?: number
+}
 
 export default function Card(props: CardComponentProps) {
 

@@ -2,13 +2,13 @@ import '@testing-library/jest-dom/vitest';
 
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { expect, it, vi, beforeEach } from 'vitest';
-import useStore from './store';
+import useStore from '../stores/store';
 
 beforeEach(() => {
     useStore.setState({ menuVisible: true });
 });
 
-import Menu from './Menu';
+import Menu from './menu';
 
 it("renders the base menu component", () => {
     // Arrange + Act

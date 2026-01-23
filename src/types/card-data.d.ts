@@ -1,5 +1,5 @@
-import { Ranks } from "./Ranks"
-import { Suits } from "./Suits"
+import { Ranks } from "./ranks"
+import { Suits } from "./suits"
 
 export interface CardData {
     cardIndex?: number

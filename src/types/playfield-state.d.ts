@@ -1,4 +1,4 @@
-import { CardData } from "./CardData"
+import { CardData } from "./card-data"
 
 export interface PlayfieldState {
     draw: CardData[]

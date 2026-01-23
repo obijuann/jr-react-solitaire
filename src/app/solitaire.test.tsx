@@ -3,8 +3,8 @@ import '@testing-library/jest-dom/vitest';
 import { act, fireEvent, render, screen, cleanup } from '@testing-library/react';
 import { expect, it, describe, vi, afterEach } from 'vitest';
 
-import Solitaire from './Solitaire';
-import useStore from './store';
+import Solitaire from './solitaire';
+import useStore from '../stores/store';
 
 it('renders the play area', () => {
   // Arrange + Act

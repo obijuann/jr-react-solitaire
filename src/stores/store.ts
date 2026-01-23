@@ -1,10 +1,10 @@
 import { create } from 'zustand';
-import { PlayfieldState } from './@types/PlayfieldState';
-import { CardData } from './@types/CardData';
-import { ModalTypes } from './@types/ModalTypes';
-import { PileTypes } from './@types/PileTypes';
-import { Ranks } from './@types/Ranks';
-import { Suits } from './@types/Suits';
+import { PlayfieldState } from '../types/playfield-state';
+import { CardData } from '../types/card-data';
+import { ModalTypes } from '../types/modal-types';
+import { PileTypes } from '../types/pile-types';
+import { Ranks } from '../types/ranks';
+import { Suits } from '../types/suits';
 
 const suits: Partial<Record<Suits, string>> = {
     clubs: 'black',

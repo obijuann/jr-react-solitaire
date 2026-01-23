@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import useStore from './store';
-import { CardData } from './@types/CardData';
+import { CardData } from '../types/card-data';
 
 function makeDeck(): CardData[] {
   const suits = ['clubs', 'diamonds', 'hearts', 'spades'] as const;

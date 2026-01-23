@@ -1,13 +1,18 @@
 import './Menu.css';
 
 import { useEffect, useState } from 'react';
-import useStore from './store';
+import useStore from '../stores/store';
 
-import { MenuComponentProps } from './@types/MenuComponentProps';
-import { throttle } from './Utils';
+import { throttle } from '../utils/utils';
 
 const submenuArrowSize: number = 15;
 const submenuWidth: number = 300;
+
+interface MenuComponentProps {
+    gameActive: boolean
+    undoAvailable?: boolean
+    redoAvailable?: boolean
+}
 
 interface SubMenuPosStyle {
     left?: string

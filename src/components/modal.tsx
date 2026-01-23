@@ -1,9 +1,13 @@
 import './Modal.css';
 
-import { ModalComponentProps } from './@types/ModalComponentProps';
-import { ModalTypes } from './@types/ModalTypes';
+import { ModalTypes } from '../types/modal-types';
 import React from 'react';
-import useStore from './store';
+import useStore from '../stores/store';
+
+interface ModalComponentProps {
+    gameTime: string
+    modalType: ModalTypes
+}
 
 export default function Modal(props: ModalComponentProps) {
 

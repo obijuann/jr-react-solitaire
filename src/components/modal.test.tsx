@@ -3,8 +3,8 @@ import '@testing-library/jest-dom/vitest';
 import { expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 
-import Modal from './Modal';
-import useStore from './store';
+import Modal from './modal';
+import useStore from '../stores/store';
 
 it("renders game win modal", () => {
     // Arrange + Act

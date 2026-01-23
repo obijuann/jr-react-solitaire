@@ -1,16 +1,16 @@
-import "./Solitaire.css";
+import "./solitaire.css";
 
 import { useEffect } from 'react';
 
-import Card from "./Card";
-import { CardData } from "./@types/CardData";
-import Menu from "./Menu";
-import Modal from "./Modal";
-import { PlayfieldState } from "./@types/PlayfieldState";
-import { Ranks } from "./@types/Ranks";
-import { Suits } from "./@types/Suits";
-import { PileTypes } from "./@types/PileTypes";
-import useStore from './store';
+import Card from "../components/card";
+import { CardData } from "../types/card-data";
+import Menu from "../components/menu";
+import Modal from "../components/modal";
+import { PlayfieldState } from "../types/playfield-state";
+import { Ranks } from "../types/ranks";
+import { Suits } from "../types/suits";
+import { PileTypes } from "../types/pile-types";
+import useStore from '../stores/store';
 
 const suits: Partial<Record<Suits, string>> = {
   "clubs": "black",
@@ -68,8 +68,8 @@ export default function Solitaire() {
     dragEvent.dataTransfer.clearData();
 
     if (dragEvent?.target) {
-      let cardElement = dragEvent.target as HTMLDivElement;
-      let cardData = cardElement.getAttribute("data-carddata")
+      const cardElement = dragEvent.target as HTMLDivElement;
+      const cardData = cardElement.getAttribute("data-carddata")
       cardData && dragEvent.dataTransfer.setData("cardData", cardData);
     }
   }
@@ -124,7 +124,7 @@ export default function Solitaire() {
       })
 
       if (targetPileIndex >= 0 && sourceCardIndex >= 0) {
-        let cardToMove: CardData = playfieldState["tableau"][tapppedCardData.pileIndex][sourceCardIndex];
+        const cardToMove: CardData = playfieldState["tableau"][tapppedCardData.pileIndex][sourceCardIndex];
         actions.moveCard(cardToMove, "tableau", targetPileIndex, tapppedCardData.pileType, tapppedCardData.pileIndex, sourceCardIndex);
       }
     } else {
@@ -159,12 +159,12 @@ export default function Solitaire() {
     if (cardDataList && cardDataList.length) targetCardData = cardDataList.slice(-1)[0];
 
     if (targetPileType == "tableau" && droppedCardData.pileType === "tableau" && !!droppedCardData.pileIndex) {
-      let validMoveCardIndex = playfieldState["tableau"][droppedCardData.pileIndex].findLastIndex((cardData: CardData) => {
+      const validMoveCardIndex = playfieldState["tableau"][droppedCardData.pileIndex].findLastIndex((cardData: CardData) => {
         return cardData.face === "up" && isValidMove(cardData, targetCardData, targetPileType)
       });
 
       if (validMoveCardIndex >= 0) {
-        let cardToMove: CardData = playfieldState["tableau"][droppedCardData.pileIndex][validMoveCardIndex];
+        const cardToMove: CardData = playfieldState["tableau"][droppedCardData.pileIndex][validMoveCardIndex];
         actions.moveCard(cardToMove, targetPileType as PileTypes, targetPileIndex, droppedCardData.pileType, droppedCardData.pileIndex, validMoveCardIndex);
       }
     } else {
