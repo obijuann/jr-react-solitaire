@@ -1,17 +1,16 @@
 import "./Solitaire.css";
 
-import { publish, subscribe, unsubscribe } from "./Events";
-import { useEffect, useReducer, useRef, useState } from 'react';
+import { useEffect } from 'react';
 
 import Card from "./Card";
 import { CardData } from "./@types/CardData";
 import Menu from "./Menu";
 import Modal from "./Modal";
-import { ModalTypes } from "./@types/ModalTypes";
 import { PlayfieldState } from "./@types/PlayfieldState";
 import { Ranks } from "./@types/Ranks";
 import { Suits } from "./@types/Suits";
 import { PileTypes } from "./@types/PileTypes";
+import useStore from './store';
 
 const suits: Partial<Record<Suits, string>> = {
   "clubs": "black",
@@ -21,74 +20,50 @@ const suits: Partial<Record<Suits, string>> = {
 };
 const ranks: Ranks[] = ["ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "jack", "queen", "king"];
 
-const emptyPlayArea: PlayfieldState = {
-  "draw": [],
-  "waste": [],
-  "foundation": [[], [], [], []],
-  "tableau": [[], [], [], [], [], [], []]
-};
 
 export default function Solitaire() {
-
-  // Set up state management
-  const shuffledDeck = useRef<CardData[]>([]);
-  const timerInterval = useRef<ReturnType<typeof setInterval>>();
-  const [modalTypeDisplayed, setModalTypeDisplayed] = useState<ModalTypes>();
-  const [gameTimer, setGameTimer] = useState<number>(0);
-  const [playfieldState, setPlayfieldState] = useReducer(
-    (state: PlayfieldState, newState: Partial<PlayfieldState>) => ({ ...state, ...newState }),
-    emptyPlayArea
-  );
-
-
-  const undoQueue = useRef<Partial<PlayfieldState>[]>([]);
-  const redoQueue = useRef<Partial<PlayfieldState>[]>([]);
-
+  const playfieldState = useStore(state => state.playfield);
+  const gameTimer = useStore(state => state.gameTimer);
+  const modalTypeDisplayed = useStore(state => state.modalType);
+  const gameActive = useStore(state => !!state.shuffledDeck.length);
+  const undoAvailable = useStore(state => !!state.undoQueue.length);
+  const redoAvailable = useStore(state => !!state.redoQueue.length);
+  const actions = useStore(state => ({
+    newGame: state.newGame,
+    restartGame: state.restartGame,
+    exitGame: state.exitGame,
+    redo: state.redo,
+    undo: state.undo,
+    drawCard: state.drawCard,
+    moveCard: state.moveCard,
+    checkGameState: state.checkGameState,
+    startTimer: state.startTimer,
+    stopTimer: state.stopTimer,
+  }));
 
   useEffect(() => {
-    // Set listeners for various game events
-    subscribe("newGame", newGameHandler);
-    subscribe("restartGame", restartGameHandler);
-    subscribe("exitGame", exitGameHandler);
-    subscribe("redoMove", redoMoveHandler);
-    subscribe("undoMove", undoMoveHandler);
+    actions.checkGameState();
+    // no event bus subscriptions required with store-driven actions
+    return () => {};
+    // run once
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-    // Check to see if the user has won the game
-    checkGameState();
-
-    return () => {
-      // Remove listeners for game events
-      unsubscribe("newGame", newGameHandler);
-      unsubscribe("restartGame", restartGameHandler);
-      unsubscribe("exitGame", exitGameHandler);
-      unsubscribe("redoMove", redoMoveHandler);
-      unsubscribe("undoMove", undoMoveHandler);
-    };
-  });
-
-  /**
-   * Prevents default actions on drag enter
-   * @param {Event} e Drag enter event
-   */
   function dragEnterHandler(e: React.DragEvent) {
     e.preventDefault();
   }
 
-  /**
-   * Prevents default actions on drag over
-   * @param {Event} e Drag over event
-   */
   function dragOverHander(e: React.DragEvent) {
     e.preventDefault();
   }
 
   /**
-   * Handler invoked when the card element is dragged
-   * @param {DragEvent} dragEvent Drag event
+   * Handle the start of a drag operation on a card element.
+   * Serializes the card's `data-carddata` attribute onto the drag dataTransfer
+   * so drop targets can parse and use it.
+   * @param dragEvent The drag event from the DOM
    */
   function dragStartHandler(dragEvent: React.DragEvent<HTMLDivElement>): void {
-    // Write the card data to the data transfer property.
-    // This will be read when the card is dropped on an appropriate card pile
     dragEvent.dataTransfer.effectAllowed = "move";
     dragEvent.dataTransfer.clearData();
 
@@ -100,105 +75,57 @@ export default function Solitaire() {
   }
 
   /**
-   * Invoked when drawing cards from the draw pile
+   * Handle clicking the draw pile — prevents the default action and calls
+   * the store action to draw a card.
+   * @param e Mouse event from the click
    */
   function drawCardHandler(e: React.MouseEvent) {
     e.preventDefault();
-
-    // Add the current draw and waste pile information to the Undo queue, so it can be reversed
-    const undoPileData: Partial<PlayfieldState> =
-    {
-      draw: structuredClone(playfieldState.draw),
-      waste: structuredClone(playfieldState.waste)
-    };
-
-    undoQueue.current.push(undoPileData);
-
-    // Update the draw and waste piles
-    const newPlayfieldState: PlayfieldState = structuredClone(playfieldState);
-
-    // If the draw pile is empty, and the waste pile has cards, move the waste pile back to the draw pile
-    if (!newPlayfieldState.draw.length && newPlayfieldState.waste.length) {
-      // Also set the cards face down
-      newPlayfieldState.draw = newPlayfieldState.waste.reverse().map(cardData => { cardData.face = "down"; return cardData; });
-      newPlayfieldState.waste = [];
-    } else if (newPlayfieldState.draw.length) {
-      // Add the last card from the draw pile to the waste pile
-      const lastCardData = newPlayfieldState.draw.pop();
-      lastCardData && newPlayfieldState.waste.push(lastCardData);
-    }
-
-    // Update the playfield
-    setPlayfieldState(newPlayfieldState);
+    actions.drawCard();
   }
 
   /**
-   * Handles clicks on card piles to automatically move cards to new piles
-   * @param {Event} e The click event
+   * Handle clicks on piles (tableau, foundation, waste). Determines the
+   * clicked card and attempts an automatic move according to game rules.
+   * @param e Mouse event coming from the pile container
    */
   function pileClickHandler(e: React.MouseEvent<HTMLDivElement>) {
-
     const target = e.target as HTMLDivElement;
-    if (!target) {
-      return;
-    }
+    if (!target) return;
 
-    // Get the card data from the tapped card
     const tappedCardElement = target.closest(".card");
-    if (!tappedCardElement ||
-      tappedCardElement.getAttribute("draggable") === "false" ||
-      !tappedCardElement.hasAttribute("data-carddata")) {
-      return;
-    }
+    if (!tappedCardElement || tappedCardElement.getAttribute("draggable") === "false" || !tappedCardElement.hasAttribute("data-carddata")) return;
 
     const tapppedCardData = JSON.parse(tappedCardElement.getAttribute("data-carddata") || "");
-    if (!tapppedCardData) {
-      return;
-    }
+    if (!tapppedCardData) return;
 
-    // Check to see if the card can be moved to one of the foundation piles
     let targetPileIndex = playfieldState.foundation.findIndex((foundationCardPileData: CardData[]) => {
       return isValidMove(tapppedCardData, foundationCardPileData.length ? foundationCardPileData.slice(-1)[0] : undefined, "foundation");
     })
 
     if (targetPileIndex !== -1) {
-      moveCard(tapppedCardData, "foundation", targetPileIndex);
+      actions.moveCard(tapppedCardData, "foundation", targetPileIndex);
       return;
     }
 
-    // Check to see if this card can be moved to one of the tableau piles
     let sourceCardIndex = -1;
     if (tapppedCardData.pileType === "tableau") {
-
-      // If the tapped card was from a tableau pile, find the first valid move for any card in the tapped card's pile
       targetPileIndex = playfieldState.tableau.findIndex((tableauCardPileDataList, tableauCardPileIndex) => {
+        if (tapppedCardData.pileIndex === tableauCardPileIndex) return;
 
-        // Skip checking the tapped card's pile
-        if (tapppedCardData.pileIndex === tableauCardPileIndex) {
-          return;
-        }
-
-        // Get the last card in the pile
         let potentialTargetCardData: CardData | undefined = undefined;
-        if (tableauCardPileDataList && tableauCardPileDataList.length) {
-          potentialTargetCardData = tableauCardPileDataList.slice(-1)[0];
-        }
+        if (tableauCardPileDataList && tableauCardPileDataList.length) potentialTargetCardData = tableauCardPileDataList.slice(-1)[0];
 
-        // Check the cards in the tapped card's pile to see if any can be moved to the potential target card
         sourceCardIndex = playfieldState["tableau"][tapppedCardData.pileIndex].findLastIndex((cardData: CardData) => {
           return cardData.face === "up" && isValidMove(cardData, potentialTargetCardData, "tableau")
         });
 
-        // If a valid move was found, this will be target pile index
-        if (sourceCardIndex >= 0) {
-          return true;
-        }
+        if (sourceCardIndex >= 0) return true;
       })
 
-      // If we have a valid source card and target pile, move that card and any subsequent cards
       if (targetPileIndex >= 0 && sourceCardIndex >= 0) {
         let cardToMove: CardData = playfieldState["tableau"][tapppedCardData.pileIndex][sourceCardIndex];
-        moveCard(cardToMove, "tableau", targetPileIndex, tapppedCardData.pileType, tapppedCardData.pileIndex, sourceCardIndex);
+        actions.moveCard(cardToMove, "tableau", targetPileIndex, tapppedCardData.pileType, tapppedCardData.pileIndex, sourceCardIndex);
       }
     } else {
       targetPileIndex = playfieldState.tableau.findIndex((tableauCardPileData) => {
@@ -206,71 +133,54 @@ export default function Solitaire() {
       })
 
       if (targetPileIndex !== -1) {
-        moveCard(tapppedCardData, "tableau", targetPileIndex);
+        actions.moveCard(tapppedCardData, "tableau", targetPileIndex);
       }
     }
   }
 
   /**
-   * Handler for the drop event when a card is dropped on a new pile
-   * @param {Event} e The drop event target
-   * @param {string} targetPileType The drop target pile type
-   * @param {number} targetPileIndex The drop target pile index
+   * Handle dropping a dragged card onto a target pile. The dropped card data
+   * is read from `dataTransfer` and validated with `isValidMove` before
+   * dispatching `moveCard` on the store.
+   * @param e Drag event from the drop
+   * @param targetPileType The pile type being dropped onto ('tableau'|'foundation'|'waste')
+   * @param targetPileIndex The index of the target pile
    */
   function dropHandler(e: React.DragEvent, targetPileType: string, targetPileIndex: number) {
+    if (!e || !e.dataTransfer || !e.target || !targetPileType) return;
 
-    if (!e || !e.dataTransfer || !e.target || !targetPileType) {
-      return;
-    }
-
-    // Get card data from the dropped card
     const droppedCardDataString = e.dataTransfer.getData("cardData");
     const droppedCardData = droppedCardDataString ? JSON.parse(droppedCardDataString) as CardData : null;
-    if (!droppedCardData || !droppedCardData.suit || !droppedCardData.rank) {
-      return;
-    }
+    if (!droppedCardData || !droppedCardData.suit || !droppedCardData.rank) return;
 
-    // Get the last card in the pile
     let targetCardData: CardData | undefined = undefined;
     const cardDataList = playfieldState[targetPileType as keyof PlayfieldState][targetPileIndex];
 
-    if (cardDataList && cardDataList.length) {
-      targetCardData = cardDataList.slice(-1)[0];
-    }
+    if (cardDataList && cardDataList.length) targetCardData = cardDataList.slice(-1)[0];
 
-    // If moving cards between tableau piles, we traverse the entire target pile and find the first valid move
     if (targetPileType == "tableau" && droppedCardData.pileType === "tableau" && !!droppedCardData.pileIndex) {
       let validMoveCardIndex = playfieldState["tableau"][droppedCardData.pileIndex].findLastIndex((cardData: CardData) => {
         return cardData.face === "up" && isValidMove(cardData, targetCardData, targetPileType)
       });
 
-      // If a valid move was found, move that card and any subsequent cards
       if (validMoveCardIndex >= 0) {
         let cardToMove: CardData = playfieldState["tableau"][droppedCardData.pileIndex][validMoveCardIndex];
-        moveCard(cardToMove, targetPileType, targetPileIndex, droppedCardData.pileType, droppedCardData.pileIndex, validMoveCardIndex);
+        actions.moveCard(cardToMove, targetPileType as PileTypes, targetPileIndex, droppedCardData.pileType, droppedCardData.pileIndex, validMoveCardIndex);
       }
     } else {
-      // See if this is a valid move for the dropped card
       if (isValidMove(droppedCardData, targetCardData, targetPileType)) {
-        moveCard(droppedCardData, targetPileType, targetPileIndex);
+        actions.moveCard(droppedCardData, targetPileType as PileTypes, targetPileIndex);
       }
     }
   }
 
   /**
-   * Renders a card component
-   * @param cardData The card data props
-   * @param cardIndex The card index
-   * @param pileType The pile type
-   * @param pileIndex The pile index
-   * @returns 
+   * Render a single `Card` component with the appropriate props.
+   * @returns JSX.Element for the card
    */
   function renderCard(cardData: CardData, cardIndex: number, pileType: PileTypes, pileIndex?: number) {
-
-    // Cards are only draggable if they are face up
     let draggable = !!(cardData.face === "up");
 
-    // Only the last card on the waste pile should be draggable
     if (pileType == "waste") {
       draggable = cardIndex + 1 === playfieldState.waste.length;
     }
@@ -286,15 +196,12 @@ export default function Solitaire() {
         cardIndex={cardIndex}
         onDragStart={dragStartHandler}
         draggable={draggable}
-        // We only care about offsets in the tableau pile
         offset={pileType == "tableau" ? cardIndex * 3 : 0}
       />
     )
   }
 
-  /**
-   * Renders the draw pile of cards
-   */
+  /** Render the draw pile container */
   function renderDrawPile() {
     return (
       <div id="stock">
@@ -308,11 +215,8 @@ export default function Solitaire() {
     );
   }
 
-  /**
-   * Renders the waste pile of cards
-   */
+  /** Render the waste (talon) pile; adjusts classNames based on count */
   function renderWastePile() {
-
     let className = "";
     const wasteCardCount = playfieldState.waste.length;
 
@@ -332,9 +236,7 @@ export default function Solitaire() {
     );
   }
 
-  /**
-   * Renders the foundation section of the play area
-   */
+  /** Render the four foundation piles */
   function renderFoundation() {
     return (
       <div id="foundation">
@@ -360,9 +262,7 @@ export default function Solitaire() {
     );
   }
 
-  /**
-   * Renders the tableau section of the play area
-   */
+  /** Render the seven tableau piles */
   function renderTableau() {
     return (
       <div id="tableau">
@@ -388,14 +288,8 @@ export default function Solitaire() {
     );
   }
 
-  /**
-   * Renders the game time elapsed
-   */
+  /** Render the game timer */
   function renderGameTime() {
-    if (!timerInterval.current) {
-      return;
-    }
-
     return (
       <div id="timer">
         {getTimeElapsed()}
@@ -404,8 +298,8 @@ export default function Solitaire() {
   }
 
   /**
-   * Helper function to display a formatted time string
-   * @returns A formatted string showing the elapsed game time
+   * Build a `HH:MM:SS` time string from the numeric `gameTimer` seconds.
+   * Hours reset after 24.
    */
   function getTimeElapsed() {
     const seconds = Math.floor(gameTimer % 60);
@@ -414,7 +308,6 @@ export default function Solitaire() {
 
     let gameTimeElapsed = ""
 
-    // Only shows hours for really slow players
     if (hours) {
       gameTimeElapsed = `${hours}`.padStart(2, "0") + ":";
     }
@@ -423,40 +316,9 @@ export default function Solitaire() {
     return gameTimeElapsed;
   }
 
-  /**
-   * Resets the game time value and starts the clock
-   */
-  function startTimer() {
-    setGameTimer(0);
-    timerInterval.current = setInterval(() => {
-      setGameTimer(prevGameTimer => prevGameTimer + 1);
-    }, 1000);
-  }
-
-  /**
-   * Resets the game time value and restarts the clock
-   */
-  function restartTimer() {
-    stopTimer();
-    startTimer();
-  }
-
-  /**
-   * Stops the game timer clock
-   */
-  function stopTimer() {
-    clearInterval(timerInterval.current);
-    timerInterval.current = undefined;
-  }
-
-  /**
-   * Renders the "game finished" modal
-   */
+  /** Conditionally render a `Modal` when `modalTypeDisplayed` is present */
   function renderModal() {
-
-    if (!modalTypeDisplayed) {
-      return;
-    }
+    if (!modalTypeDisplayed) return;
 
     const gameTime = getTimeElapsed();
 
@@ -469,152 +331,38 @@ export default function Solitaire() {
   }
 
   /**
-   * Handler to toggle the menu and sub menu
-   * @param {Event} e Custom toggle event
-        */
+   * Toggle the global menu visibility when clicking on the play area or menu.
+   * Delegates to the store `toggleMenu` action.
+   */
   function toggleMenu(e: React.MouseEvent) {
     e.preventDefault();
 
     const target = e.target as HTMLDivElement;
 
     if (target && (target.id === "play-area" || target.id === "menu")) {
-      publish("toggleMenu", true);
+      useStore.getState().toggleMenu(true);
     }
   }
 
   /**
-   * Handler for keyboard events
-   * @param {Event} e Keyboard event
-        */
+   * Keyboard handler to close menus with 'm', 'M' or 'Esc'
+   */
   function keyDownHandler(e: React.KeyboardEvent) {
     if (!e || !e.key) {
       return;
     }
 
-    // Toggle the menu on Esc or m/M
     if (e.key === "m" || e.key === "M" || e.key === "Esc") {
-      publish("toggleMenu", true);
+      useStore.getState().toggleMenu(true);
     }
   }
 
+  
+
   /**
-   * Handler for new game custom event triggers
+   * Validate whether the dropped card can be placed onto the target pile
+   * according to simple Solitaire rules for tableau and foundation.
    */
-  function newGameHandler() {
-
-    // Close any open modal
-    setModalTypeDisplayed(undefined);
-
-    // Stop the timer
-    stopTimer();
-
-    // Create a new shuffled deck
-    shuffleDeck();
-
-    // Deal the deck
-    dealDeck();
-
-    // Start the timer
-    startTimer();
-  }
-
-  /**
-   * Handler for game restart custom event triggers
-   */
-  function restartGameHandler() {
-    // Close any open modal
-    setModalTypeDisplayed(undefined);
-
-    // Re-deal the current deck
-    dealDeck();
-
-    // Stop the current timer and reset
-    restartTimer();
-  }
-
-  /**
-   * Handler for exit game custom event triggers
-   */
-  function exitGameHandler() {
-    // Close any open modal
-    setModalTypeDisplayed(undefined);
-
-    // Stop the timer
-    stopTimer();
-
-    // Remove cards from the shuffled deck
-    shuffledDeck.current = [];
-
-    // Remove cards from playfield
-    setPlayfieldState(emptyPlayArea);
-  }
-
-  /**
-   * Handler for redo move custom event triggers
-   */
-  function redoMoveHandler() {
-    if (!redoQueue.current.length) {
-      return;
-    }
-
-    const lastMoveData = redoQueue.current.pop() as Partial<PlayfieldState>;
-    const newPlayfieldState: Partial<PlayfieldState> = structuredClone(playfieldState);
-    const undoMoveData: Partial<PlayfieldState> = {};
-
-    if (lastMoveData) {
-      Object.keys(lastMoveData).forEach(key => {
-        // Save the undo data from the current state
-        undoMoveData[key as keyof PlayfieldState] = structuredClone(playfieldState[key as keyof PlayfieldState]);
-
-        // Update the new state object with the data from the last move
-        newPlayfieldState[key as keyof PlayfieldState] = structuredClone(lastMoveData[key as keyof PlayfieldState]);
-      });
-    }
-
-    // Add undo move data to undo queue
-    undoQueue.current.push(undoMoveData);
-
-    // Update the playfield
-    setPlayfieldState(newPlayfieldState);
-  }
-
-  /**
-   * Handler for undo move custom event triggers
-   */
-  function undoMoveHandler() {
-
-    if (!undoQueue.current.length) {
-      return;
-    }
-
-    const lastMoveData = undoQueue.current.pop() as Partial<PlayfieldState>;
-    const newPlayfieldState: Partial<PlayfieldState> = structuredClone(playfieldState);
-    const redoMoveData: Partial<PlayfieldState> = {};
-
-    if (lastMoveData) {
-      Object.keys(lastMoveData).forEach(key => {
-        // Save the redo data from the current state
-        redoMoveData[key as keyof PlayfieldState] = structuredClone(playfieldState[key as keyof PlayfieldState]);
-
-        // Update the new state object with the data from the last move
-        newPlayfieldState[key as keyof PlayfieldState] = structuredClone(lastMoveData[key as keyof PlayfieldState]);
-      });
-    }
-
-    // Add redo move data to redo queue
-    redoQueue.current.push(redoMoveData);
-
-    // Update the playfield
-    setPlayfieldState(newPlayfieldState);
-  }
-
-  /**
-   * Returns true if the dropped card can be placed atop the pile card
-   *
-   * @param {cardData} droppedCardData Card data for the dropped or tapped card
-        * @param {cardData} targetPileCardData Card data for the target card
-        * @param {string} targetPileType Pile type the dropped/tapped card is targeting
-        */
   function isValidMove(droppedCardData: CardData, targetPileCardData: CardData | undefined, targetPileType: string) {
     if (!targetPileCardData && !droppedCardData) {
       return false;
@@ -624,19 +372,16 @@ export default function Solitaire() {
     const droppedCardDataRankIndex = ranks.indexOf(droppedCardData.rank);
 
     if (targetPileType === "tableau") {
-      // Kings are the only card that can be placed on an empty tableau pile
       if (!targetPileCardData && droppedCardData.rank === "king") {
         return true;
       }
 
-      // Valid moves must be descending ranks of alternating red/black suits
       if (targetPileCardData && suits[targetPileCardData.suit] !== suits[droppedCardData.suit] && droppedCardDataRankIndex + 1 === pileCardDataRankIndex) {
         return true;
       }
 
     } else if (targetPileType === "foundation") {
 
-      // Only move cards to the foundation if they're the last card on their pile
       const cardIndex = droppedCardData.cardIndex as number;
       const pileIndex = droppedCardData.pileIndex as number;
       const pileType = droppedCardData.pileType as keyof PlayfieldState;
@@ -645,12 +390,10 @@ export default function Solitaire() {
         return false;
       }
 
-      // Aces are the only card that can be placed on an empty foundation pile
       if (!targetPileCardData && droppedCardData.rank === "ace") {
         return true;
       }
 
-      // Valid moves must be ascending ranks of the same suit
       if (targetPileCardData && targetPileCardData.suit === droppedCardData.suit && droppedCardDataRankIndex - 1 === pileCardDataRankIndex) {
         return true;
       }
@@ -659,206 +402,7 @@ export default function Solitaire() {
     return false;
   }
 
-  /**
-   * Moves the souce card from its origin to the target pile
-   * @param {cardData} sourceCardData Card data for the source card
-   * @param {string} targetPileType The type of target pile
-   * @param {number} targetPileIndex The target pile index
-   * @param {string} sourcePileType The source pile type
-   * @param {number} sourcePileIndex The source pile index
-   * @param {number} sourceCardIndex The source card index
-   */
-  function moveCard(sourceCardData: CardData,
-    targetPileType: string,
-    targetPileIndex: number,
-    sourcePileType: string = sourceCardData.pileType,
-    sourcePileIndex: number = sourceCardData.pileIndex || 0,
-    sourceCardIndex: number = sourceCardData.cardIndex || 0) {
-
-    if (!sourcePileType || sourcePileIndex < 0 || sourceCardIndex < 0) {
-      return;
-    }
-
-    const newPlayfieldState = structuredClone(playfieldState);
-
-    // Remove the card (and any subsequent cards) from the source pile
-    let cardsToMove;
-    switch (sourcePileType) {
-      case "foundation":
-      case "tableau":
-        cardsToMove = newPlayfieldState[sourcePileType][sourcePileIndex].slice(sourceCardIndex);
-        newPlayfieldState[sourcePileType][sourcePileIndex] = newPlayfieldState[sourcePileType][sourcePileIndex].slice(0, sourceCardIndex);
-        break;
-      case "waste":
-        cardsToMove = newPlayfieldState.waste.slice(sourceCardIndex);
-        newPlayfieldState.waste = newPlayfieldState.waste.slice(0, sourceCardIndex);
-        break;
-      default:
-        return;
-    }
-
-    // Make sure any cards being moved are set to be face up
-    cardsToMove.forEach((cardData: CardData) => cardData.face = "up");
-
-    // Move cards to target pile
-    switch (targetPileType) {
-      case "foundation":
-      case "tableau":
-        newPlayfieldState[targetPileType][targetPileIndex] = newPlayfieldState[targetPileType][targetPileIndex].concat(cardsToMove);
-        break;
-      case "waste":
-        newPlayfieldState.waste = newPlayfieldState.waste.concat(cardsToMove);
-        break;
-      default:
-        return;
-    }
-
-    // Add this information to the Undo queue, so it can be reversed
-    const undoPileData: Partial<PlayfieldState> = {};
-
-    // Always include the source pile data
-    undoPileData[sourcePileType] = structuredClone(playfieldState[sourcePileType]);
-
-    // if the target pile was different than the source, include that too
-    if (sourcePileType !== targetPileType) {
-      undoPileData[targetPileType] = structuredClone(playfieldState[targetPileType]);
-    }
-
-    undoQueue.current.push(undoPileData);
-
-    // Reset the redo queue
-    redoQueue.current = [];
-
-    // Update the playfield state
-    setPlayfieldState(newPlayfieldState);
-  }
-
-  /**
-   * Resets the current deck and creates a new, shuffled deck
-   */
-  function shuffleDeck() {
-    // Reset the deck
-    const newDeck: CardData[] = [];
-
-    // Create an unshuffled deck of cards.
-    const suitsList = Object.keys(suits) as Suits[];
-    for (let si = 0; si < suitsList.length; si++) {
-      for (let ri = 0; ri < ranks.length; ri++) {
-        const card: CardData = { rank: ranks[ri], suit: suitsList[si], face: "down" };
-        newDeck.push(card);
-      }
-    }
-
-    // Shuffle the cards in the deck
-    for (let i = newDeck.length - 1; i > 0; i--) {
-      // Pick a random card from the deck
-      const j = Math.floor(Math.random() * i);
-
-      // Swap the card at the current index with the randomly chosen one
-      const temp = newDeck[i];
-      newDeck[i] = newDeck[j];
-      newDeck[j] = temp;
-    }
-
-    shuffledDeck.current = newDeck;
-  }
-
-  /**
-   * Deals the deck into the draw and tableau piles
-   */
-  function dealDeck() {
-
-    // Turn all cards face down
-    shuffledDeck.current.forEach(cardData => cardData.face = "down");
-
-    // Deal cards into the tableau piles
-    // Starting with the leftmost tableau pile, we deal cards accordingly
-    // Pile 1: 1 faceup card
-    // Pile 2: 1 facedown card + 1 faceup card
-    // Pile 3: 2 facedown cards + 1 faceup card
-    // etc.
-    let cardsToDeal = 1;
-    let cardIndex = 0;
-    const tableauCardData = []
-    for (let i = 0; i < playfieldState.tableau.length; i++) {
-      const cardDataList = [];
-      for (let i = 0; i < cardsToDeal; i++) {
-        // Create a card element and add it to the pile
-        cardDataList.push(shuffledDeck.current[cardIndex++]);
-      }
-      cardsToDeal++;
-      tableauCardData.push(cardDataList);
-    }
-
-    // Add the rest of the cards to the draw pile
-    const drawPileCardData = shuffledDeck.current.slice(cardIndex).reverse();
-
-    // Reset the undo/redo queues
-    undoQueue.current = [];
-    redoQueue.current = [];
-
-    // Update the game state
-    setPlayfieldState({ draw: drawPileCardData, tableau: tableauCardData, waste: [], foundation: [[], [], [], []] })
-  }
-
-  /**
-   * Checks the game state to see if any updates are needed
-   */
-  function checkGameState() {
-
-    // Checks the playfield to see if the game has been won
-    let numFoundationCards = 0;
-    playfieldState.foundation.forEach(pileCards => { numFoundationCards += pileCards.length; });
-
-    if (numFoundationCards === 52) {
-      // Stop the timer
-      stopTimer();
-
-      // Display the "winner" modal
-      setModalTypeDisplayed("gamewin");
-
-      return;
-    }
-
-    // Check to see which cards need to be flipped
-    // This step is needed so that the card flipping animation has something to transition to (face down => face up)
-    let updatePlayfield = false;
-    const newPlayfieldState = structuredClone(playfieldState);
-
-    // Flip the last card on each tableau pile
-    newPlayfieldState.tableau = playfieldState.tableau.map((cardDataList) => {
-      return cardDataList.map((cardData: CardData, cardIndex: number) => {
-        // Last card should always be up
-        const lastCard = cardIndex + 1 === cardDataList.length;
-
-        if (lastCard && cardData.face !== "up") {
-          updatePlayfield = true;
-          cardData.face = "up";
-        }
-
-        return cardData;
-      });
-    });
-
-    // Flip the last card on the waste pile
-    newPlayfieldState.waste = playfieldState.waste.map((cardData, cardIndex) => {
-      // Last card should always be up
-      const lastCard = cardIndex + 1 === playfieldState.waste.length;
-
-      if (lastCard && cardData.face !== "up") {
-        updatePlayfield = true;
-        cardData.face = "up";
-      }
-
-      return cardData;
-    });
-
-    // Update the playfield if any cards need to be updated
-    if (updatePlayfield) {
-      setPlayfieldState(newPlayfieldState);
-    }
-  }
-
+  
   return (
     <div id="play-area" data-testid="play-area" onClick={toggleMenu} onKeyDown={keyDownHandler}>
       {renderDrawPile()}
@@ -866,9 +410,9 @@ export default function Solitaire() {
       {renderFoundation()}
       {renderTableau()}
       <Menu
-        gameActive={!!shuffledDeck.current.length}
-        undoAvailable={!!undoQueue.current.length}
-        redoAvailable={!!redoQueue.current.length}
+        gameActive={gameActive}
+        undoAvailable={undoAvailable}
+        redoAvailable={redoAvailable}
       />
       {renderGameTime()}
       {renderModal()}

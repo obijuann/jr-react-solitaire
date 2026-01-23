@@ -3,7 +3,7 @@ import './Modal.css';
 import { ModalComponentProps } from './@types/ModalComponentProps';
 import { ModalTypes } from './@types/ModalTypes';
 import React from 'react';
-import { publish } from './Events';
+import useStore from './store';
 
 export default function Modal(props: ModalComponentProps) {
 
@@ -13,7 +13,7 @@ export default function Modal(props: ModalComponentProps) {
      */
     function newGameHandler(e: React.MouseEvent) {
         e.preventDefault();
-        publish("newGame");
+        useStore.getState().newGame();
     }
 
     /**

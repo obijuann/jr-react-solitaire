@@ -1,7 +1,7 @@
 import './Menu.css';
 
-import { publish, subscribe, unsubscribe } from './Events';
 import { useEffect, useState } from 'react';
+import useStore from './store';
 
 import { MenuComponentProps } from './@types/MenuComponentProps';
 import { throttle } from './Utils';
@@ -17,24 +17,27 @@ interface SubMenuPosStyle {
 export default function Menu(props: MenuComponentProps) {
 
     // Set up state management
-    const [isMenuVisible, setIsMenuVisible] = useState(true);
+    const isMenuVisible = useStore(state => state.menuVisible);
     const [submenuId, setSubmenuId] = useState("");
     const [subMenuPosStyle, setSubMenuPosStyle] = useState({});
     const [submenuArrowPos, setSubmenuArrowPos] = useState(0);
-
     useEffect(() => {
-        // Set listener for toggle menu event, which happens in the main Solitaire component
-        subscribe("toggleMenu", toggleMenu);
-
         // Close the submenu on resize
         window.addEventListener("resize", throttle(resizeHandler, 150));
 
         return () => {
-            // Remove listeners for game events
-            unsubscribe("toggleMenu", toggleMenu);
             window.removeEventListener("resize", throttle(resizeHandler, 150));
         };
     });
+
+    // Ensure submenus are cleared when the main menu is closed
+    useEffect(() => {
+        if (!isMenuVisible) {
+            setSubmenuId("");
+            setSubMenuPosStyle({});
+            setSubmenuArrowPos(0);
+        }
+    }, [isMenuVisible]);
 
     function renderSubmenu() {
         if (!isMenuVisible) {
@@ -126,31 +129,30 @@ export default function Menu(props: MenuComponentProps) {
         setSubmenuId("");
     }
 
-    /**
-     * Toggling the menu should dismiss the submenu first, then the main menu.
-     * Otherwise it should enable the main menu without a submenu
-     */
+    // Note: menu visibility is controlled by the global store; submenu clearing
+    // is handled via the effect watching `isMenuVisible` above.
 
     /**
+     * TODO: Move this logic to the store
      * Toggling the menu should dismiss the submenu first, then the main menu.
      * Otherwise it should enable the main menu without a submenu
      * @param {Event} e 
      * @param {boolean} hideMenus Flag to hide all menus
      */
-    function toggleMenu(e: React.MouseEvent, hideMenus: boolean): void {
-        e.preventDefault();
+    // function toggleMenu(e: React.MouseEvent, hideMenus: boolean): void {
+    //     e.preventDefault();
 
-        if (hideMenus) {
-            setIsMenuVisible(false);
-        } else if (submenuId || !isMenuVisible) {
-            setIsMenuVisible(true);
-        } else {
-            setIsMenuVisible(false);
-        }
+    //     if (hideMenus) {
+    //         setIsMenuVisible(false);
+    //     } else if (submenuId || !isMenuVisible) {
+    //         setIsMenuVisible(true);
+    //     } else {
+    //         setIsMenuVisible(false);
+    //     }
 
-        // Clear the submenu ID
-        setSubmenuId("");
-    }
+    //     // Clear the submenu ID
+    //     setSubmenuId("");
+    // }
 
     /**
      * Toggles the submenu
@@ -213,8 +215,8 @@ export default function Menu(props: MenuComponentProps) {
      */
     function newGameHandler(e: React.MouseEvent) {
         e.preventDefault();
-        toggleMenu(e, true);
-        publish("newGame");
+        useStore.getState().toggleMenu(true);
+        useStore.getState().newGame();
     }
 
     /**
@@ -223,8 +225,8 @@ export default function Menu(props: MenuComponentProps) {
      */
     function restartGameHandler(e: React.MouseEvent) {
         e.preventDefault();
-        toggleMenu(e, true);
-        publish("restartGame");
+        useStore.getState().toggleMenu(true);
+        useStore.getState().restartGame();
     }
 
     /**
@@ -232,22 +234,23 @@ export default function Menu(props: MenuComponentProps) {
      * @param {*} e React mouse event
      */
     function exitGameHandler(e: React.MouseEvent) {
-        toggleMenu(e, true);
-        publish("exitGame");
+        e.preventDefault();
+        useStore.getState().toggleMenu(true);
+        useStore.getState().exitGame();
     }
 
     /**
      * Handler for clicking on the "redo" menu option
      */
     function redoMoveHandler() {
-        publish("redoMove");
+        useStore.getState().redo();
     }
 
     /**
      * Handler for clicking on the "undo" menu option
      */
     function undoMoveHandler() {
-        publish("undoMove");
+        useStore.getState().undo();
     }
 
     return (
