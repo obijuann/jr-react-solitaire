@@ -9,6 +9,7 @@ import { Ranks } from "../types/ranks";
 import { Suits } from "../types/suits";
 import { PileTypes } from "../types/pile-types";
 import useStore from '../stores/store';
+import { getFormattedTimer } from "../utils/utils";
 
 const suits: Partial<Record<Suits, string>> = {
   "clubs": "black",
@@ -290,40 +291,19 @@ export default function Solitaire() {
   function renderGameTime() {
     return (
       <div id="timer">
-        {getTimeElapsed()}
+        {getFormattedTimer(gameTimer)}
       </div>
     )
-  }
-
-  /**
-   * Build a `HH:MM:SS` time string from the numeric `gameTimer` seconds.
-   * Hours reset after 24.
-   */
-  function getTimeElapsed() {
-    const seconds = Math.floor(gameTimer % 60);
-    const minutes = Math.floor((gameTimer / 60) % 60);
-    const hours = Math.floor((gameTimer / 60 / 60) % 24);
-
-    let gameTimeElapsed = ""
-
-    if (hours) {
-      gameTimeElapsed = `${hours}`.padStart(2, "0") + ":";
-    }
-    gameTimeElapsed += `${minutes}`.padStart(2, "0") + ":" + `${seconds}`.padStart(2, "0");
-
-    return gameTimeElapsed;
   }
 
   /** Conditionally render a `Modal` when `modalTypeDisplayed` is present */
   function renderModal() {
     if (!modalTypeDisplayed) return;
 
-    const gameTime = getTimeElapsed();
-
     return (
       <Modal
         modalType={modalTypeDisplayed}
-        gameTime={gameTime}
+        gameTime={getFormattedTimer(gameTimer)}
       />
     );
   }
@@ -355,8 +335,6 @@ export default function Solitaire() {
       useStore.getState().toggleMenu(true);
     }
   }
-
-
 
   /**
    * Validate whether the dropped card can be placed onto the target pile
@@ -400,7 +378,6 @@ export default function Solitaire() {
 
     return false;
   }
-
 
   return (
     <div id="play-area" data-testid="play-area" onClick={toggleMenu} onKeyDown={keyDownHandler}>

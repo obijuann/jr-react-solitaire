@@ -12,6 +12,7 @@ const suits: Partial<Record<Suits, string>> = {
     hearts: 'red',
     spades: 'black',
 };
+
 const ranks: Ranks[] = [
     'ace',
     '2',
