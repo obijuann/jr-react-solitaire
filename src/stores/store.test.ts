@@ -112,11 +112,17 @@ describe('Zustand store actions', () => {
       // Act
       useStore.getState().startTimer();
       vi.advanceTimersByTime(3100);
-      const t = useStore.getState().gameTimer;
+      let t = useStore.getState().gameTimer;
 
       // Assert
       expect(t).toBeGreaterThanOrEqual(3);
+
+      // Act
       useStore.getState().stopTimer();
+      
+      // Assert
+      t = useStore.getState().gameTimer;
+      expect(t).toEqual(0);
     } finally {
       vi.useRealTimers();
     }

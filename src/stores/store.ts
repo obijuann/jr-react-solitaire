@@ -380,7 +380,7 @@ export const useStore = create<StoreState>((set, get) => ({
         if (id) {
             clearInterval(id);
         }
-        set(() => ({ timerId: null }));
+        set(() => ({ timerId: null, gameTimer: 0 }));
     },
 
     /**
