@@ -9,6 +9,7 @@ import { Ranks } from "../types/ranks";
 import { Suits } from "../types/suits";
 import { PileTypes } from "../types/pile-types";
 import useStore from '../stores/store';
+import { useEffect } from 'react';
 import { getFormattedTimer } from "../utils/utils";
 
 const suits: Partial<Record<Suits, string>> = {
@@ -24,6 +25,7 @@ export default function Solitaire() {
   const playfieldState = useStore(state => state.playfield);
   const gameTimer = useStore(state => state.gameTimer);
   const modalTypeDisplayed = useStore(state => state.modalType);
+  const submenuIdDisplayed = useStore(state => state.submenuId);
   const gameActive = useStore(state => !!state.shuffledDeck.length);
   const undoAvailable = useStore(state => !!state.undoQueue.length);
   const redoAvailable = useStore(state => !!state.redoQueue.length);
@@ -39,6 +41,26 @@ export default function Solitaire() {
     startTimer: state.startTimer,
     stopTimer: state.stopTimer,
   }));
+
+  // Global keyboard handler to toggle menus with 'Esc'
+  useEffect(() => {
+    function globalKeyHandler(e: KeyboardEvent) {
+      if (!e || !e.key) return;
+
+      const store = useStore.getState();
+
+      if (e.key === 'Escape') {
+        if (store.submenuId) {
+          store.clearSubmenu();
+          return;
+        }
+        useStore.getState().toggleMenu();
+      }
+    }
+
+    window.addEventListener('keydown', globalKeyHandler);
+    return () => window.removeEventListener('keydown', globalKeyHandler);
+  }, []);
 
   /**
    * Prevents default actions on drag enter
@@ -186,7 +208,7 @@ export default function Solitaire() {
 
     return (
       <Card
-        key={`${cardData.rank}_${cardData.suit}`}
+        key={`${cardData.rank ?? 'x'}_${cardData.suit ?? 'x'}_${pileType}_${pileIndex ?? 0}_${cardIndex}`}
         rank={cardData.rank}
         suit={cardData.suit}
         face={cardData.face}
@@ -316,23 +338,19 @@ export default function Solitaire() {
     e.preventDefault();
 
     const target = e.target as HTMLDivElement;
+    const store = useStore.getState();
 
-    if (target && (target.id === "play-area" || target.id === "menu")) {
-      useStore.getState().toggleMenu(true);
-    }
-  }
+    // If click originated inside the menu, do not clear the submenu here —
+    // let the menu's own handlers manage it.
+    const clickedInsideMenu = (e.target as HTMLElement)?.closest && (e.target as HTMLElement).closest('#menu');
 
-  /**
-   * Keyboard handler to close menus with 'm', 'M' or 'Esc'
-   * TODO: Get this working again
-   */
-  function keyDownHandler(e: React.KeyboardEvent) {
-    if (!e || !e.key) {
+    if (store.submenuId && !clickedInsideMenu) {
+      store.clearSubmenu();
       return;
     }
 
-    if (e.key === "m" || e.key === "M" || e.key === "Esc") {
-      useStore.getState().toggleMenu(true);
+    if (target && (target.id === "play-area" || target.id === "menu")) {
+      useStore.getState().toggleMenu();
     }
   }
 
@@ -380,7 +398,7 @@ export default function Solitaire() {
   }
 
   return (
-    <div id="play-area" data-testid="play-area" onClick={toggleMenu} onKeyDown={keyDownHandler}>
+    <div id="play-area" data-testid="play-area" onClick={toggleMenu} className={submenuIdDisplayed ? 'submenu-open' : ''}>
       {renderDrawPile()}
       {renderWastePile()}
       {renderFoundation()}

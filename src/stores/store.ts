@@ -43,11 +43,15 @@ type StoreState = {
     redoQueue: Partial<PlayfieldState>[];
     modalType?: ModalTypes;
     menuVisible: boolean;
+    submenuId: string;
+    
     gameTimer: number;
     timerId?: number | null;
     // actions
     setPlayfield: (p: Partial<PlayfieldState>) => void;
     toggleMenu: (hideMenus?: boolean) => void;
+    toggleSubmenu: (id?: string | null) => void;
+    clearSubmenu: () => void;
     shuffleDeck: () => void;
     dealDeck: () => void;
     newGame: () => void;
@@ -76,6 +80,7 @@ export const useStore = create<StoreState>((set, get) => ({
     redoQueue: [],
     modalType: undefined,
     menuVisible: true,
+    submenuId: "",
     gameTimer: 0,
     timerId: null,
 
@@ -83,14 +88,37 @@ export const useStore = create<StoreState>((set, get) => ({
         set(state => ({ playfield: { ...state.playfield, ...p } }));
     },
 
-    /** Toggle the main menu visibility. If `hideMenus` is true the menu
-     * will be closed, otherwise it toggles current visibility. */
+    /** 
+     * Toggle the main menu visibility. If `hideMenus` is true the menu
+     * will be closed, otherwise it toggles current visibility.
+     */
     toggleMenu: (hideMenus = false) => {
         if (hideMenus) {
-            set(() => ({ menuVisible: false }));
+            set(() => ({ menuVisible: false, submenuId: "", subMenuPosStyle: {}, submenuArrowPos: 0 }));
             return;
         }
         set(state => ({ menuVisible: !state.menuVisible }));
+    },
+
+    /** Toggle or close a submenu. If `button` is omitted the submenu is closed. */
+    toggleSubmenu: (id?: string | null) => {
+        if (!id) {
+            set(() => ({ submenuId: "" }));
+            return;
+        }
+
+        const state = get();
+        if (state.submenuId) {
+            const oldId = state.submenuId;
+            set(() => ({ submenuId: "" }));
+            if (oldId === id) return;
+        }
+
+        set(() => ({ submenuId: id }));
+    },
+
+    clearSubmenu: () => {
+        set(() => ({ submenuId: "" }));
     },
 
     /** Build and shuffle a fresh 52-card deck and store it in `shuffledDeck`. */

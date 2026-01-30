@@ -5,7 +5,7 @@ import { expect, it, vi, beforeEach } from 'vitest';
 import useStore from '../stores/store';
 
 beforeEach(() => {
-    useStore.setState({ menuVisible: true });
+    useStore.setState({ menuVisible: true, submenuId: "" });
 });
 
 import Menu from './menu';

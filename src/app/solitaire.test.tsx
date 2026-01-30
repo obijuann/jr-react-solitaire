@@ -195,7 +195,7 @@ describe('Solitaire additional behavior', () => {
     expect(waste2.className).toEqual('offset-two');
   });
 
-  it('pressing m key closes the menu', () => {
+  it('pressing Esc key closes the menu', () => {
     const toggleOriginal = useStore.getState().toggleMenu;
     const spy = vi.fn();
     useStore.setState({ toggleMenu: spy });
@@ -204,7 +204,7 @@ describe('Solitaire additional behavior', () => {
     const area = screen.getByTestId('play-area');
 
     act(() => {
-      fireEvent.keyDown(area, { key: 'm' });
+      fireEvent.keyDown(area, { key: 'Escape' });
     });
 
     expect(spy).toHaveBeenCalled();

@@ -14,36 +14,37 @@ interface MenuComponentProps {
     redoAvailable?: boolean
 }
 
-interface SubMenuPosStyle {
-    left?: string
-    right?: string
-}
 
 export default function Menu(props: MenuComponentProps) {
 
     // Set up state management
     const isMenuVisible = useStore(state => state.menuVisible);
-    const [submenuId, setSubmenuId] = useState("");
-    const [subMenuPosStyle, setSubMenuPosStyle] = useState({});
+    const submenuId = useStore(state => state.submenuId);
+    const clearSubmenu = useStore(state => state.clearSubmenu);
+    const toggleSubmenu = useStore(state => state.toggleSubmenu);
+    const [subMenuPosStyle, setSubMenuPosStyle] = useState<Record<string, string>>({});
     const [submenuArrowPos, setSubmenuArrowPos] = useState(0);
+
     useEffect(() => {
         // Close the submenu on resize
-        window.addEventListener("resize", throttle(resizeHandler, 150));
+        const resizeHandler = throttle(() => {
+            clearSubmenu();
+        }, 150);
+        window.addEventListener("resize", resizeHandler);
 
         return () => {
-            window.removeEventListener("resize", throttle(resizeHandler, 150));
+            window.removeEventListener("resize", resizeHandler);
         };
-    });
+    }, [clearSubmenu]);
 
     // Ensure submenus are cleared when the main menu is closed
-    // TODO: Make this logic work with the global state
     useEffect(() => {
         if (!isMenuVisible) {
-            setSubmenuId("");
+            clearSubmenu();
             setSubMenuPosStyle({});
             setSubmenuArrowPos(0);
         }
-    }, [isMenuVisible]);
+    }, [isMenuVisible, clearSubmenu]);
 
     function renderSubmenu() {
         if (!isMenuVisible) {
@@ -129,90 +130,52 @@ export default function Menu(props: MenuComponentProps) {
     }
 
     /**
-     * Closes the submenu on window resize
-     */
-    function resizeHandler() {
-        setSubmenuId("");
-    }
-
-    // Note: menu visibility is controlled by the global store; submenu clearing
-    // is handled via the effect watching `isMenuVisible` above.
-
-    /**
-     * TODO: Move this logic to the store
-     * Toggling the menu should dismiss the submenu first, then the main menu.
-     * Otherwise it should enable the main menu without a submenu
-     * @param {Event} e 
-     * @param {boolean} hideMenus Flag to hide all menus
-     */
-    // function toggleMenu(e: React.MouseEvent, hideMenus: boolean): void {
-    //     e.preventDefault();
-
-    //     if (hideMenus) {
-    //         setIsMenuVisible(false);
-    //     } else if (submenuId || !isMenuVisible) {
-    //         setIsMenuVisible(true);
-    //     } else {
-    //         setIsMenuVisible(false);
-    //     }
-
-    //     // Clear the submenu ID
-    //     setSubmenuId("");
-    // }
-
-    /**
      * Toggles the submenu
      */
-    function toggleSubmenu(e: React.MouseEvent) {
+    function handleSubmenuToggle(e: React.MouseEvent<HTMLButtonElement>) {
+        const button = e.currentTarget as HTMLElement;
 
-        // If no menu ID was passed, close any existing submenus
-        const buttonTarget = e.target as HTMLButtonElement;
-
-        if (!buttonTarget || !buttonTarget.id) {
-            setSubmenuId("");
-            setSubMenuPosStyle(0);
+        if (!button || !button.id) {
+            // close any open submenu
+            toggleSubmenu(undefined);
+            setSubMenuPosStyle({});
+            setSubmenuArrowPos(0);
             return;
         }
 
-        const newSubmenuId = buttonTarget.id;
+        const newSubmenuId = button.id;
 
-        // Close any open submenus
-        if (submenuId) {
-            const oldSubmenuId = submenuId;
-            setSubmenuId("");
-            setSubMenuPosStyle(0);
+        // If same id clicked and submenu already open, toggleSubmenu will close it
+        // Compute positions locally so store doesn't handle DOM measurements
+        try {
+            // Calculate the positions of the submenu element and the arrow
+            const submenuViewportOffset = 20;
+            const clientRect = button.getBoundingClientRect();
+            const menuIconCenter = clientRect.left + (clientRect.width / 2);
+            const viewportWidth = window.innerWidth;
 
-            // If the same menu button was clicked again, we're done after closing the menu
-            if (oldSubmenuId === newSubmenuId) {
-                return;
+            // Make sure the submenu doesn't fall off the viewport
+            // Submenus positioned over the leftmost edge of the viewport is reset to the base offset from the left
+            // Otherwise, they should be positioned over the center of the button
+            // Note: This isn't super precise because we're not accounting for padding or scroll bars, but it's close enough
+            const subMenuPos = menuIconCenter - submenuWidth / 2;
+            let posStyle: Record<string, string> = { left: `${subMenuPos < 1 ? submenuViewportOffset : subMenuPos}px` };
+            // Submenus positioned over the rightmost edge of the viewport is reset to the base offset from the right
+            if (subMenuPos + submenuWidth + submenuViewportOffset > viewportWidth) {
+                posStyle = { right: `${submenuViewportOffset}px` };
             }
+
+            // The submenu arrow should point to the middle of the parent menu element
+            const arrowPos = Math.floor(menuIconCenter - submenuArrowSize);
+            // Open the submenu
+            setSubMenuPosStyle(posStyle);
+            setSubmenuArrowPos(arrowPos);
+        } catch (err) {
+            setSubMenuPosStyle({});
+            setSubmenuArrowPos(0);
         }
 
-        // Calculate the positions of the submenu element and the arrow
-        const submenuViewportOffset = 20;
-        const clientRect = buttonTarget.getBoundingClientRect();
-        const menuIconCenter = clientRect.left + (clientRect.width / 2);
-        const viewportWidth = window.innerWidth;
-
-        // Make sure the submenu doesn't fall off the viewport
-        // Submenus positioned over the leftmost edge of the viewport is reset to the base offset from the left
-        // Otherwise, they should be positioned over the center of the button
-        // Note: This isn't super precise because we're not accounting for padding or scroll bars, but it's close enough
-        const subMenuPos = menuIconCenter - submenuWidth / 2;
-        let subMenuPosStyle: SubMenuPosStyle = { left: `${subMenuPos < 1 ? submenuViewportOffset : subMenuPos}px` }
-
-        // Submenus positioned over the rightmost edge of the viewport is reset to the base offset from the right
-        if (subMenuPos + submenuWidth + submenuViewportOffset > viewportWidth) {
-            subMenuPosStyle = { right: `${submenuViewportOffset}px` };
-        }
-
-        // The submenu arrow should point to the middle of the parent menu element
-        const submenuArrowPos = Math.floor(menuIconCenter - submenuArrowSize);
-
-        // Open the submenu
-        setSubmenuId(newSubmenuId);
-        setSubMenuPosStyle(subMenuPosStyle);
-        setSubmenuArrowPos(submenuArrowPos);
+        toggleSubmenu(newSubmenuId);
     }
 
     /**
@@ -262,10 +225,10 @@ export default function Menu(props: MenuComponentProps) {
     return (
         <div id="menu" data-testid="menu" className={isMenuVisible ? "visible" : ""}>
             <div id="primary-menu">
-                <button className="primary" id="new-game" onClick={toggleSubmenu}>New</button>
+                <button className="primary" id="new-game" onClick={handleSubmenuToggle}>New</button>
                 <button className="primary" id="undo" disabled={!props.undoAvailable} onClick={undoMoveHandler}>Undo</button>
                 <button className="primary" id="redo" disabled={!props.redoAvailable} onClick={redoMoveHandler}>Redo</button>
-                <button className="primary" id="help" onClick={toggleSubmenu}>Help</button>
+                <button className="primary" id="help" onClick={handleSubmenuToggle}>Help</button>
                 {renderSubmenu()}
             </div>
         </div>
