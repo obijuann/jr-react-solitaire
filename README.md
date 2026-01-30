@@ -10,12 +10,11 @@ Note, this is a personal project just to keep my skills current. It's not intend
 
 These are some of the features that are coming in the future:
 
-- Enable state management
-  - Restore from previous session
-  - Preferences
-- Enable card animation via preferences
-- Enable autocomplete via preferences
-- Configuration of game settings (e.g. timer/no-timer, card back design, etc.)
+- Restore from previous session
+- User Preferences
+  - Enable card animation
+  - Enable autocomplete via preferences
+  - Configuration of game settings (e.g. timer/no-timer, card back design, etc.)
 
 ## Available Scripts
 
