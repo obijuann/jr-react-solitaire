@@ -2,6 +2,7 @@
  * Build a `HH:MM:SS` time string from a time value measured in seconds.
  * Hours reset after 24.
  * @param timeValue The time value (in seconds) to format
+ * @returns Formatted time string in `HH:MM:SS` (hours optional)
  */
 function getFormattedTimer(timeValue: number) {
     const seconds = Math.floor(timeValue % 60);
@@ -19,16 +20,16 @@ function getFormattedTimer(timeValue: number) {
 }
 
 /**
- * Simple version of the lodash throttle function
- * @param func Funtion to throttle
- * @param delay Delay in ms. Default is 250 
+ * Simple throttle helper. Returns a wrapper that limits `func` calls to
+ * once per `delay` milliseconds.
+ * @param func Function to throttle
+ * @param delay Delay in ms. Default is 250
+ * @returns A throttled function wrapper
  */
-// eslint-disable-next-line
-function throttle(func: any, delay: number = 250) {
+function throttle(func: (...args: unknown[]) => unknown, delay: number = 250) {
     let waiting = false;
 
-    // eslint-disable-next-line
-    return (...args: any[]) => {
+    return (...args: unknown[]) => {
         if (waiting) return;
 
         func(...args)

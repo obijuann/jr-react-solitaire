@@ -14,21 +14,24 @@ describe('throttle', () => {
   });
 
   it('calls the function immediately and then waits before calling again', () => {
+    // Arrange
     const fn = vi.fn();
     const throttled = throttle(fn, 1000);
 
+    // Act
     throttled();
     throttled();
     throttled();
 
+    // Assert
     expect(fn).toHaveBeenCalledTimes(1);
 
-    // advance time less than delay
+    // Advance time less than delay
     vi.advanceTimersByTime(500);
     throttled();
     expect(fn).toHaveBeenCalledTimes(1);
 
-    // advance past delay
+    // Advance past delay
     vi.advanceTimersByTime(600);
     throttled();
     expect(fn).toHaveBeenCalledTimes(2);

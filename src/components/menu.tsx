@@ -14,7 +14,12 @@ interface MenuComponentProps {
     redoAvailable?: boolean
 }
 
-
+/**
+ * Menu component.
+ * Renders the primary menu and any active submenu. Submenu positioning
+ * is calculated locally to avoid storing DOM measurements in the global store.
+ * @param props Component props
+ */
 export default function Menu(props: MenuComponentProps) {
 
     // Set up state management
@@ -46,6 +51,10 @@ export default function Menu(props: MenuComponentProps) {
         }
     }, [isMenuVisible, clearSubmenu]);
 
+    /**
+     * Render the currently selected submenu (if any).
+     * @returns JSX.Element | void
+     */
     function renderSubmenu() {
         if (!isMenuVisible) {
             return;
@@ -68,6 +77,10 @@ export default function Menu(props: MenuComponentProps) {
         }
     }
 
+    /**
+     * Render the "Start" submenu (new/restart/quit actions).
+     * @returns JSX.Element
+     */
     function renderStartSubmenu() {
         return (
             <div id="submenu" className="list" style={subMenuPosStyle}>
@@ -78,6 +91,10 @@ export default function Menu(props: MenuComponentProps) {
         );
     }
 
+    /**
+     * Render the help submenu with gameplay instructions.
+     * @returns JSX.Element
+     */
     function renderHelpSubmenu() {
         return (
             <div id="submenu" className="help" style={subMenuPosStyle}>
@@ -130,13 +147,15 @@ export default function Menu(props: MenuComponentProps) {
     }
 
     /**
-     * Toggles the submenu
+     * Toggle the submenu for a primary menu button. Calculates submenu
+     * position locally and then delegates visibility state to the store.
+     * @param e Mouse event from the button
      */
     function handleSubmenuToggle(e: React.MouseEvent<HTMLButtonElement>) {
         const button = e.currentTarget as HTMLElement;
 
         if (!button || !button.id) {
-            // close any open submenu
+            // Close any open submenu
             toggleSubmenu(undefined);
             setSubMenuPosStyle({});
             setSubmenuArrowPos(0);
@@ -179,8 +198,8 @@ export default function Menu(props: MenuComponentProps) {
     }
 
     /**
-     * Handler for clicking on the "New Game" menu option
-     * @param {*} e The event
+     * Handler for the "New Game" action; closes menus and starts a new game.
+     * @param e Mouse event
      */
     function newGameHandler(e: React.MouseEvent) {
         e.preventDefault();
@@ -189,8 +208,9 @@ export default function Menu(props: MenuComponentProps) {
     }
 
     /**
-     * Handler for clicking on the "Restart Game" menu option
-     * @param {*} e The event
+     * Handler for the "Restart Game" action; closes menus and
+     * restarts the current shuffled deck.
+     * @param e Mouse event
      */
     function restartGameHandler(e: React.MouseEvent) {
         e.preventDefault();
@@ -199,8 +219,8 @@ export default function Menu(props: MenuComponentProps) {
     }
 
     /**
-     * Handler for clicking on the "Exit Game" menu option
-     * @param {*} e React mouse event
+     * Handler for the "Quit Game" action; exits current game.
+     * @param e Mouse event
      */
     function exitGameHandler(e: React.MouseEvent) {
         e.preventDefault();
@@ -209,14 +229,14 @@ export default function Menu(props: MenuComponentProps) {
     }
 
     /**
-     * Handler for clicking on the "redo" menu option
+     * Dispatch a redo action to the store.
      */
     function redoMoveHandler() {
         useStore.getState().redo();
     }
 
     /**
-     * Handler for clicking on the "undo" menu option
+     * Dispatch an undo action to the store.
      */
     function undoMoveHandler() {
         useStore.getState().undo();

@@ -3,12 +3,12 @@ import '@testing-library/jest-dom/vitest';
 import { afterEach } from 'vitest';
 import { cleanup } from '@testing-library/react';
 
-// runs a cleanup after each test case (e.g. clearing jsdom)
+// Runs a cleanup after each test case (e.g. clearing jsdom)
 afterEach(() => {
   cleanup();
 });
 
-// Silence known react warning messages during tests that are noisy but
+// Silence known React warning messages during tests that are noisy but
 // intentional in the test environment (e.g. act warnings or duplicate key warnings).
 const originalConsoleError = console.error;
 const originalConsoleWarn = console.warn;

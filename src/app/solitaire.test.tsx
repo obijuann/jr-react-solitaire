@@ -75,6 +75,7 @@ it('Removes cards from the playfield when the game is exited', () => {
     useStore.getState().exitGame();
   });
 
+  // Assert
   expect(playArea.querySelector("#draw")?.childNodes.length).toEqual(0);
   expect(playArea.querySelector("#waste")?.childNodes.length).toEqual(0);
   playArea.querySelector("#foundation")?.childNodes.forEach(foundationPile => {
@@ -92,7 +93,7 @@ it('Removes cards from the playfield when the game is exited', () => {
 describe('Solitaire additional behavior', () => {
   afterEach(() => {
     cleanup();
-    // reset store to avoid cross-test leakage
+    // Reset store to avoid cross-test leakage
     useStore.setState({
       playfield: { draw: [], waste: [], foundation: [[], [], [], []], tableau: [[], [], [], [], [], [], []] },
       shuffledDeck: [],
@@ -106,17 +107,24 @@ describe('Solitaire additional behavior', () => {
   });
 
   it('formats timer correctly as HH:MM:SS', () => {
+    // Arrange
     useStore.setState({ gameTimer: 3661 }); // 1h 1m 1s
+
+    // Act
     render(<Solitaire />);
     const timer = screen.getByText(/01:01:01/);
+
+    // Assert
     expect(timer).toBeInTheDocument();
   });
 
   it('clicking draw calls store.drawCard', () => {
+    // Arrange
     const original = useStore.getState().drawCard;
     const spy = vi.fn();
     useStore.setState({ drawCard: spy });
 
+    // Act
     render(<Solitaire />);
     // click the draw pile element
     const drawElem = screen.getByTestId('play-area').querySelector('#draw') as HTMLElement;
@@ -126,30 +134,39 @@ describe('Solitaire additional behavior', () => {
       fireEvent.click(drawElem);
     });
 
+    // Assert
     expect(spy).toHaveBeenCalled();
     useStore.setState({ drawCard: original });
   });
 
   it('dragStart sets cardData on dataTransfer', () => {
+    // Arrange
     // Ensure there is a game with cards
     act(() => useStore.getState().newGame());
+
+    // Act
     render(<Solitaire />);
 
+    // Assert
     const firstCard = document.querySelector('.card[data-carddata]') as HTMLElement;
     expect(firstCard).toBeTruthy();
 
+    // Arrange
     const setData = vi.fn();
     const clearData = vi.fn();
-    const dataTransfer: any = { setData, clearData, effectAllowed: '' };
+    const dataTransfer = { setData, clearData, effectAllowed: '' };
 
+    // Act
     act(() => {
       fireEvent.dragStart(firstCard, { dataTransfer });
     });
 
+    // Assert
     expect(setData).toHaveBeenCalled();
   });
 
   it('dropping a king onto an empty tableau calls moveCard', () => {
+    // Arrange
     // Prepare a playfield with empty tableau
     useStore.setState({
       playfield: {
@@ -160,42 +177,49 @@ describe('Solitaire additional behavior', () => {
       }
     });
 
+    // Act
     const moveOriginal = useStore.getState().moveCard;
     const moveSpy = vi.fn();
     useStore.setState({ moveCard: moveSpy });
-
     render(<Solitaire />);
 
     // create a fake drag event with king
     const data = JSON.stringify({ rank: 'king', suit: 'hearts', cardIndex: 0, pileIndex: -1, pileType: 'draw' });
-    const dataTransfer: any = { getData: () => data };
-
+    const dataTransfer = { getData: () => data };
     const target = screen.getByTestId('play-area').querySelector('#tabpile0') as HTMLElement;
+
+    // Assert
     expect(target).toBeTruthy();
 
+    // Act
     act(() => {
       fireEvent.drop(target, { dataTransfer });
     });
 
+    // Assert
     expect(moveSpy).toHaveBeenCalled();
     useStore.setState({ moveCard: moveOriginal });
   });
 
   it('waste pile class changes with count', () => {
+    // Arrange
     useStore.setState({ playfield: { ...useStore.getState().playfield, waste: [{ rank: 'ace', suit: 'hearts', face: 'up' }, { rank: '2', suit: 'hearts', face: 'up' }] } });
     render(<Solitaire />);
     const waste = screen.getByTestId('play-area').querySelector('#waste') as HTMLElement;
     expect(waste.className).toEqual('offset-one');
 
+    // Act
     act(() => {
       useStore.setState({ playfield: { ...useStore.getState().playfield, waste: [{}, {}, {}] as any } });
     });
-
     const waste2 = screen.getByTestId('play-area').querySelector('#waste') as HTMLElement;
+    
+    // Assert
     expect(waste2.className).toEqual('offset-two');
   });
 
   it('pressing Esc key closes the menu', () => {
+    // Arrange
     const toggleOriginal = useStore.getState().toggleMenu;
     const spy = vi.fn();
     useStore.setState({ toggleMenu: spy });
@@ -203,10 +227,12 @@ describe('Solitaire additional behavior', () => {
     render(<Solitaire />);
     const area = screen.getByTestId('play-area');
 
+    // Act
     act(() => {
       fireEvent.keyDown(area, { key: 'Escape' });
     });
 
+    // Assert
     expect(spy).toHaveBeenCalled();
     useStore.setState({ toggleMenu: toggleOriginal });
   });

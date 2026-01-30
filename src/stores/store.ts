@@ -6,6 +6,7 @@ import { PileTypes } from '../types/pile-types';
 import { Ranks } from '../types/ranks';
 import { Suits } from '../types/suits';
 
+/** Mapping of suit name to display color used for game logic. */
 const suits: Partial<Record<Suits, string>> = {
     clubs: 'black',
     diamonds: 'red',
@@ -13,6 +14,7 @@ const suits: Partial<Record<Suits, string>> = {
     spades: 'black',
 };
 
+/** Ordered ranks from lowest to highest used for game rules. */
 const ranks: Ranks[] = [
     'ace',
     '2',
@@ -29,6 +31,7 @@ const ranks: Ranks[] = [
     'king',
 ];
 
+/** Template for an empty playfield used to reset or initialize state. */
 const emptyPlayArea: PlayfieldState = {
     draw: [],
     waste: [],
@@ -37,17 +40,26 @@ const emptyPlayArea: PlayfieldState = {
 };
 
 type StoreState = {
+    /** Current playfield layout (draw, waste, foundation, tableau). */
     playfield: PlayfieldState;
+    /** The current shuffled deck not yet dealt. */
     shuffledDeck: CardData[];
+    /** Stack of prior playfield states used for undo operations. */
     undoQueue: Partial<PlayfieldState>[];
+    /** Stack of undone playfield states used for redo operations. */
     redoQueue: Partial<PlayfieldState>[];
+    /** Optional modal currently displayed (e.g., 'gamewin'). */
     modalType?: ModalTypes;
+    /** Whether the main menu is visible. */
     menuVisible: boolean;
+    /** Identifier of the currently opened submenu (empty string when none). */
     submenuId: string;
-    
+    /** Elapsed game time in seconds. */
     gameTimer: number;
+    /** Interval id for the game timer, if running. */
     timerId?: number | null;
-    // actions
+
+    // Actions
     setPlayfield: (p: Partial<PlayfieldState>) => void;
     toggleMenu: (hideMenus?: boolean) => void;
     toggleSubmenu: (id?: string | null) => void;
@@ -73,6 +85,10 @@ type StoreState = {
     checkGameState: () => void;
 };
 
+/**
+ * Application store created with Zustand. Holds game playfield state,
+ * menu visibility, submenu id, timer and exposes actions for game play.
+ */
 export const useStore = create<StoreState>((set, get) => ({
     playfield: structuredClone(emptyPlayArea),
     shuffledDeck: [],
@@ -84,6 +100,11 @@ export const useStore = create<StoreState>((set, get) => ({
     gameTimer: 0,
     timerId: null,
 
+    /**
+     * Merge a partial playfield object into the current playfield state.
+     * @param {Partial<PlayfieldState>} p Partial playfield values to merge
+     * @returns {void}
+     */
     setPlayfield: (p: Partial<PlayfieldState>) => {
         set(state => ({ playfield: { ...state.playfield, ...p } }));
     },
@@ -94,7 +115,7 @@ export const useStore = create<StoreState>((set, get) => ({
      */
     toggleMenu: (hideMenus = false) => {
         if (hideMenus) {
-            set(() => ({ menuVisible: false, submenuId: "", subMenuPosStyle: {}, submenuArrowPos: 0 }));
+            set(() => ({ menuVisible: false, submenuId: "" }));
             return;
         }
         set(state => ({ menuVisible: !state.menuVisible }));
@@ -117,11 +138,16 @@ export const useStore = create<StoreState>((set, get) => ({
         set(() => ({ submenuId: id }));
     },
 
+    /**
+     * Clear any open submenu.
+     */
     clearSubmenu: () => {
         set(() => ({ submenuId: "" }));
     },
 
-    /** Build and shuffle a fresh 52-card deck and store it in `shuffledDeck`. */
+    /**
+     * Build and shuffle a fresh 52-card deck and store it in `shuffledDeck`.
+     */
     shuffleDeck: () => {
         const newDeck: CardData[] = [];
         const suitsList = Object.keys(suits) as Suits[];
@@ -142,7 +168,9 @@ export const useStore = create<StoreState>((set, get) => ({
         set(() => ({ shuffledDeck: newDeck }));
     },
 
-    /** Deal the shuffled deck into `tableau` and `draw` piles and reset undo/redo. */
+    /**
+     * Deal the shuffled deck into `tableau` and `draw` piles and reset undo/redo.
+     */
     dealDeck: () => {
         const deck = structuredClone(get().shuffledDeck || []);
         deck.forEach(c => (c.face = 'down'));
@@ -171,7 +199,9 @@ export const useStore = create<StoreState>((set, get) => ({
         get().checkGameState();
     },
 
-    /** Start a new game: reset modal, shuffle, deal and start timer. */
+    /**
+     * Start a new game: reset modals, shuffle, deal and start timer.
+     */
     newGame: () => {
         set(() => ({ modalType: undefined }));
         get().stopTimer();
@@ -180,7 +210,9 @@ export const useStore = create<StoreState>((set, get) => ({
         get().startTimer();
     },
 
-    /** Restart the current game: redeal the current shuffled deck and restart timer. */
+    /**
+     * Restart the current game: redeal the current shuffled deck and restart timer.
+     */
     restartGame: () => {
         set(() => ({ modalType: undefined }));
         get().dealDeck();
@@ -188,13 +220,17 @@ export const useStore = create<StoreState>((set, get) => ({
         get().startTimer();
     },
 
-    /** Exit the current game and clear playfield and deck. */
+    /**
+     * Exit the current game and clear playfield and deck.
+     */
     exitGame: () => {
         set(() => ({ modalType: undefined, shuffledDeck: [], playfield: structuredClone(emptyPlayArea) }));
         get().stopTimer();
     },
 
-    /** Draw a card from the draw pile to the waste, or recycle waste back to draw. */
+    /**
+     * Draw a card from the draw pile to the waste, or recycle waste back to draw.
+     */
     drawCard: () => {
         const playfield = structuredClone(get().playfield);
         const undoPileData: Partial<PlayfieldState> = {
@@ -219,7 +255,9 @@ export const useStore = create<StoreState>((set, get) => ({
         get().checkGameState();
     },
 
-    /** Move one or more cards from a source pile to a target pile and record undo data. */
+    /**
+     * Move one or more cards from a source pile to a target pile and record undo data.
+     */
     moveCard: (sourceCardData, targetPileType, targetPileIndex, sourcePileType = sourceCardData.pileType as PileTypes, sourcePileIndex = sourceCardData.pileIndex || 0, sourceCardIndex = sourceCardData.cardIndex || 0) => {
         if (!sourcePileType || sourcePileIndex < 0 || sourceCardIndex < 0) return;
 
@@ -267,7 +305,9 @@ export const useStore = create<StoreState>((set, get) => ({
         get().checkGameState();
     },
 
-    /** Undo the last recorded move. */
+    /**
+     * Undo the last recorded move.
+     */
     undo: () => {
         const undoQueue = structuredClone(get().undoQueue || []);
         if (!undoQueue.length) return;
@@ -278,9 +318,12 @@ export const useStore = create<StoreState>((set, get) => ({
 
         if (lastMoveData) {
             Object.keys(lastMoveData).forEach(key => {
-                redoMoveData[key as keyof PlayfieldState] = structuredClone(current[key as keyof PlayfieldState]);
-                // @ts-ignore
-                current[key] = structuredClone(lastMoveData[key as keyof PlayfieldState]);
+                const k = key as keyof PlayfieldState;
+                redoMoveData[k] = structuredClone(current[k]);
+                const newVal = lastMoveData[k];
+                if (newVal !== undefined) {
+                    current[k] = structuredClone(newVal) as PlayfieldState[typeof k];
+                }
             });
         }
 
@@ -290,7 +333,9 @@ export const useStore = create<StoreState>((set, get) => ({
         set(() => ({ playfield: current, undoQueue: undoQueue, redoQueue: redoQueue }));
     },
 
-    /** Redo the last undone move. */
+    /**
+     * Redo the last undone move.
+     */
     redo: () => {
         const redoQueue = structuredClone(get().redoQueue || []);
         if (!redoQueue.length) return;
@@ -301,9 +346,12 @@ export const useStore = create<StoreState>((set, get) => ({
 
         if (lastMoveData) {
             Object.keys(lastMoveData).forEach(key => {
-                undoMoveData[key as keyof PlayfieldState] = structuredClone(current[key as keyof PlayfieldState]);
-                // @ts-ignore
-                current[key] = structuredClone(lastMoveData[key as keyof PlayfieldState]);
+                const k = key as keyof PlayfieldState;
+                undoMoveData[k] = structuredClone(current[k]);
+                const newVal = lastMoveData[k];
+                if (newVal !== undefined) {
+                    current[k] = structuredClone(newVal) as PlayfieldState[typeof k];
+                }
             });
         }
 
@@ -313,7 +361,9 @@ export const useStore = create<StoreState>((set, get) => ({
         set(() => ({ playfield: current, undoQueue: undoQueue, redoQueue: redoQueue }));
     },
 
-    /** Start the game timer and reset the elapsed time. */
+    /**
+     * Start the game timer and reset the elapsed time.
+     */
     startTimer: () => {
         get().stopTimer();
         const id = window.setInterval(() => {
@@ -322,7 +372,9 @@ export const useStore = create<StoreState>((set, get) => ({
         set(() => ({ timerId: id, gameTimer: 0 }));
     },
 
-    /** Stop the game timer and clear the interval. */
+    /**
+     * Stop the game timer and clear the interval.
+     */
     stopTimer: () => {
         const id = get().timerId;
         if (id) {
@@ -331,7 +383,9 @@ export const useStore = create<StoreState>((set, get) => ({
         set(() => ({ timerId: null }));
     },
 
-    /** Inspect the playfield to flip necessary cards and detect a win. */
+    /**
+     * Inspect the playfield to flip necessary cards and detect a win.
+     */
     checkGameState: () => {
         const playfield = structuredClone(get().playfield);
         let numFoundationCards = 0;

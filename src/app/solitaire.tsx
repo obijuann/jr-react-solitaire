@@ -21,6 +21,11 @@ const suits: Partial<Record<Suits, string>> = {
 
 const ranks: Ranks[] = ["ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "jack", "queen", "king"];
 
+/**
+ * Main Solitaire component. Renders the play area, piles, menu and modal,
+ * and wires up global keyboard handlers and playfield interactions.
+ * @returns JSX.Element
+ */
 export default function Solitaire() {
   const playfieldState = useStore(state => state.playfield);
   const gameTimer = useStore(state => state.gameTimer);
@@ -341,7 +346,7 @@ export default function Solitaire() {
     const store = useStore.getState();
 
     // If click originated inside the menu, do not clear the submenu here —
-    // let the menu's own handlers manage it.
+    // Let the menu's own handlers manage it.
     const clickedInsideMenu = (e.target as HTMLElement)?.closest && (e.target as HTMLElement).closest('#menu');
 
     if (store.submenuId && !clickedInsideMenu) {

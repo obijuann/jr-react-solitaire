@@ -3,12 +3,25 @@ import './card.css';
 import { CardData } from '../types/card-data';
 import { DragEventHandler } from 'react';
 
+/**
+ * Props for the `Card` component. Extends `CardData` with render and
+ * interaction helpers.
+ */
 interface CardComponentProps extends CardData {
-    draggable?: boolean
-    onDragStart?: DragEventHandler
-    offset?: number
+  /** Whether the card is draggable. */
+  draggable?: boolean
+  /** Optional drag-start event handler. */
+  onDragStart?: DragEventHandler
+  /** Visual vertical offset (in vh) for stacked tableau rendering. */
+  offset?: number
 }
 
+/**
+ * Render a single playing card. The component renders front/back faces,
+ * applies suit/rank classes and supports dragging when `draggable` is true.
+ * @param props Card component props
+ * @returns JSX.Element
+ */
 export default function Card(props: CardComponentProps) {
 
   let styleOverride;
