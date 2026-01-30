@@ -1,18 +1,19 @@
 import "./solitaire.css";
 
+import { useEffect } from 'react';
 import Card from "../components/card";
-import { CardData } from "../types/card-data";
 import Menu from "../components/menu";
 import Modal from "../components/modal";
+import Timer from "../components/timer";
+import useStore from '../stores/store';
+import { CardData } from "../types/card-data";
+import { PileTypes } from "../types/pile-types";
 import { PlayfieldState } from "../types/playfield-state";
 import { Ranks } from "../types/ranks";
 import { Suits } from "../types/suits";
-import { PileTypes } from "../types/pile-types";
-import useStore from '../stores/store';
-import { useEffect } from 'react';
-import { getFormattedTimer } from "../utils/utils";
 
-const suits: Partial<Record<Suits, string>> = {
+/** Mapping of suit name to display color used for game logic. */
+const suitsToColorsMap: Partial<Record<Suits, string>> = {
   "clubs": "black",
   "diamonds": "red",
   "hearts": "red",
@@ -28,7 +29,6 @@ const ranks: Ranks[] = ["ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "ja
  */
 export default function Solitaire() {
   const playfieldState = useStore(state => state.playfield);
-  const gameTimer = useStore(state => state.gameTimer);
   const modalTypeDisplayed = useStore(state => state.modalType);
   const submenuIdDisplayed = useStore(state => state.submenuId);
   const gameActive = useStore(state => !!state.shuffledDeck.length);
@@ -42,9 +42,7 @@ export default function Solitaire() {
     undo: state.undo,
     drawCard: state.drawCard,
     moveCard: state.moveCard,
-    checkGameState: state.checkGameState,
-    startTimer: state.startTimer,
-    stopTimer: state.stopTimer,
+    checkGameState: state.checkGameState
   }));
 
   // Global keyboard handler to toggle menus with 'Esc'
@@ -314,15 +312,6 @@ export default function Solitaire() {
     );
   }
 
-  /** Render the game timer */
-  function renderGameTime() {
-    return (
-      <div id="timer">
-        {getFormattedTimer(gameTimer)}
-      </div>
-    )
-  }
-
   /** Conditionally render a `Modal` when `modalTypeDisplayed` is present */
   function renderModal() {
     if (!modalTypeDisplayed) return;
@@ -330,7 +319,6 @@ export default function Solitaire() {
     return (
       <Modal
         modalType={modalTypeDisplayed}
-        gameTime={getFormattedTimer(gameTimer)}
       />
     );
   }
@@ -376,7 +364,7 @@ export default function Solitaire() {
         return true;
       }
 
-      if (targetPileCardData && suits[targetPileCardData.suit] !== suits[droppedCardData.suit] && droppedCardDataRankIndex + 1 === pileCardDataRankIndex) {
+      if (targetPileCardData && suitsToColorsMap[targetPileCardData.suit] !== suitsToColorsMap[droppedCardData.suit] && droppedCardDataRankIndex + 1 === pileCardDataRankIndex) {
         return true;
       }
 
@@ -413,7 +401,7 @@ export default function Solitaire() {
         undoAvailable={undoAvailable}
         redoAvailable={redoAvailable}
       />
-      {renderGameTime()}
+      <Timer />
       {renderModal()}
     </div>
   );

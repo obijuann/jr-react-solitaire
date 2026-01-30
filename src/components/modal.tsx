@@ -1,11 +1,11 @@
 import './modal.css';
 
-import { ModalTypes } from '../types/modal-types';
 import React from 'react';
 import useStore from '../stores/store';
+import { ModalTypes } from '../types/modal-types';
+import { getFormattedTimer } from '../utils/utils';
 
 interface ModalComponentProps {
-    gameTime: string
     modalType: ModalTypes
 }
 
@@ -15,6 +15,8 @@ interface ModalComponentProps {
  * @param props Component props
  */
 export default function Modal(props: ModalComponentProps) {
+
+    const gameTimer = useStore(state => state.gameTimer);
 
     /**
      * Handler for the New Game button inside the modal. Starts a new game.
@@ -36,7 +38,7 @@ export default function Modal(props: ModalComponentProps) {
                 return (
                     <React.Fragment>
                         <span>Congratulations!</span>
-                        <span>Time: {props.gameTime}</span>
+                        <span>Time: {getFormattedTimer(gameTimer)}</span>
                         <button className="new-game" onClick={newGameHandler}>New Game</button>
                     </React.Fragment>
                 )

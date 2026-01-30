@@ -1,0 +1,7 @@
+#timer {
+    bottom: 20px;
+    color: yellow;
+    filter: drop-shadow(1px 1px 1px black);
+    font-size: 22px;
+    position: fixed;
+}
