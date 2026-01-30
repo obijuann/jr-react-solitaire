@@ -86,7 +86,7 @@ export default function Menu(props: MenuComponentProps) {
             <div id="submenu" className="list" style={subMenuPosStyle}>
                 <button className="secondary" id="new-game" onClick={newGameHandler}>New game</button>
                 <button className="secondary" id="restart" onClick={restartGameHandler} disabled={!props.gameActive}>Restart this game</button>
-                <button className="secondary" id="quit" onClick={exitGameHandler} disabled={!props.gameActive}>Quit this game</button>
+                <button className="secondary" id="quit" onClick={quitGameHandler} disabled={!props.gameActive}>Quit this game</button>
             </div>
         );
     }
@@ -219,13 +219,13 @@ export default function Menu(props: MenuComponentProps) {
     }
 
     /**
-     * Handler for the "Quit Game" action; exits current game.
+     * Handler for the "Quit Game" action; quits the current game.
      * @param e Mouse event
      */
-    function exitGameHandler(e: React.MouseEvent) {
+    function quitGameHandler(e: React.MouseEvent) {
         e.preventDefault();
         useStore.getState().toggleMenu(true);
-        useStore.getState().exitGame();
+        useStore.getState().quitGame();
     }
 
     /**

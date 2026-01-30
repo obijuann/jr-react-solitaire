@@ -53,7 +53,7 @@ it('Deals the cards when a new game event is published', () => {
   expect(playArea.querySelector("#menu")).toBeInTheDocument();
 });
 
-it('Removes cards from the playfield when the game is exited', () => {
+it('Removes cards from the playfield when the game is quit', () => {
   // Arrange
   render(<Solitaire />);
 
@@ -72,7 +72,7 @@ it('Removes cards from the playfield when the game is exited', () => {
   // Act
   act(() => {
     // Use the store action directly
-    useStore.getState().exitGame();
+    useStore.getState().quitGame();
   });
 
   // Assert

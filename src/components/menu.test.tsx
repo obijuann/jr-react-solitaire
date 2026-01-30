@@ -130,11 +130,11 @@ it("clicking the restart game button calls store.restartGame and closes all menu
     useStore.setState({ restartGame: original });
 });
 
-it("clicking the quit game button calls store.exitGame and closes all menus", () => {
+it("clicking the quit game button calls store.quitGame and closes all menus", () => {
     // Arrange
-    const original = useStore.getState().exitGame;
-    const exitSpy = vi.fn();
-    useStore.setState({ exitGame: exitSpy });
+    const original = useStore.getState().quitGame;
+    const quitGameSpy = vi.fn();
+    useStore.setState({ quitGame: quitGameSpy });
 
     // Act
     render(<Menu gameActive={true} />);
@@ -153,11 +153,11 @@ it("clicking the quit game button calls store.exitGame and closes all menus", ()
     fireEvent.click(quitGameButton);
 
     // Assert
-    expect(exitSpy).toHaveBeenCalled();
+    expect(quitGameSpy).toHaveBeenCalled();
     expect(screen.queryByRole('button', { name: 'Quit this game' })).not.toBeInTheDocument();
     expect(screen.getByTestId("menu").className).not.toEqual("visible");
 
-    useStore.setState({ exitGame: original });
+    useStore.setState({ quitGame: original });
 });
 
 it("renders the help submenu", () => {

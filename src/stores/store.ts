@@ -68,7 +68,7 @@ type StoreState = {
     dealDeck: () => void;
     newGame: () => void;
     restartGame: () => void;
-    exitGame: () => void;
+    quitGame: () => void;
     drawCard: () => void;
     moveCard: (
         sourceCardData: CardData,
@@ -221,10 +221,10 @@ export const useStore = create<StoreState>((set, get) => ({
     },
 
     /**
-     * Exit the current game and clear playfield and deck.
+     * Quit the current game and clear playfield and deck.
      */
-    exitGame: () => {
-        set(() => ({ modalType: undefined, shuffledDeck: [], playfield: structuredClone(emptyPlayArea) }));
+    quitGame: () => {
+        set(() => ({ modalType: undefined, shuffledDeck: [], playfield: structuredClone(emptyPlayArea), undoQueue: [], redoQueue: [] }));
         get().stopTimer();
     },
 

@@ -37,7 +37,7 @@ export default function Solitaire() {
   const actions = useStore(state => ({
     newGame: state.newGame,
     restartGame: state.restartGame,
-    exitGame: state.exitGame,
+    quitGame: state.quitGame,
     redo: state.redo,
     undo: state.undo,
     drawCard: state.drawCard,
