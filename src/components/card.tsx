@@ -1,7 +1,7 @@
 import './card.css';
 
-import { CardData } from '../types/card-data';
 import { DragEventHandler } from 'react';
+import { CardData } from '../types/card-data';
 
 /**
  * Props for the `Card` component. Extends `CardData` with render and

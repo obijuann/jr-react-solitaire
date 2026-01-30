@@ -2,7 +2,6 @@ import './menu.css';
 
 import { useEffect, useState } from 'react';
 import useStore from '../stores/store';
-
 import { throttle } from '../utils/utils';
 
 const submenuArrowSize: number = 15;

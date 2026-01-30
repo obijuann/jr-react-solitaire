@@ -1,18 +1,10 @@
 import { create } from 'zustand';
-import { PlayfieldState } from '../types/playfield-state';
 import { CardData } from '../types/card-data';
 import { ModalTypes } from '../types/modal-types';
 import { PileTypes } from '../types/pile-types';
+import { PlayfieldState } from '../types/playfield-state';
 import { Ranks } from '../types/ranks';
 import { Suits } from '../types/suits';
-
-/** Mapping of suit name to display color used for game logic. */
-const suits: Partial<Record<Suits, string>> = {
-    clubs: 'black',
-    diamonds: 'red',
-    hearts: 'red',
-    spades: 'black',
-};
 
 /** Ordered ranks from lowest to highest used for game rules. */
 const ranks: Ranks[] = [
@@ -81,7 +73,7 @@ type StoreState = {
     undo: () => void;
     redo: () => void;
     startTimer: () => void;
-    stopTimer: () => void;
+    stopTimer: (resetTime?: boolean) => void;
     checkGameState: () => void;
 };
 
@@ -150,7 +142,8 @@ export const useStore = create<StoreState>((set, get) => ({
      */
     shuffleDeck: () => {
         const newDeck: CardData[] = [];
-        const suitsList = Object.keys(suits) as Suits[];
+        const suitsList: Suits[] = ["clubs", "diamonds", "hearts", "spades"];
+
         for (let si = 0; si < suitsList.length; si++) {
             for (let ri = 0; ri < ranks.length; ri++) {
                 const card: CardData = { rank: ranks[ri], suit: suitsList[si], face: 'down' };
@@ -375,12 +368,19 @@ export const useStore = create<StoreState>((set, get) => ({
     /**
      * Stop the game timer and clear the interval.
      */
-    stopTimer: () => {
+    stopTimer: (resetTime = true) => {
         const id = get().timerId;
         if (id) {
             clearInterval(id);
         }
-        set(() => ({ timerId: null, gameTimer: 0 }));
+
+        const timerProps: Partial<StoreState> = { timerId: null };
+
+        if (resetTime) {
+            timerProps.gameTimer = 0;
+        }
+
+        set(() => (timerProps));
     },
 
     /**
@@ -392,7 +392,7 @@ export const useStore = create<StoreState>((set, get) => ({
         playfield.foundation.forEach(pile => (numFoundationCards += pile.length));
 
         if (numFoundationCards === 52) {
-            get().stopTimer();
+            get().stopTimer(false);
             set(() => ({ modalType: 'gamewin' }));
             return;
         }

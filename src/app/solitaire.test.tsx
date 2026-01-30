@@ -1,10 +1,9 @@
 import '@testing-library/jest-dom/vitest';
 
-import { act, fireEvent, render, screen, cleanup } from '@testing-library/react';
-import { expect, it, describe, vi, afterEach } from 'vitest';
-
-import Solitaire from './solitaire';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import useStore from '../stores/store';
+import Solitaire from './solitaire';
 
 it('renders the play area', () => {
   // Arrange + Act

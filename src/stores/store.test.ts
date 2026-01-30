@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import useStore from './store';
 import { CardData } from '../types/card-data';
+import useStore from './store';
 
 function makeDeck(): CardData[] {
   const suits = ['clubs', 'diamonds', 'hearts', 'spades'] as const;
@@ -134,7 +134,7 @@ describe('Zustand store actions', () => {
     expect(pf.waste.length).toBe(0);
   });
 
-  it('startTimer increments gameTimer and stopTimer clears it', () => {
+  it('startTimer increments gameTimer and stopTimer clears it by default', () => {
     // Arrange
     vi.useFakeTimers();
     try {
@@ -152,6 +152,29 @@ describe('Zustand store actions', () => {
       // Assert
       gameTimeElapsed = useStore.getState().gameTimer;
       expect(gameTimeElapsed).toEqual(0);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('stopTimer does not reset the timer value', () => {
+    // Arrange
+    vi.useFakeTimers();
+    try {
+      // Act
+      useStore.getState().startTimer();
+      vi.advanceTimersByTime(3100);
+      let gameTimeElapsed = useStore.getState().gameTimer;
+
+      // Assert
+      expect(gameTimeElapsed).toBeGreaterThanOrEqual(3);
+
+      // Act
+      useStore.getState().stopTimer(false);
+
+      // Assert
+      gameTimeElapsed = useStore.getState().gameTimer;
+      expect(gameTimeElapsed).toBeGreaterThanOrEqual(3);
     } finally {
       vi.useRealTimers();
     }
