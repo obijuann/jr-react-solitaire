@@ -210,7 +210,7 @@ describe('Solitaire additional behavior', () => {
 
     // Act
     act(() => {
-      useStore.setState({ playfield: { ...useStore.getState().playfield, waste: [{}, {}, {}] as any } });
+      useStore.setState({ playfield: { ...useStore.getState().playfield, waste: [{ rank: 'ace', suit: 'hearts', face: 'up' }, { rank: '2', suit: 'hearts', face: 'up' }, { rank: '5', suit: 'clubs', face: 'up' }] } });
     });
     const waste2 = screen.getByTestId('play-area').querySelector('#waste') as HTMLElement;
     
