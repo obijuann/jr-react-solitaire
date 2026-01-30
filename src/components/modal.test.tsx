@@ -3,8 +3,8 @@ import '@testing-library/jest-dom/vitest';
 import { expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 
-import Modal from './Modal';
-import { subscribe } from './Events';
+import Modal from './modal';
+import useStore from '../stores/store';
 
 it("renders game win modal", () => {
     // Arrange + Act
@@ -18,8 +18,9 @@ it("renders game win modal", () => {
 
 it("clicking the 'new game' button publishes a new game event", () => {
     // Arrange
-    const newGameListener = vi.fn();
-    subscribe("newGame", newGameListener);
+    const original = useStore.getState().newGame;
+    const newGameSpy = vi.fn();
+    useStore.setState({ newGame: newGameSpy });
     render(<Modal modalType="gamewin" gameTime="09:99" />);
 
     // Act
@@ -27,13 +28,15 @@ it("clicking the 'new game' button publishes a new game event", () => {
     fireEvent.click(newGameButton);
 
     // Assert
-    expect(newGameListener).toHaveBeenCalled();
+    expect(newGameSpy).toHaveBeenCalled();
+    useStore.setState({ newGame: original });
 });
 
 it("clicking the modal backdrop publishes a new game event", () => {
     // Arrange
-    const newGameListener = vi.fn();
-    subscribe("newGame", newGameListener);
+    const original = useStore.getState().newGame;
+    const newGameSpy = vi.fn();
+    useStore.setState({ newGame: newGameSpy });
     render(<Modal modalType="gamewin" gameTime="09:99" />);
 
     // Act
@@ -41,5 +44,6 @@ it("clicking the modal backdrop publishes a new game event", () => {
     fireEvent.click(backdrop);
 
     // Assert
-    expect(newGameListener).toHaveBeenCalled();
+    expect(newGameSpy).toHaveBeenCalled();
+    useStore.setState({ newGame: original });
 });

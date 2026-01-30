@@ -1,24 +1,34 @@
-import './Modal.css';
+import './modal.css';
 
-import { ModalComponentProps } from './@types/ModalComponentProps';
-import { ModalTypes } from './@types/ModalTypes';
+import { ModalTypes } from '../types/modal-types';
 import React from 'react';
-import { publish } from './Events';
+import useStore from '../stores/store';
 
+interface ModalComponentProps {
+    gameTime: string
+    modalType: ModalTypes
+}
+
+/**
+ * Modal component.
+ * Renders modal backdrop and content based on the provided `modalType`.
+ * @param props Component props
+ */
 export default function Modal(props: ModalComponentProps) {
 
     /**
-     * Handler for clicking on the "New Game" menu option
-     * @param {*} e The event
+     * Handler for the New Game button inside the modal. Starts a new game.
+     * @param e Mouse event
      */
     function newGameHandler(e: React.MouseEvent) {
         e.preventDefault();
-        publish("newGame");
+        useStore.getState().newGame();
     }
 
     /**
-     * Renders the inner modal content depending on the type passed
-     * @param {ModalTypes} modalType Modal type to render
+     * Render modal inner content for the given type.
+     * @param modalType Modal type to render
+     * @returns JSX.Element | void
      */
     function renderModalContent(modalType: ModalTypes) {
         switch (modalType) {

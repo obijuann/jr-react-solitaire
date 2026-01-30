@@ -19,6 +19,14 @@
   justify-content: space-between;
 }
 
+/* Slight blur when a submenu is open: blur all direct children except the menu
+   so the menu and submenu remain crisp and interactive. Also disable pointer
+   events on the blurred content so taps first close the submenu. */
+#play-area.submenu-open > :not(#menu) {
+  filter: blur(3px);
+  pointer-events: none;
+}
+
 #stock {
   grid-column: 1/1;
 }

@@ -3,7 +3,7 @@ import '@testing-library/jest-dom/vitest';
 import { expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
 
-import Card from './Card';
+import Card from './card';
 
 it("renders facedown card", () => {
     // Arrange + Act

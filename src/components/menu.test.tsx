@@ -1,10 +1,14 @@
 import '@testing-library/jest-dom/vitest';
 
 import { act, fireEvent, render, screen } from '@testing-library/react';
-import { expect, it, vi } from 'vitest';
-import { publish, subscribe } from './Events';
+import { expect, it, vi, beforeEach } from 'vitest';
+import useStore from '../stores/store';
 
-import Menu from './Menu';
+beforeEach(() => {
+    useStore.setState({ menuVisible: true, submenuId: "" });
+});
+
+import Menu from './menu';
 
 it("renders the base menu component", () => {
     // Arrange + Act
@@ -43,7 +47,7 @@ it("firing the 'toggleMenu' event hides the menu component", () => {
     // Act
     act(() => {
         // Wrapped in an act call since this is render-affecting
-        publish("toggleMenu");
+        useStore.getState().toggleMenu();
     });
 
     // Assert
@@ -63,12 +67,12 @@ it("firing the 'toggleMenu' event hides the submenu", () => {
     expect(screen.getByRole('button', { name: 'Restart this game' })).toBeInTheDocument();
     act(() => {
         // Wrapped in an act call since this is render-affecting
-        publish("toggleMenu");
+        useStore.getState().toggleMenu();
     });
 
     // Assert
     expect(screen.queryByRole('button', { name: 'Restart this game' })).not.toBeInTheDocument();
-    expect(screen.getByTestId("menu").className).toEqual("visible");
+    expect(screen.getByTestId("menu").className).not.toEqual("visible");
 });
 
 it("renders the new game submenu", () => {
@@ -96,10 +100,11 @@ it("renders the new game submenu", () => {
     expect(quitGameButton.hasAttribute("disabled")).toBeTruthy();
 });
 
-it("clicking the restart game button publishes a new game event and closes all menus", () => {
+it("clicking the restart game button calls store.restartGame and closes all menus", () => {
     // Arrange
-    const restartGameListener = vi.fn();
-    subscribe("restartGame", restartGameListener);
+    const original = useStore.getState().restartGame;
+    const restartSpy = vi.fn();
+    useStore.setState({ restartGame: restartSpy });
 
     // Act
     render(<Menu gameActive={true} />);
@@ -118,15 +123,18 @@ it("clicking the restart game button publishes a new game event and closes all m
     fireEvent.click(restartGameButton);
 
     // Assert
-    expect(restartGameListener).toHaveBeenCalled();
+    expect(restartSpy).toHaveBeenCalled();
     expect(screen.queryByRole('button', { name: 'Restart this game' })).not.toBeInTheDocument();
     expect(screen.getByTestId("menu").className).not.toEqual("visible");
+
+    useStore.setState({ restartGame: original });
 });
 
-it("clicking the quit game button publishes a new game event and closes all menus", () => {
+it("clicking the quit game button calls store.quitGame and closes all menus", () => {
     // Arrange
-    const quitGameListener = vi.fn();
-    subscribe("exitGame", quitGameListener);
+    const original = useStore.getState().quitGame;
+    const quitGameSpy = vi.fn();
+    useStore.setState({ quitGame: quitGameSpy });
 
     // Act
     render(<Menu gameActive={true} />);
@@ -145,9 +153,11 @@ it("clicking the quit game button publishes a new game event and closes all menu
     fireEvent.click(quitGameButton);
 
     // Assert
-    expect(quitGameListener).toHaveBeenCalled();
+    expect(quitGameSpy).toHaveBeenCalled();
     expect(screen.queryByRole('button', { name: 'Quit this game' })).not.toBeInTheDocument();
     expect(screen.getByTestId("menu").className).not.toEqual("visible");
+
+    useStore.setState({ quitGame: original });
 });
 
 it("renders the help submenu", () => {

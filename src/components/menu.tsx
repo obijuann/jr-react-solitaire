@@ -1,41 +1,60 @@
-import './Menu.css';
+import './menu.css';
 
-import { publish, subscribe, unsubscribe } from './Events';
 import { useEffect, useState } from 'react';
+import useStore from '../stores/store';
 
-import { MenuComponentProps } from './@types/MenuComponentProps';
-import { throttle } from './Utils';
+import { throttle } from '../utils/utils';
 
 const submenuArrowSize: number = 15;
 const submenuWidth: number = 300;
 
-interface SubMenuPosStyle {
-    left?: string
-    right?: string
+interface MenuComponentProps {
+    gameActive: boolean
+    undoAvailable?: boolean
+    redoAvailable?: boolean
 }
 
+/**
+ * Menu component.
+ * Renders the primary menu and any active submenu. Submenu positioning
+ * is calculated locally to avoid storing DOM measurements in the global store.
+ * @param props Component props
+ */
 export default function Menu(props: MenuComponentProps) {
 
     // Set up state management
-    const [isMenuVisible, setIsMenuVisible] = useState(true);
-    const [submenuId, setSubmenuId] = useState("");
-    const [subMenuPosStyle, setSubMenuPosStyle] = useState({});
+    const isMenuVisible = useStore(state => state.menuVisible);
+    const submenuId = useStore(state => state.submenuId);
+    const clearSubmenu = useStore(state => state.clearSubmenu);
+    const toggleSubmenu = useStore(state => state.toggleSubmenu);
+    const [subMenuPosStyle, setSubMenuPosStyle] = useState<Record<string, string>>({});
     const [submenuArrowPos, setSubmenuArrowPos] = useState(0);
 
     useEffect(() => {
-        // Set listener for toggle menu event, which happens in the main Solitaire component
-        subscribe("toggleMenu", toggleMenu);
-
         // Close the submenu on resize
-        window.addEventListener("resize", throttle(resizeHandler, 150));
+        const resizeHandler = throttle(() => {
+            clearSubmenu();
+        }, 150);
+        window.addEventListener("resize", resizeHandler);
 
         return () => {
-            // Remove listeners for game events
-            unsubscribe("toggleMenu", toggleMenu);
-            window.removeEventListener("resize", throttle(resizeHandler, 150));
+            window.removeEventListener("resize", resizeHandler);
         };
-    });
+    }, [clearSubmenu]);
 
+    // Ensure submenus are cleared when the main menu is closed
+    useEffect(() => {
+        if (!isMenuVisible) {
+            clearSubmenu();
+            setSubMenuPosStyle({});
+            setSubmenuArrowPos(0);
+        }
+    }, [isMenuVisible, clearSubmenu]);
+
+    /**
+     * Render the currently selected submenu (if any).
+     * @returns JSX.Element | void
+     */
     function renderSubmenu() {
         if (!isMenuVisible) {
             return;
@@ -58,16 +77,24 @@ export default function Menu(props: MenuComponentProps) {
         }
     }
 
+    /**
+     * Render the "Start" submenu (new/restart/quit actions).
+     * @returns JSX.Element
+     */
     function renderStartSubmenu() {
         return (
             <div id="submenu" className="list" style={subMenuPosStyle}>
                 <button className="secondary" id="new-game" onClick={newGameHandler}>New game</button>
                 <button className="secondary" id="restart" onClick={restartGameHandler} disabled={!props.gameActive}>Restart this game</button>
-                <button className="secondary" id="quit" onClick={exitGameHandler} disabled={!props.gameActive}>Quit this game</button>
+                <button className="secondary" id="quit" onClick={quitGameHandler} disabled={!props.gameActive}>Quit this game</button>
             </div>
         );
     }
 
+    /**
+     * Render the help submenu with gameplay instructions.
+     * @returns JSX.Element
+     */
     function renderHelpSubmenu() {
         return (
             <div id="submenu" className="help" style={subMenuPosStyle}>
@@ -120,143 +147,108 @@ export default function Menu(props: MenuComponentProps) {
     }
 
     /**
-     * Closes the submenu on window resize
+     * Toggle the submenu for a primary menu button. Calculates submenu
+     * position locally and then delegates visibility state to the store.
+     * @param e Mouse event from the button
      */
-    function resizeHandler() {
-        setSubmenuId("");
-    }
+    function handleSubmenuToggle(e: React.MouseEvent<HTMLButtonElement>) {
+        const button = e.currentTarget as HTMLElement;
 
-    /**
-     * Toggling the menu should dismiss the submenu first, then the main menu.
-     * Otherwise it should enable the main menu without a submenu
-     */
-
-    /**
-     * Toggling the menu should dismiss the submenu first, then the main menu.
-     * Otherwise it should enable the main menu without a submenu
-     * @param {Event} e 
-     * @param {boolean} hideMenus Flag to hide all menus
-     */
-    function toggleMenu(e: React.MouseEvent, hideMenus: boolean): void {
-        e.preventDefault();
-
-        if (hideMenus) {
-            setIsMenuVisible(false);
-        } else if (submenuId || !isMenuVisible) {
-            setIsMenuVisible(true);
-        } else {
-            setIsMenuVisible(false);
-        }
-
-        // Clear the submenu ID
-        setSubmenuId("");
-    }
-
-    /**
-     * Toggles the submenu
-     */
-    function toggleSubmenu(e: React.MouseEvent) {
-
-        // If no menu ID was passed, close any existing submenus
-        const buttonTarget = e.target as HTMLButtonElement;
-
-        if (!buttonTarget || !buttonTarget.id) {
-            setSubmenuId("");
-            setSubMenuPosStyle(0);
+        if (!button || !button.id) {
+            // Close any open submenu
+            toggleSubmenu(undefined);
+            setSubMenuPosStyle({});
+            setSubmenuArrowPos(0);
             return;
         }
 
-        const newSubmenuId = buttonTarget.id;
+        const newSubmenuId = button.id;
 
-        // Close any open submenus
-        if (submenuId) {
-            const oldSubmenuId = submenuId;
-            setSubmenuId("");
-            setSubMenuPosStyle(0);
+        // If same id clicked and submenu already open, toggleSubmenu will close it
+        // Compute positions locally so store doesn't handle DOM measurements
+        try {
+            // Calculate the positions of the submenu element and the arrow
+            const submenuViewportOffset = 20;
+            const clientRect = button.getBoundingClientRect();
+            const menuIconCenter = clientRect.left + (clientRect.width / 2);
+            const viewportWidth = window.innerWidth;
 
-            // If the same menu button was clicked again, we're done after closing the menu
-            if (oldSubmenuId === newSubmenuId) {
-                return;
+            // Make sure the submenu doesn't fall off the viewport
+            // Submenus positioned over the leftmost edge of the viewport is reset to the base offset from the left
+            // Otherwise, they should be positioned over the center of the button
+            // Note: This isn't super precise because we're not accounting for padding or scroll bars, but it's close enough
+            const subMenuPos = menuIconCenter - submenuWidth / 2;
+            let posStyle: Record<string, string> = { left: `${subMenuPos < 1 ? submenuViewportOffset : subMenuPos}px` };
+            // Submenus positioned over the rightmost edge of the viewport is reset to the base offset from the right
+            if (subMenuPos + submenuWidth + submenuViewportOffset > viewportWidth) {
+                posStyle = { right: `${submenuViewportOffset}px` };
             }
+
+            // The submenu arrow should point to the middle of the parent menu element
+            const arrowPos = Math.floor(menuIconCenter - submenuArrowSize);
+            // Open the submenu
+            setSubMenuPosStyle(posStyle);
+            setSubmenuArrowPos(arrowPos);
+        } catch (err) {
+            setSubMenuPosStyle({});
+            setSubmenuArrowPos(0);
         }
 
-        // Calculate the positions of the submenu element and the arrow
-        const submenuViewportOffset = 20;
-        const clientRect = buttonTarget.getBoundingClientRect();
-        const menuIconCenter = clientRect.left + (clientRect.width / 2);
-        const viewportWidth = window.innerWidth;
-
-        // Make sure the submenu doesn't fall off the viewport
-        // Submenus positioned over the leftmost edge of the viewport is reset to the base offset from the left
-        // Otherwise, they should be positioned over the center of the button
-        // Note: This isn't super precise because we're not accounting for padding or scroll bars, but it's close enough
-        const subMenuPos = menuIconCenter - submenuWidth / 2;
-        let subMenuPosStyle: SubMenuPosStyle = { left: `${subMenuPos < 1 ? submenuViewportOffset : subMenuPos}px` }
-
-        // Submenus positioned over the rightmost edge of the viewport is reset to the base offset from the right
-        if (subMenuPos + submenuWidth + submenuViewportOffset > viewportWidth) {
-            subMenuPosStyle = { right: `${submenuViewportOffset}px` };
-        }
-
-        // The submenu arrow should point to the middle of the parent menu element
-        const submenuArrowPos = Math.floor(menuIconCenter - submenuArrowSize);
-
-        // Open the submenu
-        setSubmenuId(newSubmenuId);
-        setSubMenuPosStyle(subMenuPosStyle);
-        setSubmenuArrowPos(submenuArrowPos);
+        toggleSubmenu(newSubmenuId);
     }
 
     /**
-     * Handler for clicking on the "New Game" menu option
-     * @param {*} e The event
+     * Handler for the "New Game" action; closes menus and starts a new game.
+     * @param e Mouse event
      */
     function newGameHandler(e: React.MouseEvent) {
         e.preventDefault();
-        toggleMenu(e, true);
-        publish("newGame");
+        useStore.getState().toggleMenu(true);
+        useStore.getState().newGame();
     }
 
     /**
-     * Handler for clicking on the "Restart Game" menu option
-     * @param {*} e The event
+     * Handler for the "Restart Game" action; closes menus and
+     * restarts the current shuffled deck.
+     * @param e Mouse event
      */
     function restartGameHandler(e: React.MouseEvent) {
         e.preventDefault();
-        toggleMenu(e, true);
-        publish("restartGame");
+        useStore.getState().toggleMenu(true);
+        useStore.getState().restartGame();
     }
 
     /**
-     * Handler for clicking on the "Exit Game" menu option
-     * @param {*} e React mouse event
+     * Handler for the "Quit Game" action; quits the current game.
+     * @param e Mouse event
      */
-    function exitGameHandler(e: React.MouseEvent) {
-        toggleMenu(e, true);
-        publish("exitGame");
+    function quitGameHandler(e: React.MouseEvent) {
+        e.preventDefault();
+        useStore.getState().toggleMenu(true);
+        useStore.getState().quitGame();
     }
 
     /**
-     * Handler for clicking on the "redo" menu option
+     * Dispatch a redo action to the store.
      */
     function redoMoveHandler() {
-        publish("redoMove");
+        useStore.getState().redo();
     }
 
     /**
-     * Handler for clicking on the "undo" menu option
+     * Dispatch an undo action to the store.
      */
     function undoMoveHandler() {
-        publish("undoMove");
+        useStore.getState().undo();
     }
 
     return (
         <div id="menu" data-testid="menu" className={isMenuVisible ? "visible" : ""}>
             <div id="primary-menu">
-                <button className="primary" id="new-game" onClick={toggleSubmenu}>New</button>
+                <button className="primary" id="new-game" onClick={handleSubmenuToggle}>New</button>
                 <button className="primary" id="undo" disabled={!props.undoAvailable} onClick={undoMoveHandler}>Undo</button>
                 <button className="primary" id="redo" disabled={!props.redoAvailable} onClick={redoMoveHandler}>Redo</button>
-                <button className="primary" id="help" onClick={toggleSubmenu}>Help</button>
+                <button className="primary" id="help" onClick={handleSubmenuToggle}>Help</button>
                 {renderSubmenu()}
             </div>
         </div>
