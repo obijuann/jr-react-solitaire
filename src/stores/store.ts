@@ -1,4 +1,4 @@
-import { create } from 'zustand';
+import { createWithEqualityFn } from 'zustand/traditional';
 import { CardData } from '../types/card-data';
 import { ModalTypes } from '../types/modal-types';
 import { PileTypes } from '../types/pile-types';
@@ -81,8 +81,8 @@ type StoreState = {
  * Application store created with Zustand. Holds game playfield state,
  * menu visibility, submenu id, timer and exposes actions for game play.
  */
-export const useStore = create<StoreState>((set, get) => ({
-    playfield: structuredClone(emptyPlayArea),
+export const useStore = createWithEqualityFn<StoreState>((set, get) => ({
+    playfield: emptyPlayArea,
     shuffledDeck: [],
     undoQueue: [],
     redoQueue: [],
@@ -165,7 +165,7 @@ export const useStore = create<StoreState>((set, get) => ({
      * Deal the shuffled deck into `tableau` and `draw` piles and reset undo/redo.
      */
     dealDeck: () => {
-        const deck = structuredClone(get().shuffledDeck || []);
+        const deck = (get().shuffledDeck || []).slice();
         deck.forEach(c => (c.face = 'down'));
 
         let cardsToDeal = 1;
@@ -217,7 +217,7 @@ export const useStore = create<StoreState>((set, get) => ({
      * Quit the current game and clear playfield and deck.
      */
     quitGame: () => {
-        set(() => ({ modalType: undefined, shuffledDeck: [], playfield: structuredClone(emptyPlayArea), undoQueue: [], redoQueue: [] }));
+        set(() => ({ modalType: undefined, shuffledDeck: [], playfield: emptyPlayArea, undoQueue: [], redoQueue: [] }));
         get().stopTimer();
     },
 

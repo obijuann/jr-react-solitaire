@@ -1,6 +1,7 @@
 import "./solitaire.css";
 
 import { useEffect } from 'react';
+import { shallow } from 'zustand/shallow';
 import Card from "../components/card";
 import Menu from "../components/menu";
 import Modal from "../components/modal";
@@ -43,7 +44,7 @@ export default function Solitaire() {
     drawCard: state.drawCard,
     moveCard: state.moveCard,
     checkGameState: state.checkGameState
-  }));
+  }), shallow);
 
   // Global keyboard handler to toggle menus with 'Esc'
   useEffect(() => {
