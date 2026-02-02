@@ -105,7 +105,7 @@ describe('Solitaire additional behavior', () => {
     });
   });
 
-  it('formats timer correctly as HH:MM:SS', () => {
+  it('renders the timer component', () => {
     // Arrange
     useStore.setState({ gameTimer: 3661 }); // 1h 1m 1s
 
