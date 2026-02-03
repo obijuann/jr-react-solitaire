@@ -195,4 +195,50 @@ describe('Zustand store actions', () => {
     // Assert
     expect(useStore.getState().modalType).toBe('gamewin');
   });
+
+  it('onStorageRehydrated starts timer when gameTimer > 0', () => {
+    vi.useFakeTimers();
+    try {
+      const spy = vi.spyOn(window, 'setInterval');
+      useStore.setState({ gameTimer: 5, timerId: null, shuffledDeck: [] });
+
+      useStore.getState().onStorageRehydrated();
+
+      expect(spy).toHaveBeenCalled();
+      spy.mockRestore();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('onStorageRehydrated starts timer when shuffledDeck is present', () => {
+    vi.useFakeTimers();
+    try {
+      const spy = vi.spyOn(window, 'setInterval');
+      const card = { rank: 'ace', suit: 'hearts', face: 'down' } as CardData;
+      useStore.setState({ gameTimer: 0, timerId: null, shuffledDeck: [card] });
+
+      useStore.getState().onStorageRehydrated();
+
+      expect(spy).toHaveBeenCalled();
+      spy.mockRestore();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('onStorageRehydrated does not start timer when no game in progress', () => {
+    vi.useFakeTimers();
+    try {
+      const spy = vi.spyOn(window, 'setInterval');
+      useStore.setState({ gameTimer: 0, timerId: null, shuffledDeck: [] });
+
+      useStore.getState().onStorageRehydrated();
+
+      expect(spy).not.toHaveBeenCalled();
+      spy.mockRestore();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });

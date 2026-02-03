@@ -442,6 +442,20 @@ export const useStore = createWithEqualityFn<StoreState>()(
         }),
         {
             name: 'sol-store',
+            /**
+             * Only persist the serializable parts of the store. Exclude `timerId`
+             * and functions which cannot be JSON.stringified.
+             */
+            partialize: (state) => ({
+                gameTimer: state.gameTimer,
+                menuVisible: state.menuVisible,
+                modalType: state.modalType,
+                playfield: state.playfield,
+                redoQueue: state.redoQueue,
+                shuffledDeck: state.shuffledDeck,
+                submenuId: state.submenuId,
+                undoQueue: state.undoQueue
+            }),
             onRehydrateStorage: () => (state, error) => {
                 state?.onStorageRehydrated();
                 if (error) {
