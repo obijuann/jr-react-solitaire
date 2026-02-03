@@ -195,4 +195,74 @@ describe('Zustand store actions', () => {
     // Assert
     expect(useStore.getState().modalType).toBe('gamewin');
   });
+
+  it('onStorageRehydrated resets the game if the previous game was in a win state', () => {
+    // Arrange
+    useStore.setState({ gameTimer: 99, modalType: "gamewin" });
+
+    // Act
+    useStore.getState().onStorageRehydrated();
+
+    // Assert
+    expect(useStore.getState().modalType).toBeUndefined;
+    expect(useStore.getState().gameTimer).toBe(0);
+    expect(useStore.getState().shuffledDeck.length).toBe(0);
+    expect(useStore.getState().redoQueue.length).toBe(0);
+    expect(useStore.getState().undoQueue.length).toBe(0);
+  });
+
+  it('onStorageRehydrated starts timer when gameTimer > 0', () => {
+    vi.useFakeTimers();
+    try {
+      // Arrange
+      const spy = vi.spyOn(window, 'setInterval');
+      useStore.setState({ gameTimer: 5, timerId: null, shuffledDeck: [] });
+
+      // Act
+      useStore.getState().onStorageRehydrated();
+
+      // Assert
+      expect(spy).toHaveBeenCalled();
+      spy.mockRestore();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('onStorageRehydrated starts timer when shuffledDeck is present', () => {
+    vi.useFakeTimers();
+    try {
+      // Arrange
+      const spy = vi.spyOn(window, 'setInterval');
+      const card = { rank: 'ace', suit: 'hearts', face: 'down' } as CardData;
+      useStore.setState({ gameTimer: 0, timerId: null, shuffledDeck: [card] });
+
+      // Act
+      useStore.getState().onStorageRehydrated();
+
+      // Assert
+      expect(spy).toHaveBeenCalled();
+      spy.mockRestore();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('onStorageRehydrated does not start timer when no game in progress', () => {
+    vi.useFakeTimers();
+    try {
+      // Arrange
+      const spy = vi.spyOn(window, 'setInterval');
+      useStore.setState({ gameTimer: 0, timerId: null, shuffledDeck: [] });
+
+      // Act
+      useStore.getState().onStorageRehydrated();
+
+      // Assert
+      expect(spy).not.toHaveBeenCalled();
+      spy.mockRestore();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });
