@@ -82,6 +82,8 @@ type StoreState = {
 /**
  * Application store created with Zustand. Holds game playfield state,
  * menu visibility, submenu id, timer and exposes actions for game play.
+ * 
+ * NOTE: Update the persistent storage version when adding new state values
  */
 export const useStore = createWithEqualityFn<StoreState>()(
     persist(
@@ -100,6 +102,14 @@ export const useStore = createWithEqualityFn<StoreState>()(
              * Invoked after the state has been rehydrated from persistent storage.
              */
             onStorageRehydrated: () => {
+                // If the user last left the game in a "win" state,
+                // "quit" the current game to reset the play state
+                const modalType = get().modalType;
+                if (modalType === "gamewin") {
+                    get().quitGame();
+                    return;
+                }
+
                 // If the timer is non-zero, or the deck is shuffled, it indicates a game in progress.
                 // Restart the game timer.
                 const timer = get().gameTimer;
@@ -447,6 +457,7 @@ export const useStore = createWithEqualityFn<StoreState>()(
              * and functions which cannot be JSON.stringified.
              */
             partialize: (state) => ({
+                // Version 1
                 gameTimer: state.gameTimer,
                 menuVisible: state.menuVisible,
                 modalType: state.modalType,
@@ -461,7 +472,8 @@ export const useStore = createWithEqualityFn<StoreState>()(
                 if (error) {
                     console.error(`error on store hydration: ${error}`);
                 }
-            }
+            },
+            version: 1
         },
     ),
 )
