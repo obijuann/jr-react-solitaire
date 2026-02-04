@@ -396,12 +396,10 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
             name: 'sol-store',
             partialize: (state) => ({
                 gameTimer: state.gameTimer,
-                menuVisible: state.menuVisible,
                 modalType: state.modalType,
                 playfield: state.playfield,
                 redoQueue: state.redoQueue,
                 shuffledDeck: state.shuffledDeck,
-                submenuId: state.submenuId,
                 undoQueue: state.undoQueue
             }),
             onRehydrateStorage: () => (state, error) => {
@@ -410,7 +408,7 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
                     console.error(`error on store hydration: ${error}`);
                 }
             },
-            version: 1
+            version: 2
         },
     ),
 )
