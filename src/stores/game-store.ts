@@ -346,14 +346,11 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
                         clearInterval(id);
                     }
 
-                    const timerProps: Partial<GameStoreState> = { timerId: null };
-
                     if (resetTime) {
-                        // @ts-ignore allow partial set
-                        timerProps.gameTimer = 0;
+                        set(() => ({ timerId: null, gameTimer: 0 }));
+                    } else {
+                        set(() => ({ timerId: null }));
                     }
-
-                    set(() => (timerProps as any));
                 },
 
                 checkGameState: () => {
