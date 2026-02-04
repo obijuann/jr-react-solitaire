@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { CardData } from '../types/card-data';
-import useStore from './store';
+import useGameStore from './game-store';
 
 function makeDeck(): CardData[] {
   const suits = ['clubs', 'diamonds', 'hearts', 'spades'] as const;
@@ -15,7 +15,7 @@ function makeDeck(): CardData[] {
 }
 
 beforeEach(() => {
-  useStore.setState({
+  useGameStore.setState({
     playfield: { draw: [], waste: [], foundation: [[], [], [], []], tableau: [[], [], [], [], [], [], []] },
     shuffledDeck: [],
     undoQueue: [],
@@ -29,8 +29,8 @@ beforeEach(() => {
 describe('Zustand store actions', () => {
   it('shuffleDeck produces 52 cards', () => {
     // Arrange + Act
-    useStore.getState().shuffleDeck();
-    const s = useStore.getState().shuffledDeck;
+    useGameStore.getState().actions.shuffleDeck();
+    const s = useGameStore.getState().shuffledDeck;
 
     // Assert
     expect(s.length).toBe(52);
@@ -46,11 +46,11 @@ describe('Zustand store actions', () => {
   it('dealDeck places correct counts', () => {
     // Arrange
     const deck = makeDeck();
-    useStore.setState({ shuffledDeck: deck });
+    useGameStore.setState({ shuffledDeck: deck });
 
     // Act
-    useStore.getState().dealDeck();
-    const pf = useStore.getState().playfield;
+    useGameStore.getState().actions.dealDeck();
+    const pf = useGameStore.getState().playfield;
     const tableauLengths = pf.tableau.map(t => t.length);
 
     // Assert
@@ -66,13 +66,13 @@ describe('Zustand store actions', () => {
     const a = { rank: 'ace', suit: 'hearts', face: 'down' } as CardData;
     const b = { rank: '2', suit: 'hearts', face: 'down' } as CardData;
     // Draw is an array where pop() will remove last element
-    useStore.setState({ playfield: { draw: [a, b], waste: [], foundation: [[], [], [], []], tableau: [[], [], [], [], [], [], []] } });
+    useGameStore.setState({ playfield: { draw: [a, b], waste: [], foundation: [[], [], [], []], tableau: [[], [], [], [], [], [], []] } });
 
     // Act
-    useStore.getState().drawCard();
+    useGameStore.getState().actions.drawCard();
 
     // Assert
-    const pf = useStore.getState().playfield;
+    const pf = useGameStore.getState().playfield;
     expect(pf.draw.length).toBe(1);
     expect(pf.waste.length).toBe(1);
     expect(pf.waste[0].rank).toEqual(b.rank);
@@ -82,25 +82,25 @@ describe('Zustand store actions', () => {
   it('moveCard and undo/redo work', () => {
     // Arrange
     const card = { rank: 'ace', suit: 'hearts', face: 'up' } as CardData;
-    useStore.setState({ playfield: { draw: [], waste: [], foundation: [[], [], [], []], tableau: [[card], [], [], [], [], [], []] } });
+    useGameStore.setState({ playfield: { draw: [], waste: [], foundation: [[], [], [], []], tableau: [[card], [], [], [], [], [], []] } });
 
     // Act
-    useStore.getState().moveCard({ ...card, pileType: 'tableau', pileIndex: 0, cardIndex: 0 }, 'foundation', 0, 'tableau', 0, 0);
+    useGameStore.getState().actions.moveCard({ ...card, pileType: 'tableau', pileIndex: 0, cardIndex: 0 }, 'foundation', 0, 'tableau', 0, 0);
 
     // Assert
-    let pf = useStore.getState().playfield;
+    let pf = useGameStore.getState().playfield;
     expect(pf.tableau[0].length).toBe(0);
     expect(pf.foundation[0].length).toBe(1);
 
     // Act + Assert undo
-    useStore.getState().undo();
-    pf = useStore.getState().playfield;
+    useGameStore.getState().actions.undo();
+    pf = useGameStore.getState().playfield;
     expect(pf.tableau[0].length).toBe(1);
     expect(pf.foundation[0].length).toBe(0);
 
     // Act + Assert redo
-    useStore.getState().redo();
-    pf = useStore.getState().playfield;
+    useGameStore.getState().actions.redo();
+    pf = useGameStore.getState().playfield;
     expect(pf.tableau[0].length).toBe(0);
     expect(pf.foundation[0].length).toBe(1);
   });
@@ -109,23 +109,23 @@ describe('Zustand store actions', () => {
     // Arrange
     const deck = makeDeck();
     const card = deck[0];
-    useStore.setState({ shuffledDeck: deck, playfield: { draw: [], waste: [], foundation: [[], [], [], []], tableau: [[card], [], [], [], [], [], []] } });
+    useGameStore.setState({ shuffledDeck: deck, playfield: { draw: [], waste: [], foundation: [[], [], [], []], tableau: [[card], [], [], [], [], [], []] } });
 
     // Act + Assert
-    useStore.getState().moveCard({ ...card, pileType: 'tableau', pileIndex: 0, cardIndex: 0 }, 'foundation', 0, 'tableau', 0, 0);
-    expect(useStore.getState().undoQueue.length).toBe(1);
+    useGameStore.getState().actions.moveCard({ ...card, pileType: 'tableau', pileIndex: 0, cardIndex: 0 }, 'foundation', 0, 'tableau', 0, 0);
+    expect(useGameStore.getState().undoQueue.length).toBe(1);
 
     // Act
-    useStore.getState().quitGame();
+    useGameStore.getState().actions.quitGame();
 
     // Assert
-    expect(useStore.getState().modalType).toBeUndefined();
-    expect(useStore.getState().shuffledDeck).toEqual([]);
-    expect(useStore.getState().undoQueue.length).toBe(0);
-    expect(useStore.getState().redoQueue.length).toBe(0);
-    expect(useStore.getState().gameTimer).toBe(0);
+    expect(useGameStore.getState().modalType).toBeUndefined();
+    expect(useGameStore.getState().shuffledDeck).toEqual([]);
+    expect(useGameStore.getState().undoQueue.length).toBe(0);
+    expect(useGameStore.getState().redoQueue.length).toBe(0);
+    expect(useGameStore.getState().gameTimer).toBe(0);
 
-    const pf = useStore.getState().playfield;
+    const pf = useGameStore.getState().playfield;
     expect(pf.tableau.length).toBe(7);
     expect(pf.tableau[0].length).toBe(0);
     expect(pf.foundation.length).toBe(4);
@@ -139,18 +139,18 @@ describe('Zustand store actions', () => {
     vi.useFakeTimers();
     try {
       // Act
-      useStore.getState().startTimer();
+      useGameStore.getState().actions.startTimer();
       vi.advanceTimersByTime(3100);
-      let gameTimeElapsed = useStore.getState().gameTimer;
+      let gameTimeElapsed = useGameStore.getState().gameTimer;
 
       // Assert
       expect(gameTimeElapsed).toBeGreaterThanOrEqual(3);
 
       // Act
-      useStore.getState().stopTimer();
+      useGameStore.getState().actions.stopTimer();
 
       // Assert
-      gameTimeElapsed = useStore.getState().gameTimer;
+      gameTimeElapsed = useGameStore.getState().gameTimer;
       expect(gameTimeElapsed).toEqual(0);
     } finally {
       vi.useRealTimers();
@@ -162,18 +162,18 @@ describe('Zustand store actions', () => {
     vi.useFakeTimers();
     try {
       // Act
-      useStore.getState().startTimer();
+      useGameStore.getState().actions.startTimer();
       vi.advanceTimersByTime(3100);
-      let gameTimeElapsed = useStore.getState().gameTimer;
+      let gameTimeElapsed = useGameStore.getState().gameTimer;
 
       // Assert
       expect(gameTimeElapsed).toBeGreaterThanOrEqual(3);
 
       // Act
-      useStore.getState().stopTimer(false);
+      useGameStore.getState().actions.stopTimer(false);
 
       // Assert
-      gameTimeElapsed = useStore.getState().gameTimer;
+      gameTimeElapsed = useGameStore.getState().gameTimer;
       expect(gameTimeElapsed).toBeGreaterThanOrEqual(3);
     } finally {
       vi.useRealTimers();
@@ -187,28 +187,28 @@ describe('Zustand store actions', () => {
     const suits = ['clubs', 'diamonds', 'hearts', 'spades'];
     const ranks = ['ace', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'jack', 'queen', 'king'];
     const foundation = suits.map(s => ranks.map(r => makeCard(r, s)));
-    useStore.setState({ playfield: { draw: [], waste: [], foundation: foundation, tableau: [[], [], [], [], [], [], []] } });
+    useGameStore.setState({ playfield: { draw: [], waste: [], foundation: foundation, tableau: [[], [], [], [], [], [], []] } });
 
     // Act
-    useStore.getState().checkGameState();
+    useGameStore.getState().actions.checkGameState();
 
     // Assert
-    expect(useStore.getState().modalType).toBe('gamewin');
+    expect(useGameStore.getState().modalType).toBe('gamewin');
   });
 
   it('onStorageRehydrated resets the game if the previous game was in a win state', () => {
     // Arrange
-    useStore.setState({ gameTimer: 99, modalType: "gamewin" });
+    useGameStore.setState({ gameTimer: 99, modalType: "gamewin" });
 
     // Act
-    useStore.getState().onStorageRehydrated();
+    useGameStore.getState().actions.onStorageRehydrated();
 
     // Assert
-    expect(useStore.getState().modalType).toBeUndefined;
-    expect(useStore.getState().gameTimer).toBe(0);
-    expect(useStore.getState().shuffledDeck.length).toBe(0);
-    expect(useStore.getState().redoQueue.length).toBe(0);
-    expect(useStore.getState().undoQueue.length).toBe(0);
+    expect(useGameStore.getState().modalType).toBeUndefined;
+    expect(useGameStore.getState().gameTimer).toBe(0);
+    expect(useGameStore.getState().shuffledDeck.length).toBe(0);
+    expect(useGameStore.getState().redoQueue.length).toBe(0);
+    expect(useGameStore.getState().undoQueue.length).toBe(0);
   });
 
   it('onStorageRehydrated starts timer when gameTimer > 0', () => {
@@ -216,10 +216,10 @@ describe('Zustand store actions', () => {
     try {
       // Arrange
       const spy = vi.spyOn(window, 'setInterval');
-      useStore.setState({ gameTimer: 5, timerId: null, shuffledDeck: [] });
+      useGameStore.setState({ gameTimer: 5, timerId: null, shuffledDeck: [] });
 
       // Act
-      useStore.getState().onStorageRehydrated();
+      useGameStore.getState().actions.onStorageRehydrated();
 
       // Assert
       expect(spy).toHaveBeenCalled();
@@ -235,10 +235,10 @@ describe('Zustand store actions', () => {
       // Arrange
       const spy = vi.spyOn(window, 'setInterval');
       const card = { rank: 'ace', suit: 'hearts', face: 'down' } as CardData;
-      useStore.setState({ gameTimer: 0, timerId: null, shuffledDeck: [card] });
+      useGameStore.setState({ gameTimer: 0, timerId: null, shuffledDeck: [card] });
 
       // Act
-      useStore.getState().onStorageRehydrated();
+      useGameStore.getState().actions.onStorageRehydrated();
 
       // Assert
       expect(spy).toHaveBeenCalled();
@@ -253,10 +253,10 @@ describe('Zustand store actions', () => {
     try {
       // Arrange
       const spy = vi.spyOn(window, 'setInterval');
-      useStore.setState({ gameTimer: 0, timerId: null, shuffledDeck: [] });
+      useGameStore.setState({ gameTimer: 0, timerId: null, shuffledDeck: [] });
 
       // Act
-      useStore.getState().onStorageRehydrated();
+      useGameStore.getState().actions.onStorageRehydrated();
 
       // Assert
       expect(spy).not.toHaveBeenCalled();

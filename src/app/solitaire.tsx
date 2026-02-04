@@ -6,7 +6,7 @@ import Card from "../components/card";
 import Menu from "../components/menu";
 import Modal from "../components/modal";
 import Timer from "../components/timer";
-import useStore from '../stores/store';
+import useGameStore from '../stores/game-store';
 import { CardData } from "../types/card-data";
 import { PileTypes } from "../types/pile-types";
 import { PlayfieldState } from "../types/playfield-state";
@@ -29,21 +29,21 @@ const ranks: Ranks[] = ["ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "ja
  * @returns JSX.Element
  */
 export default function Solitaire() {
-  const playfieldState = useStore(state => state.playfield);
-  const modalTypeDisplayed = useStore(state => state.modalType);
-  const submenuIdDisplayed = useStore(state => state.submenuId);
-  const gameActive = useStore(state => !!state.shuffledDeck.length);
-  const undoAvailable = useStore(state => !!state.undoQueue.length);
-  const redoAvailable = useStore(state => !!state.redoQueue.length);
-  const actions = useStore(state => ({
-    newGame: state.newGame,
-    restartGame: state.restartGame,
-    quitGame: state.quitGame,
-    redo: state.redo,
-    undo: state.undo,
-    drawCard: state.drawCard,
-    moveCard: state.moveCard,
-    checkGameState: state.checkGameState
+  const playfieldState = useGameStore(state => state.playfield);
+  const modalTypeDisplayed = useGameStore(state => state.modalType);
+  const submenuIdDisplayed = useGameStore(state => state.submenuId);
+  const gameActive = useGameStore(state => !!state.shuffledDeck.length);
+  const undoAvailable = useGameStore(state => !!state.undoQueue.length);
+  const redoAvailable = useGameStore(state => !!state.redoQueue.length);
+  const actions = useGameStore(state => ({
+    newGame: state.actions.newGame,
+    restartGame: state.actions.restartGame,
+    quitGame: state.actions.quitGame,
+    redo: state.actions.redo,
+    undo: state.actions.undo,
+    drawCard: state.actions.drawCard,
+    moveCard: state.actions.moveCard,
+    checkGameState: state.actions.checkGameState
   }), shallow);
 
   // Global keyboard handler to toggle menus with 'Esc'
@@ -51,14 +51,14 @@ export default function Solitaire() {
     function globalKeyHandler(e: KeyboardEvent) {
       if (!e || !e.key) return;
 
-      const store = useStore.getState();
+      const store = useGameStore.getState();
 
       if (e.key === 'Escape') {
         if (store.submenuId) {
-          store.clearSubmenu();
+          store.actions.clearSubmenu();
           return;
         }
-        useStore.getState().toggleMenu();
+        useGameStore.getState().actions.toggleMenu();
       }
     }
 
@@ -332,19 +332,19 @@ export default function Solitaire() {
     e.preventDefault();
 
     const target = e.target as HTMLDivElement;
-    const store = useStore.getState();
+    const store = useGameStore.getState();
 
     // If click originated inside the menu, do not clear the submenu here —
     // Let the menu's own handlers manage it.
     const clickedInsideMenu = (e.target as HTMLElement)?.closest && (e.target as HTMLElement).closest('#menu');
 
     if (store.submenuId && !clickedInsideMenu) {
-      store.clearSubmenu();
+      store.actions.clearSubmenu();
       return;
     }
 
     if (target && (target.id === "play-area" || target.id === "menu")) {
-      useStore.getState().toggleMenu();
+      useGameStore.getState().actions.toggleMenu();
     }
   }
 

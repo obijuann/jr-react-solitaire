@@ -1,7 +1,7 @@
 import './menu.css';
 
 import { useEffect, useState } from 'react';
-import useStore from '../stores/store';
+import useGameStore from '../stores/game-store';
 import { throttle } from '../utils/utils';
 
 const submenuArrowSize: number = 15;
@@ -22,10 +22,10 @@ interface MenuComponentProps {
 export default function Menu(props: MenuComponentProps) {
 
     // Set up state management
-    const isMenuVisible = useStore(state => state.menuVisible);
-    const submenuId = useStore(state => state.submenuId);
-    const clearSubmenu = useStore(state => state.clearSubmenu);
-    const toggleSubmenu = useStore(state => state.toggleSubmenu);
+    const isMenuVisible = useGameStore(state => state.menuVisible);
+    const submenuId = useGameStore(state => state.submenuId);
+    const clearSubmenu = useGameStore(state => state.actions.clearSubmenu);
+    const toggleSubmenu = useGameStore(state => state.actions.toggleSubmenu);
     const [subMenuPosStyle, setSubMenuPosStyle] = useState<Record<string, string>>({});
     const [submenuArrowPos, setSubmenuArrowPos] = useState(0);
 
@@ -202,8 +202,8 @@ export default function Menu(props: MenuComponentProps) {
      */
     function newGameHandler(e: React.MouseEvent) {
         e.preventDefault();
-        useStore.getState().toggleMenu(true);
-        useStore.getState().newGame();
+        useGameStore.getState().actions.toggleMenu(true);
+        useGameStore.getState().actions.newGame();
     }
 
     /**
@@ -213,8 +213,8 @@ export default function Menu(props: MenuComponentProps) {
      */
     function restartGameHandler(e: React.MouseEvent) {
         e.preventDefault();
-        useStore.getState().toggleMenu(true);
-        useStore.getState().restartGame();
+        useGameStore.getState().actions.toggleMenu(true);
+        useGameStore.getState().actions.restartGame();
     }
 
     /**
@@ -223,22 +223,22 @@ export default function Menu(props: MenuComponentProps) {
      */
     function quitGameHandler(e: React.MouseEvent) {
         e.preventDefault();
-        useStore.getState().toggleMenu(true);
-        useStore.getState().quitGame();
+        useGameStore.getState().actions.toggleMenu(true);
+        useGameStore.getState().actions.quitGame();
     }
 
     /**
      * Dispatch a redo action to the store.
      */
     function redoMoveHandler() {
-        useStore.getState().redo();
+        useGameStore.getState().actions.redo();
     }
 
     /**
      * Dispatch an undo action to the store.
      */
     function undoMoveHandler() {
-        useStore.getState().undo();
+        useGameStore.getState().actions.undo();
     }
 
     return (

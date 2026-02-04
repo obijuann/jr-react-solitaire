@@ -3,16 +3,16 @@ import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/react';
 import { beforeEach, expect, it } from 'vitest';
 
-import useStore from '../stores/store';
+import useGameStore from '../stores/game-store';
 import Timer from './timer';
 
 beforeEach(() => {
-    useStore.setState({ gameTimer: 0 });
+    useGameStore.setState({ gameTimer: 0 });
 });
 
 it("renders empty timer", () => {
     // Arrange
-    useStore.setState({ gameTimer: 0 });
+    useGameStore.setState({ gameTimer: 0 });
 
     // Act
     render(<Timer />);
@@ -23,7 +23,7 @@ it("renders empty timer", () => {
 
 it("renders timer", () => {
     // Arrange
-    useStore.setState({ gameTimer: 61 }); // 1m 1s
+    useGameStore.setState({ gameTimer: 61 }); // 1m 1s
 
     // Act
     render(<Timer />);
