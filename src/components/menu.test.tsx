@@ -5,14 +5,14 @@ import { beforeEach, expect, it, vi } from 'vitest';
 import useGameStore from '../stores/game-store';
 
 beforeEach(() => {
-    useGameStore.setState({ menuVisible: true, submenuId: "" });
+    useGameStore.setState({ menuVisible: true, submenuId: "", shuffledDeck: [] });
 });
 
 import Menu from './menu';
 
 it("renders the base menu component", () => {
     // Arrange + Act
-    render(<Menu gameActive={false} />);
+    render(<Menu />);
 
     // Assert
     const newButton = screen.getByRole('button', { name: 'New' });
@@ -38,7 +38,7 @@ it("renders the base menu component", () => {
 
 it("firing the 'toggleMenu' event hides the menu component", () => {
     // Arrange + Act
-    render(<Menu gameActive={false} />);
+    render(<Menu />);
 
     // Assert
     const newButton = screen.getByRole('button', { name: 'New' });
@@ -56,7 +56,7 @@ it("firing the 'toggleMenu' event hides the menu component", () => {
 
 it("firing the 'toggleMenu' event hides the submenu", () => {
     // Arrange + Act
-    render(<Menu gameActive={false} />);
+    render(<Menu />);
 
     // Assert
     const newButton = screen.getByRole('button', { name: 'New' });
@@ -77,7 +77,7 @@ it("firing the 'toggleMenu' event hides the submenu", () => {
 
 it("renders the new game submenu", () => {
     // Arrange + Act
-    render(<Menu gameActive={false} />);
+    render(<Menu />);
 
     // Assert
     const newButton = screen.getByRole('button', { name: 'New' });
@@ -102,12 +102,13 @@ it("renders the new game submenu", () => {
 
 it("clicking the restart game button calls store.restartGame and closes all menus", () => {
     // Arrange
+    useGameStore.setState({ menuVisible: true, submenuId: "", shuffledDeck: [{ face: "down", rank: "ace", suit: "clubs"}] });
     const original = useGameStore.getState().actions.restartGame;
     const restartSpy = vi.fn();
     useGameStore.setState(state => ({ actions: { ...state.actions, restartGame: restartSpy } }));
 
     // Act
-    render(<Menu gameActive={true} />);
+    render(<Menu />);
 
     // Assert
     const newButton = screen.getByRole('button', { name: 'New' });
@@ -132,12 +133,13 @@ it("clicking the restart game button calls store.restartGame and closes all menu
 
 it("clicking the quit game button calls store.quitGame and closes all menus", () => {
     // Arrange
+    useGameStore.setState({ menuVisible: true, submenuId: "", shuffledDeck: [{ face: "down", rank: "ace", suit: "clubs"}] });
     const original = useGameStore.getState().actions.quitGame;
     const quitGameSpy = vi.fn();
     useGameStore.setState(state => ({ actions: { ...state.actions, quitGame: quitGameSpy } }));
 
     // Act
-    render(<Menu gameActive={true} />);
+    render(<Menu />);
 
     // Assert
     const newButton = screen.getByRole('button', { name: 'New' });
@@ -162,7 +164,7 @@ it("clicking the quit game button calls store.quitGame and closes all menus", ()
 
 it("renders the help submenu", () => {
     // Arrange + Act
-    render(<Menu gameActive={false} />);
+    render(<Menu />);
 
     // Assert
     const helpButton = screen.getByRole('button', { name: 'Help' });

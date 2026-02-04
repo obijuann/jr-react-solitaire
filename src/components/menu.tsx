@@ -7,21 +7,18 @@ import { throttle } from '../utils/utils';
 const submenuArrowSize: number = 15;
 const submenuWidth: number = 300;
 
-interface MenuComponentProps {
-    gameActive: boolean
-    undoAvailable?: boolean
-    redoAvailable?: boolean
-}
-
 /**
  * Menu component.
  * Renders the primary menu and any active submenu. Submenu positioning
  * is calculated locally to avoid storing DOM measurements in the global store.
  * @param props Component props
  */
-export default function Menu(props: MenuComponentProps) {
+export default function Menu() {
 
     // Set up state management
+    const gameActive = useGameStore(state => !!state.shuffledDeck.length);
+    const undoAvailable = useGameStore(state => !!state.undoQueue.length);
+    const redoAvailable = useGameStore(state => !!state.redoQueue.length);
     const isMenuVisible = useGameStore(state => state.menuVisible);
     const submenuId = useGameStore(state => state.submenuId);
     const clearSubmenu = useGameStore(state => state.actions.clearSubmenu);
@@ -84,8 +81,8 @@ export default function Menu(props: MenuComponentProps) {
         return (
             <div id="submenu" className="list" style={subMenuPosStyle}>
                 <button className="secondary" id="new-game" onClick={newGameHandler}>New game</button>
-                <button className="secondary" id="restart" onClick={restartGameHandler} disabled={!props.gameActive}>Restart this game</button>
-                <button className="secondary" id="quit" onClick={quitGameHandler} disabled={!props.gameActive}>Quit this game</button>
+                <button className="secondary" id="restart" onClick={restartGameHandler} disabled={!gameActive}>Restart this game</button>
+                <button className="secondary" id="quit" onClick={quitGameHandler} disabled={!gameActive}>Quit this game</button>
             </div>
         );
     }
@@ -245,8 +242,8 @@ export default function Menu(props: MenuComponentProps) {
         <div id="menu" data-testid="menu" className={isMenuVisible ? "visible" : ""}>
             <div id="primary-menu">
                 <button className="primary" id="new-game" onClick={handleSubmenuToggle}>New</button>
-                <button className="primary" id="undo" disabled={!props.undoAvailable} onClick={undoMoveHandler}>Undo</button>
-                <button className="primary" id="redo" disabled={!props.redoAvailable} onClick={redoMoveHandler}>Redo</button>
+                <button className="primary" id="undo" disabled={!undoAvailable} onClick={undoMoveHandler}>Undo</button>
+                <button className="primary" id="redo" disabled={!redoAvailable} onClick={redoMoveHandler}>Redo</button>
                 <button className="primary" id="help" onClick={handleSubmenuToggle}>Help</button>
                 {renderSubmenu()}
             </div>

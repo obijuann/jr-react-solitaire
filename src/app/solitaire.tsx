@@ -32,9 +32,6 @@ export default function Solitaire() {
   const playfieldState = useGameStore(state => state.playfield);
   const modalTypeDisplayed = useGameStore(state => state.modalType);
   const submenuIdDisplayed = useGameStore(state => state.submenuId);
-  const gameActive = useGameStore(state => !!state.shuffledDeck.length);
-  const undoAvailable = useGameStore(state => !!state.undoQueue.length);
-  const redoAvailable = useGameStore(state => !!state.redoQueue.length);
   const actions = useGameStore(state => ({
     newGame: state.actions.newGame,
     restartGame: state.actions.restartGame,
@@ -397,11 +394,7 @@ export default function Solitaire() {
       {renderWastePile()}
       {renderFoundation()}
       {renderTableau()}
-      <Menu
-        gameActive={gameActive}
-        undoAvailable={undoAvailable}
-        redoAvailable={redoAvailable}
-      />
+      <Menu />
       <Timer />
       {renderModal()}
     </div>
