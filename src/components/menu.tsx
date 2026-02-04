@@ -66,8 +66,10 @@ export default function Menu() {
         switch (submenuId) {
             case "help":
                 return renderHelpSubmenu();
-            case "new-game":
+            case "new-menu":
                 return renderStartSubmenu();
+            case "stats":
+                return renderStatisticsSubmenu();
             default:
                 return;
         }
@@ -138,6 +140,62 @@ export default function Menu() {
                 <p>
                     Continue to transfer cards in the tableau and bring cards into play from the stock pile until all the cards are built in suit sequences in the foundation piles to win!
                 </p>
+            </div>
+        );
+    }
+
+    /**
+     * Render the "Statistics" submenu.
+     * @returns JSX.Element
+     */
+    function renderStatisticsSubmenu() {
+        return (
+            <div id="submenu" className="list" style={subMenuPosStyle}>
+                <div id="stats-submenu">
+                    <div className="stats-header">
+                        <button className="secondary" id="reset-stats" title='Reset Statistics'></button>
+                        Statistics
+                    </div>
+                    <div className="stats-section-header">Time</div>
+                    <div className="stats-section">
+                        <div>Current</div>
+                        <div>00:00</div>
+                    </div>
+                    <div className="stats-section">
+                        <div>Best</div>
+                        <div>00:00</div>
+                    </div>
+                    <div className="stats-section">
+                        <div>Average</div>
+                        <div>00:00</div>
+                    </div>
+                    <div className="stats-section-header">Totals</div>
+                    <div className="stats-section">
+                        <div>Wins</div>
+                        <div>0</div>
+                    </div>
+                    <div className="stats-section">
+                        <div>Losses</div>
+                        <div>0</div>
+                    </div>
+                    <div className="stats-section">
+                        <div>Rate</div>
+                        <div>0%</div>
+                    </div>
+                    <div className="stats-section-header">Streaks</div>
+                    <div className="stats-section">
+                        <div>Wins</div>
+                        <div>0</div>
+                    </div>
+                    <div className="stats-section">
+                        <div>Losses</div>
+                        <div>0</div>
+                    </div>
+                    <div className="stats-section">
+                        <div>Current</div>
+                        <div>0</div>
+                    </div>
+                </div>
             </div>
         );
     }
@@ -241,9 +299,10 @@ export default function Menu() {
     return (
         <div id="menu" data-testid="menu" className={isMenuVisible ? "visible" : ""}>
             <div id="primary-menu">
-                <button className="primary" id="new-game" onClick={handleSubmenuToggle}>New</button>
+                <button className="primary" id="new-menu" onClick={handleSubmenuToggle}>New</button>
                 <button className="primary" id="undo" disabled={!undoAvailable} onClick={undoMoveHandler}>Undo</button>
                 <button className="primary" id="redo" disabled={!redoAvailable} onClick={redoMoveHandler}>Redo</button>
+                <button className="primary" id="stats" onClick={handleSubmenuToggle}>Statistics</button>
                 <button className="primary" id="help" onClick={handleSubmenuToggle}>Help</button>
                 {renderSubmenu()}
             </div>

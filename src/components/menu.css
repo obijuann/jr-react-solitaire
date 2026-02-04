@@ -14,6 +14,7 @@
     bottom: 0;
 }
 
+#new-menu,
 #new-game {
     background-image: url("/icons/play.svg");
 }
@@ -43,7 +44,7 @@
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
-    margin: 0 auto; 
+    margin: 0 auto;
     max-width: 900px;
     padding: 0 30px;
 }
@@ -109,6 +110,53 @@
 
 #submenu.help {
     overflow-y: scroll;
+}
+
+#reset-stats {
+    background-image: url("/icons/reset.svg");
+    background-position: center;
+    position: absolute;
+    left: 6px;
+}
+
+#stats {
+    background-image: url("/icons/statistics.svg");
+}
+
+#stats-submenu {
+    font-size: 18px;
+    overflow-y: scroll;
+}
+
+#stats-submenu>div {
+    align-items: center;
+    display: flex;
+    justify-content: center;
+    height: 40px;
+    margin: 0;
+    padding: 0 10px;
+}
+
+#stats-submenu>div:nth-child(2) {
+    margin-top: 40px;
+}
+
+#stats-submenu .stats-header {
+    background-color: green;
+    border-bottom: 1px solid white;
+    position: fixed;
+    padding: 0;
+    width: var(--submenu-width);
+}
+
+#stats-submenu .stats-section-header {
+    background-color: darkgreen;
+    justify-content: left;
+}
+
+#stats-submenu .stats-section {
+    background-color: green;
+    justify-content: space-between;
 }
 
 button {
