@@ -2,7 +2,7 @@ import './menu.css';
 
 import { useEffect, useState } from 'react';
 import useGameStore from '../stores/game-store';
-import { throttle } from '../utils/utils';
+import { getFormattedTimer, throttle } from '../utils/utils';
 
 const submenuArrowSize: number = 15;
 const submenuWidth: number = 300;
@@ -25,6 +25,7 @@ export default function Menu() {
     const toggleSubmenu = useGameStore(state => state.actions.toggleSubmenu);
     const [subMenuPosStyle, setSubMenuPosStyle] = useState<Record<string, string>>({});
     const [submenuArrowPos, setSubmenuArrowPos] = useState(0);
+    const gameTimer = useGameStore(state => state.gameTimer);
 
     useEffect(() => {
         // Close the submenu on resize
@@ -159,7 +160,7 @@ export default function Menu() {
                     <div className="stats-section-header">Time</div>
                     <div className="stats-section">
                         <div>Current</div>
-                        <div>00:00</div>
+                        <div>{getFormattedTimer(gameTimer)}</div>
                     </div>
                     <div className="stats-section">
                         <div>Best</div>
@@ -193,7 +194,7 @@ export default function Menu() {
                     </div>
                     <div className="stats-section">
                         <div>Current</div>
-                        <div>0</div>
+                        <div>0 Wins/Losses</div>
                     </div>
                 </div>
             </div>

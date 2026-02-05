@@ -143,9 +143,8 @@
 
 #stats-submenu .stats-header {
     background-color: green;
-    border-bottom: 1px solid white;
-    position: fixed;
     padding: 0;
+    position: fixed;
     width: var(--submenu-width);
 }
 

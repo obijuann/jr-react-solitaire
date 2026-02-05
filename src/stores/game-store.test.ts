@@ -26,7 +26,7 @@ beforeEach(() => {
   });
 });
 
-describe('Zustand store actions', () => {
+describe('Game store actions', () => {
   it('shuffleDeck produces 52 cards', () => {
     // Arrange + Act
     useGameStore.getState().actions.shuffleDeck();
