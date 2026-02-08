@@ -176,3 +176,18 @@ it("renders the help submenu", () => {
     // Assert
     expect(screen.getByText(/object of the game/i)).toBeInTheDocument();
 });
+
+it("renders the statistics submenu", () => {
+    // Arrange + Act
+    render(<Menu />);
+
+    // Assert
+    const statsMenuButton = screen.getByRole('button', { name: 'Statistics' });
+    expect(statsMenuButton).toBeInTheDocument();
+
+    // Act
+    fireEvent.click(statsMenuButton);
+
+    // Assert
+    expect(screen.getByText(/average/i)).toBeInTheDocument();
+});

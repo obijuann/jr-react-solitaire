@@ -6,6 +6,7 @@ import { PileTypes } from '../types/pile-types';
 import { PlayfieldState } from '../types/playfield-state';
 import { Ranks } from '../types/ranks';
 import { Suits } from '../types/suits';
+import useStatisticsStore from './statistics-store';
 
 /** Ordered ranks from lowest to highest used for game rules. */
 const ranks: Ranks[] = [
@@ -360,6 +361,11 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
 
                     if (numFoundationCards === 52) {
                         get().actions.stopTimer(false);
+
+                        // Log the win and time with the stats store
+                        useStatisticsStore.getState().actions.recordWin(get().gameTimer);
+
+                        // Set the modal type for a game win
                         set(() => ({ modalType: 'gamewin' }));
                         return;
                     }

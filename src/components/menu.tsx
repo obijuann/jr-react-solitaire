@@ -2,6 +2,7 @@ import './menu.css';
 
 import { useEffect, useState } from 'react';
 import useGameStore from '../stores/game-store';
+import useStatisticsStore from '../stores/statistics-store';
 import { getFormattedTimer, throttle } from '../utils/utils';
 
 const submenuArrowSize: number = 15;
@@ -26,6 +27,16 @@ export default function Menu() {
     const [subMenuPosStyle, setSubMenuPosStyle] = useState<Record<string, string>>({});
     const [submenuArrowPos, setSubmenuArrowPos] = useState(0);
     const gameTimer = useGameStore(state => state.gameTimer);
+
+    // Statistics state and computed values
+    const averageWinTime = useStatisticsStore(state => state.getAverageWinTime);
+    const winRate = useStatisticsStore(state => state.getWinRate);
+    const currentStreakText = useStatisticsStore(state => state.getCurrentStreakText);
+    const bestWinTime = useStatisticsStore(state => state.bestWinTime);
+    const totalLosses = useStatisticsStore(state => state.totalLosses);
+    const totalWins = useStatisticsStore(state => state.totalWins);
+    const bestWinStreak = useStatisticsStore(state => state.bestWinStreak);
+    const worstLoseStreak = useStatisticsStore(state => state.worstLosingStreak);
 
     useEffect(() => {
         // Close the submenu on resize
@@ -154,7 +165,7 @@ export default function Menu() {
             <div id="submenu" className="list" style={subMenuPosStyle}>
                 <div id="stats-submenu">
                     <div className="stats-header">
-                        <button className="secondary" id="reset-stats" title='Reset Statistics'></button>
+                        <button onClick={resetStatistics} className="secondary" id="reset-stats" title='Reset Statistics'></button>
                         Statistics
                     </div>
                     <div className="stats-section-header">Time</div>
@@ -164,37 +175,37 @@ export default function Menu() {
                     </div>
                     <div className="stats-section">
                         <div>Best</div>
-                        <div>00:00</div>
+                        <div>{getFormattedTimer(bestWinTime)}</div>
                     </div>
                     <div className="stats-section">
                         <div>Average</div>
-                        <div>00:00</div>
+                        <div>{getFormattedTimer(averageWinTime())}</div>
                     </div>
                     <div className="stats-section-header">Totals</div>
                     <div className="stats-section">
                         <div>Wins</div>
-                        <div>0</div>
+                        <div>{totalWins}</div>
                     </div>
                     <div className="stats-section">
                         <div>Losses</div>
-                        <div>0</div>
+                        <div>{totalLosses}</div>
                     </div>
                     <div className="stats-section">
                         <div>Rate</div>
-                        <div>0%</div>
+                        <div>{winRate()}</div>
                     </div>
                     <div className="stats-section-header">Streaks</div>
                     <div className="stats-section">
                         <div>Wins</div>
-                        <div>0</div>
+                        <div>{bestWinStreak}</div>
                     </div>
                     <div className="stats-section">
                         <div>Losses</div>
-                        <div>0</div>
+                        <div>{worstLoseStreak}</div>
                     </div>
                     <div className="stats-section">
                         <div>Current</div>
-                        <div>0 Wins/Losses</div>
+                        <div>{currentStreakText()}</div>
                     </div>
                 </div>
             </div>
@@ -258,8 +269,24 @@ export default function Menu() {
      */
     function newGameHandler(e: React.MouseEvent) {
         e.preventDefault();
+
+        // If there is a current game in progress, starting a new game counts as a loss.
+        // Record the loss with the stats store
+        if (gameActive && gameTimer > 0) {
+            useStatisticsStore.getState().actions.recordLoss();
+        }
+
         useGameStore.getState().actions.toggleMenu(true);
         useGameStore.getState().actions.newGame();
+    }
+
+    /**
+     * Handler for the "Reset Statistics" action
+     * @param e Mouse event
+     */
+    function resetStatistics(e: React.MouseEvent) {
+        e.preventDefault();
+        useStatisticsStore.getState().actions.resetStatistics();
     }
 
     /**
@@ -281,6 +308,8 @@ export default function Menu() {
         e.preventDefault();
         useGameStore.getState().actions.toggleMenu(true);
         useGameStore.getState().actions.quitGame();
+        // Log the loss with the stats store
+        useStatisticsStore.getState().actions.recordLoss();
     }
 
     /**

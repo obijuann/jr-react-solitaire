@@ -11,20 +11,25 @@ type StatisticsStoreState = {
     /** Streak type */
     currentStreakType?: "win" | "loss";
     /** Total number of games lost. */
-    gamesLost: number;
+    totalLosses: number;
     /** Total number of games won. */
-    gamesWon: number;
+    totalWins: number;
     /** Cumulative time in wins. */
     totalGameTime: number;
     /** Number of losses in the worst losing streak. */
-    worstLoseStreak: number;
+    worstLosingStreak: number;
+
+    /** Computed values based on state */
+
+    /** Computes the average time per win */
+    getAverageWinTime: () => number,
+    /** Computes the win rate percentage and returns a formatted string value */
+    getWinRate: () => string,
+    /** Computes the current streak and returns a formatted string value */
+    getCurrentStreakText: () => string,
 
     /** Grouped store actions */
     actions: {
-        /** Returns the win rate as a percentage */
-        getWinRate: () => string;
-        /** Invoked after the state has been rehydrated from persistent storage. */
-        onStorageRehydrated: () => void;
         /** Records a won game */
         recordWin: (gameTime: number) => void;
         /** Records a lost game */
@@ -40,36 +45,54 @@ export const useStatisticsStore = create<StatisticsStoreState>()(
             bestWinStreak: 0,
             bestWinTime: 0,
             currentStreak: 0,
-            gamesLost: 0,
-            gamesWon: 0,
+            totalLosses: 0,
+            totalWins: 0,
             totalGameTime: 0,
-            worstLoseStreak: 0,
+            worstLosingStreak: 0,
+
+            /**
+             * Computes the average time per win
+             * @returns Average time per win in seconds
+             */
+            getAverageWinTime: () => {
+                const { totalGameTime, totalWins } = get();
+                return totalWins ? Math.round(totalGameTime / totalWins) : 0;
+            },
+
+            /**
+             * Computes the current streak string
+             * @returns user-readable string value for the current streak
+             */
+            getCurrentStreakText: () => {
+                const { currentStreak, currentStreakType } = get();
+                let currentStreakText = `${currentStreak}`;
+                if (currentStreak === 1) {
+                    currentStreakText += `${currentStreakType === "win" ? " win" : " loss"}`;
+                } else if (currentStreak) {
+                    currentStreakText += `${currentStreakType === "win" ? " wins" : " losses"}`;
+                }
+                return currentStreakText;
+            },
+
+            /**
+             * Computes the win rate percentage
+             * @returns user-readable string value for the win rate percentage
+             */
+            getWinRate: () => {
+                const { totalLosses, totalWins } = get();
+                const totalGames = totalWins + totalLosses;
+                const winRate = totalGames > 0 ? Math.round((totalWins / totalGames) * 100) : 0;
+                return `${winRate}%`;
+            },
 
             actions: {
-                /**
-                 * Returns the win rate as a percentage
-                 * @returns a string with the percentage of games won
-                 */
-                getWinRate: () => {
-                    const gamesLost = get().gamesLost;
-                    const gamesWon = get().gamesWon;
-                    const totalGames = gamesLost + gamesWon;
-                    const winRate = totalGames > 0 ? Math.round((gamesWon / totalGames) * 100) : 0;
-                    return `${winRate}%`;
-                },
-
-                /**
-                 * Invoked after the state has been rehydrated from persistent storage.
-                 */
-                onStorageRehydrated: () => { },
-
                 /**
                  * Records a won game
                  * @param gameTime 
                  */
                 recordWin: (gameTime: number) => {
                     // Increase the win total
-                    const gamesWon = get().gamesWon + 1;
+                    const gamesWon = get().totalWins + 1;
 
                     // Add game time to the current total
                     const totalGameTime = get().totalGameTime + gameTime;
@@ -83,7 +106,7 @@ export const useStatisticsStore = create<StatisticsStoreState>()(
                     const bestWinTime = gameTime < currentBestWinTime ? gameTime : currentBestWinTime;
 
                     // Update the state
-                    set(() => ({ bestWinStreak, bestWinTime, currentStreak, currentStreakType: "win", gamesWon, totalGameTime }));
+                    set(() => ({ bestWinStreak, bestWinTime, currentStreak, currentStreakType: "win", totalWins: gamesWon, totalGameTime }));
                 },
 
                 /**
@@ -91,13 +114,14 @@ export const useStatisticsStore = create<StatisticsStoreState>()(
                  */
                 recordLoss: () => {
                     // Increase the loss total
-                    const gamesLost = get().gamesLost + 1;
+                    const gamesLost = get().totalLosses + 1;
 
                     // Update the streak
                     const currentStreak = get().currentStreakType === "loss" ? get().currentStreak + 1 : 1;
+                    const worstLoseStreak = currentStreak > get().worstLosingStreak ? currentStreak : get().worstLosingStreak;
 
                     // Update the state
-                    set(() => ({ currentStreak, currentStreakType: "loss", gamesLost }));
+                    set(() => ({ currentStreak, currentStreakType: "loss", totalLosses: gamesLost, worstLosingStreak: worstLoseStreak }));
                 },
 
                 /**
@@ -108,22 +132,31 @@ export const useStatisticsStore = create<StatisticsStoreState>()(
                         bestWinStreak: 0,
                         bestWinTime: 0,
                         currentStreak: 0,
-                        gamesLost: 0,
-                        gamesWon: 0,
+                        totalLosses: 0,
+                        totalWins: 0,
                         totalGameTime: 0,
-                        worstLoseStreak: 0
+                        worstLosingStreak: 0
                     }))
                 }
             },
         }),
         {
             name: 'stats-store',
+            partialize: (state) => ({
+                bestWinStreak: state.bestWinStreak,
+                bestWinTime: state.bestWinTime,
+                currentStreak: state.currentStreak,
+                currentStreakType: state.currentStreakType,
+                totalLosses: state.totalLosses,
+                totalWins: state.totalWins,
+                totalGameTime: state.totalGameTime,
+                worstLosingStreak: state.worstLosingStreak
+            }),
             onRehydrateStorage: () => (state, error) => {
-                state?.actions?.onStorageRehydrated?.();
                 if (error) {
-                    console.error(`error on stats store hydration: ${error}`);
-                    state?.actions?.resetStatistics();
+                    console.error(`error on store hydration: ${error}`);
                 }
+                state?.actions?.resetStatistics?.();
             },
             version: 1
         },
