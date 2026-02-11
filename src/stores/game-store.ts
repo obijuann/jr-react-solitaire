@@ -76,8 +76,9 @@ type GameStoreState = {
         onStorageRehydrated: () => void;
         undo: () => void;
         redo: () => void;
-        startTimer: (resetTime?: boolean) => void;
-        stopTimer: (resetTime?: boolean) => void;
+        resetTimer: () => void;
+        startTimer: () => void;
+        stopTimer: () => void;
         checkGameState: () => void;
     };
 };
@@ -102,13 +103,14 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
                 onStorageRehydrated: () => {
                     const modalType = get().modalType;
                     if (modalType === "gamewin") {
+                        get().actions.resetTimer();
                         get().actions.quitGame();
                         return;
                     }
 
                     const timer = get().gameTimer;
                     if (timer > 0 || get().shuffledDeck?.length > 0) {
-                        get().actions.startTimer(false);
+                        get().actions.startTimer();
                     }
                 },
 
@@ -195,6 +197,7 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
                 newGame: () => {
                     set(() => ({ modalType: undefined }));
                     get().actions.stopTimer();
+                    get().actions.resetTimer();
                     get().actions.shuffleDeck();
                     get().actions.dealDeck();
                     get().actions.startTimer();
@@ -204,12 +207,14 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
                     set(() => ({ modalType: undefined }));
                     get().actions.dealDeck();
                     get().actions.stopTimer();
+                    get().actions.resetTimer();
                     get().actions.startTimer();
                 },
 
                 quitGame: () => {
                     set(() => ({ modalType: undefined, shuffledDeck: [], playfield: emptyPlayArea, undoQueue: [], redoQueue: [] }));
                     get().actions.stopTimer();
+                    get().actions.resetTimer();
                 },
 
                 drawCard: () => {
@@ -333,25 +338,26 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
                     set(() => ({ playfield: current, undoQueue: undoQueue, redoQueue: redoQueue }));
                 },
 
-                startTimer: (resetTime = true) => {
-                    get().actions.stopTimer(resetTime);
+                resetTimer: () => {
+                    get().actions.stopTimer();
+                    set(() => ({ gameTimer: 0 }));
+                },
+
+                startTimer: () => {
+                    get().actions.stopTimer();
                     const id = window.setInterval(() => {
                         set(state => ({ gameTimer: state.gameTimer + 1 }));
                     }, 1000);
-                    set((state) => ({ timerId: id, gameTimer: resetTime ? 0 : state.gameTimer }));
+                    set((state) => ({ timerId: id, gameTimer: state.gameTimer }));
                 },
 
-                stopTimer: (resetTime = true) => {
+                stopTimer: () => {
                     const id = get().timerId;
                     if (id) {
                         clearInterval(id);
                     }
 
-                    if (resetTime) {
-                        set(() => ({ timerId: null, gameTimer: 0 }));
-                    } else {
-                        set(() => ({ timerId: null }));
-                    }
+                    set(() => ({ timerId: null }));
                 },
 
                 checkGameState: () => {
@@ -360,7 +366,7 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
                     playfield.foundation.forEach(pile => (numFoundationCards += pile.length));
 
                     if (numFoundationCards === 52) {
-                        get().actions.stopTimer(false);
+                        get().actions.stopTimer();
 
                         // Log the win and time with the stats store
                         useStatisticsStore.getState().actions.recordWin(get().gameTimer);

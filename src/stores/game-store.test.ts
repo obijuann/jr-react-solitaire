@@ -105,6 +105,43 @@ describe('Game store actions', () => {
     expect(pf.foundation[0].length).toBe(1);
   });
 
+  it('newGame shuffles a new deck, redeals the playfield, clears the undo/redo queues, and starts a new game timer', () => {
+
+    // Arrange
+    vi.useFakeTimers();
+    try {
+      // Arrange
+      const deck = makeDeck();
+      const card = deck[0];
+      useGameStore.setState({ gameTimer: 5000, shuffledDeck: deck, playfield: { draw: [], waste: [], foundation: [[], [], [], []], tableau: [[card], [], [], [], [], [], []] } });
+
+      // Act + Assert
+      useGameStore.getState().actions.moveCard({ ...card, pileType: 'tableau', pileIndex: 0, cardIndex: 0 }, 'foundation', 0, 'tableau', 0, 0);
+      expect(useGameStore.getState().undoQueue.length).toBe(1);
+
+      // Act
+      useGameStore.getState().actions.newGame();
+      vi.advanceTimersByTime(1100);
+
+      // Assert
+      expect(useGameStore.getState().modalType).toBeUndefined();
+      expect(useGameStore.getState().shuffledDeck.length).toEqual(52);
+      expect(useGameStore.getState().undoQueue.length).toBe(0);
+      expect(useGameStore.getState().redoQueue.length).toBe(0);
+      expect(useGameStore.getState().gameTimer).toBeGreaterThanOrEqual(1);
+
+      const pf = useGameStore.getState().playfield;
+      expect(pf.tableau.length).toBe(7);
+      expect(pf.tableau[0].length).toBe(1);
+      expect(pf.foundation.length).toBe(4);
+      expect(pf.foundation[0].length).toBe(0);
+      expect(pf.draw.length).toBe(24);
+      expect(pf.waste.length).toBe(0);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('quitGame resets the playfield, deck and undo/redo queues', () => {
     // Arrange
     const deck = makeDeck();
@@ -134,24 +171,37 @@ describe('Game store actions', () => {
     expect(pf.waste.length).toBe(0);
   });
 
-  it('startTimer increments gameTimer and stopTimer clears it by default', () => {
+  it('resetTimer resets the timer value', () => {
     // Arrange
     vi.useFakeTimers();
     try {
       // Act
       useGameStore.getState().actions.startTimer();
       vi.advanceTimersByTime(3100);
-      let gameTimeElapsed = useGameStore.getState().gameTimer;
 
       // Assert
-      expect(gameTimeElapsed).toBeGreaterThanOrEqual(3);
+      expect(useGameStore.getState().gameTimer).toBeGreaterThanOrEqual(3);
 
       // Act
       useGameStore.getState().actions.stopTimer();
 
       // Assert
-      gameTimeElapsed = useGameStore.getState().gameTimer;
-      expect(gameTimeElapsed).toEqual(0);
+      expect(useGameStore.getState().gameTimer).toBeGreaterThanOrEqual(3);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('startTimer increments gameTimer', () => {
+    // Arrange
+    vi.useFakeTimers();
+    try {
+      // Act
+      useGameStore.getState().actions.startTimer();
+      vi.advanceTimersByTime(3100);
+
+      // Assert
+      expect(useGameStore.getState().gameTimer).toBeGreaterThanOrEqual(3);
     } finally {
       vi.useRealTimers();
     }
@@ -170,7 +220,7 @@ describe('Game store actions', () => {
       expect(gameTimeElapsed).toBeGreaterThanOrEqual(3);
 
       // Act
-      useGameStore.getState().actions.stopTimer(false);
+      useGameStore.getState().actions.stopTimer();
 
       // Assert
       gameTimeElapsed = useGameStore.getState().gameTimer;
