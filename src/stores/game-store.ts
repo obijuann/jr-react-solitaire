@@ -55,16 +55,54 @@ type GameStoreState = {
 
     /** Grouped store actions */
     actions: {
+        /**
+         * Replace parts of the current playfield.
+         * @param p Partial playfield properties to merge into state.
+         */
         setPlayfield: (p: Partial<PlayfieldState>) => void;
+
+        /**
+         * Toggle the main menu visibility.
+         * @param hideMenus When true, hide menus and clear any open submenu.
+         */
         toggleMenu: (hideMenus?: boolean) => void;
+
+        /**
+         * Open or close a submenu by ID. Passing falsy clears the submenu.
+         * @param id Submenu identifier or undefined/null to clear.
+         */
         toggleSubmenu: (id?: string | null) => void;
+
+        /** Clear the active submenu. */
         clearSubmenu: () => void;
+
+        /** Shuffle a new deck into `shuffledDeck`. */
         shuffleDeck: () => void;
+
+        /** Deal the shuffled deck into the tableau and draw piles. */
         dealDeck: () => void;
+
+        /** Start a brand new game: shuffle, deal and start timer. */
         newGame: () => void;
+
+        /** Restart the current game (deal again and reset timer). */
         restartGame: () => void;
+
+        /** Quit the current game and reset play state. */
         quitGame: () => void;
+
+        /** Draw a card from the draw pile to the waste (or recycle waste). */
         drawCard: () => void;
+
+        /**
+         * Move one or more cards from a source pile to a target pile.
+         * @param sourceCardData The card metadata representing the source card.
+         * @param targetPileType The destination pile type (foundation/tableau/waste).
+         * @param targetPileIndex Index of the destination pile.
+         * @param sourcePileType Optional explicit source pile type (defaults to value on `sourceCardData`).
+         * @param sourcePileIndex Optional explicit source pile index (defaults to value on `sourceCardData`).
+         * @param sourceCardIndex Optional index within the source pile to move from (defaults to value on `sourceCardData`).
+         */
         moveCard: (
             sourceCardData: CardData,
             targetPileType: PileTypes,
@@ -73,12 +111,26 @@ type GameStoreState = {
             sourcePileIndex?: number,
             sourceCardIndex?: number
         ) => void;
+
+        /** Called after persistent storage has been rehydrated. */
         onStorageRehydrated: () => void;
+
+        /** Undo the last playfield change. */
         undo: () => void;
+
+        /** Redo the last undone playfield change. */
         redo: () => void;
+
+        /** Reset the in-game timer to zero and stop it. */
         resetTimer: () => void;
+
+        /** Start the in-game timer (increments `gameTimer` every second). */
         startTimer: () => void;
+
+        /** Stop the in-game timer. */
         stopTimer: () => void;
+
+        /** Validate and update derived game state (flipping cards, win check). */
         checkGameState: () => void;
     };
 };
@@ -99,6 +151,7 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
             actions: {
                 /**
                  * Invoked after the state has been rehydrated from persistent storage.
+                 * Handles resuming or cleaning up timer and modal state after hydration.
                  */
                 onStorageRehydrated: () => {
                     const modalType = get().modalType;
@@ -114,10 +167,18 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
                     }
                 },
 
+                /**
+                 * Merge provided partial playfield data into the current playfield state.
+                 * @param p Partial playfield properties to merge.
+                 */
                 setPlayfield: (p: Partial<PlayfieldState>) => {
                     set(state => ({ playfield: { ...state.playfield, ...p } }));
                 },
 
+                /**
+                 * Toggle the main menu visibility. Optionally force-hide menus and clear submenu.
+                 * @param hideMenus When true, hide menus and clear submenu state.
+                 */
                 toggleMenu: (hideMenus = false) => {
                     if (hideMenus) {
                         set(() => ({ menuVisible: false, submenuId: "" }));
@@ -126,6 +187,10 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
                     set(state => ({ menuVisible: !state.menuVisible }));
                 },
 
+                /**
+                 * Toggle a submenu by id. Calling with no id clears the submenu.
+                 * @param id Submenu identifier to open, or undefined/null to clear.
+                 */
                 toggleSubmenu: (id?: string | null) => {
                     if (!id) {
                         set(() => ({ submenuId: "" }));
@@ -142,10 +207,14 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
                     set(() => ({ submenuId: id }));
                 },
 
+                /** Clear the currently active submenu. */
                 clearSubmenu: () => {
                     set(() => ({ submenuId: "" }));
                 },
 
+                /**
+                 * Create and shuffle a standard 52-card deck and store it in `shuffledDeck`.
+                 */
                 shuffleDeck: () => {
                     const newDeck: CardData[] = [];
                     const suitsList: Suits[] = ["clubs", "diamonds", "hearts", "spades"];
@@ -167,6 +236,9 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
                     set(() => ({ shuffledDeck: newDeck }));
                 },
 
+                /**
+                 * Deal the shuffled deck into the tableau piles and prepare the draw pile.
+                 */
                 dealDeck: () => {
                     const deck = (get().shuffledDeck || []).slice();
                     deck.forEach(c => (c.face = 'down'));
@@ -194,6 +266,9 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
                     get().actions.checkGameState();
                 },
 
+                /**
+                 * Start a new game: clear modal, reset timer, shuffle and deal the deck, then start timer.
+                 */
                 newGame: () => {
                     set(() => ({ modalType: undefined }));
                     get().actions.stopTimer();
@@ -203,6 +278,7 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
                     get().actions.startTimer();
                 },
 
+                /** Restart the current game state by re-dealing and resetting the timer. */
                 restartGame: () => {
                     set(() => ({ modalType: undefined }));
                     get().actions.dealDeck();
@@ -211,12 +287,17 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
                     get().actions.startTimer();
                 },
 
+                /** Quit the current game and reset playfield and deck state. */
                 quitGame: () => {
                     set(() => ({ modalType: undefined, shuffledDeck: [], playfield: emptyPlayArea, undoQueue: [], redoQueue: [] }));
                     get().actions.stopTimer();
                     get().actions.resetTimer();
                 },
 
+                /**
+                 * Draw one card from the draw pile to the waste. If draw is empty and waste has cards,
+                 * recycle the waste back into the draw pile (face-down).
+                 */
                 drawCard: () => {
                     const playfield = structuredClone(get().playfield);
                     const undoPileData: Partial<PlayfieldState> = {
@@ -241,6 +322,15 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
                     get().actions.checkGameState();
                 },
 
+                /**
+                 * Move one or more cards from a source pile to a target pile and record undo data.
+                 * @param sourceCardData The card data object representing the moved card.
+                 * @param targetPileType Destination pile type ('foundation'|'tableau'|'waste').
+                 * @param targetPileIndex Destination pile index.
+                 * @param sourcePileType Optional explicit source pile type (defaults to value in `sourceCardData`).
+                 * @param sourcePileIndex Optional explicit source pile index (defaults to value in `sourceCardData`).
+                 * @param sourceCardIndex Optional index within the source pile to move from.
+                 */
                 moveCard: (sourceCardData, targetPileType, targetPileIndex, sourcePileType = sourceCardData.pileType as PileTypes, sourcePileIndex = sourceCardData.pileIndex || 0, sourceCardIndex = sourceCardData.cardIndex || 0) => {
                     if (!sourcePileType || sourcePileIndex < 0 || sourceCardIndex < 0) return;
 
@@ -288,6 +378,7 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
                     get().actions.checkGameState();
                 },
 
+                /** Undo the last change to the playfield by applying the top of `undoQueue`. */
                 undo: () => {
                     const undoQueue = structuredClone(get().undoQueue || []);
                     if (!undoQueue.length) return;
@@ -313,6 +404,7 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
                     set(() => ({ playfield: current, undoQueue: undoQueue, redoQueue: redoQueue }));
                 },
 
+                /** Redo the last undone change by applying the top of `redoQueue`. */
                 redo: () => {
                     const redoQueue = structuredClone(get().redoQueue || []);
                     if (!redoQueue.length) return;
@@ -338,11 +430,13 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
                     set(() => ({ playfield: current, undoQueue: undoQueue, redoQueue: redoQueue }));
                 },
 
+                /** Reset the game timer to zero and stop it. */
                 resetTimer: () => {
                     get().actions.stopTimer();
                     set(() => ({ gameTimer: 0 }));
                 },
 
+                /** Start the game timer; increments `gameTimer` every second. */
                 startTimer: () => {
                     get().actions.stopTimer();
                     const id = window.setInterval(() => {
@@ -351,6 +445,7 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
                     set((state) => ({ timerId: id, gameTimer: state.gameTimer }));
                 },
 
+                /** Stop the game timer interval if running. */
                 stopTimer: () => {
                     const id = get().timerId;
                     if (id) {
@@ -360,6 +455,10 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
                     set(() => ({ timerId: null }));
                 },
 
+                /**
+                 * Inspect playfield to detect game win and flip face-down cards where appropriate.
+                 * On win, records statistics and sets the `gamewin` modal.
+                 */
                 checkGameState: () => {
                     const playfield = structuredClone(get().playfield);
                     let numFoundationCards = 0;
