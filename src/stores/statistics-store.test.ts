@@ -75,14 +75,19 @@ describe('Statistics store actions', () => {
         expect(useStatisticsStore.getState().getWinRate()).toBe("0%");
 
         // Arrange + Act
-        useStatisticsStore.setState({ totalLosses: 333, totalWins: 900 });
+        useStatisticsStore.setState({ totalLosses: 2, totalWins: 1 });
         // Assert
-        expect(useStatisticsStore.getState().getWinRate()).toBe("73%");
+        expect(useStatisticsStore.getState().getWinRate()).toBe("33%");
 
         // Arrange + Act
         useStatisticsStore.setState({ totalLosses: 10, totalWins: 10 });
         // Assert
         expect(useStatisticsStore.getState().getWinRate()).toBe("50%");
+
+        // Arrange + Act
+        useStatisticsStore.setState({ totalLosses: 333, totalWins: 900 });
+        // Assert
+        expect(useStatisticsStore.getState().getWinRate()).toBe("73%");
 
         // Arrange + Act
         useStatisticsStore.setState({ totalLosses: 0, totalWins: 10 });
@@ -239,9 +244,33 @@ describe('Statistics store actions', () => {
         expect(useStatisticsStore.getState().bestWinStreak).toBe(0);
         expect(useStatisticsStore.getState().bestWinTime).toBe(0);
         expect(useStatisticsStore.getState().currentStreak).toBe(0);
+        expect(useStatisticsStore.getState().currentStreakType).toBeUndefined();
         expect(useStatisticsStore.getState().totalLosses).toBe(0);
         expect(useStatisticsStore.getState().totalWins).toBe(0);
         expect(useStatisticsStore.getState().totalGameTime).toBe(0);
         expect(useStatisticsStore.getState().worstLosingStreak).toBe(0);
+    });
+
+    it('recordWin and recordLoss handle undefined currentStreakType correctly', () => {
+        // Arrange
+        useStatisticsStore.setState({ currentStreak: 0, currentStreakType: undefined, totalWins: 0, totalLosses: 0, totalGameTime: 0 });
+
+        // Act
+        useStatisticsStore.getState().actions.recordWin(120);
+
+        // Assert
+        expect(useStatisticsStore.getState().currentStreak).toBe(1);
+        expect(useStatisticsStore.getState().currentStreakType).toBe('win');
+        expect(useStatisticsStore.getState().totalWins).toBe(1);
+        expect(useStatisticsStore.getState().totalGameTime).toBe(120);
+
+        // Act
+        useStatisticsStore.getState().actions.resetStatistics();
+        useStatisticsStore.getState().actions.recordLoss();
+
+        // Assert
+        expect(useStatisticsStore.getState().currentStreak).toBe(1);
+        expect(useStatisticsStore.getState().currentStreakType).toBe('loss');
+        expect(useStatisticsStore.getState().totalLosses).toBe(1);
     });
 });

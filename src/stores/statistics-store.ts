@@ -132,6 +132,7 @@ export const useStatisticsStore = create<StatisticsStoreState>()(
                         bestWinStreak: 0,
                         bestWinTime: 0,
                         currentStreak: 0,
+                        currentStreakType: undefined,
                         totalLosses: 0,
                         totalWins: 0,
                         totalGameTime: 0,
@@ -155,8 +156,8 @@ export const useStatisticsStore = create<StatisticsStoreState>()(
             onRehydrateStorage: () => (state, error) => {
                 if (error) {
                     console.error(`error on store hydration: ${error}`);
+                    state?.actions?.resetStatistics?.();
                 }
-                state?.actions?.resetStatistics?.();
             },
             version: 1
         },
