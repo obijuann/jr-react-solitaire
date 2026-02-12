@@ -2,7 +2,7 @@ import '@testing-library/jest-dom/vitest';
 
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import useStore from '../stores/store';
+import useGameStore from '../stores/game-store';
 import Solitaire from './solitaire';
 
 it('renders the play area', () => {
@@ -31,7 +31,7 @@ it('Deals the cards when a new game event is published', () => {
   // Act
   act(() => {
     // Use the store action directly
-    useStore.getState().newGame();
+    useGameStore.getState().actions.newGame();
   });
 
   // Assert
@@ -59,7 +59,7 @@ it('Removes cards from the playfield when the game is quit', () => {
   // Act
   act(() => {
     // Use the store action directly
-    useStore.getState().newGame();
+    useGameStore.getState().actions.newGame();
   });
 
   // Assert
@@ -71,7 +71,7 @@ it('Removes cards from the playfield when the game is quit', () => {
   // Act
   act(() => {
     // Use the store action directly
-    useStore.getState().quitGame();
+    useGameStore.getState().actions.quitGame();
   });
 
   // Assert
@@ -93,7 +93,7 @@ describe('Solitaire additional behavior', () => {
   afterEach(() => {
     cleanup();
     // Reset store to avoid cross-test leakage
-    useStore.setState({
+    useGameStore.setState({
       playfield: { draw: [], waste: [], foundation: [[], [], [], []], tableau: [[], [], [], [], [], [], []] },
       shuffledDeck: [],
       undoQueue: [],
@@ -107,7 +107,7 @@ describe('Solitaire additional behavior', () => {
 
   it('renders the timer component', () => {
     // Arrange
-    useStore.setState({ gameTimer: 3661 }); // 1h 1m 1s
+    useGameStore.setState({ gameTimer: 3661 }); // 1h 1m 1s
 
     // Act
     render(<Solitaire />);
@@ -119,9 +119,9 @@ describe('Solitaire additional behavior', () => {
 
   it('clicking draw calls store.drawCard', () => {
     // Arrange
-    const original = useStore.getState().drawCard;
+    const original = useGameStore.getState().actions.drawCard;
     const spy = vi.fn();
-    useStore.setState({ drawCard: spy });
+    useGameStore.setState(state => ({ actions: { ...state.actions, drawCard: spy } }));
 
     // Act
     render(<Solitaire />);
@@ -135,13 +135,13 @@ describe('Solitaire additional behavior', () => {
 
     // Assert
     expect(spy).toHaveBeenCalled();
-    useStore.setState({ drawCard: original });
+    useGameStore.setState(state => ({ actions: { ...state.actions, drawCard: original } }));
   });
 
   it('dragStart sets cardData on dataTransfer', () => {
     // Arrange
     // Ensure there is a game with cards
-    act(() => useStore.getState().newGame());
+    act(() => useGameStore.getState().actions.newGame());
 
     // Act
     render(<Solitaire />);
@@ -167,7 +167,7 @@ describe('Solitaire additional behavior', () => {
   it('dropping a king onto an empty tableau calls moveCard', () => {
     // Arrange
     // Prepare a playfield with empty tableau
-    useStore.setState({
+    useGameStore.setState({
       playfield: {
         draw: [],
         waste: [],
@@ -177,9 +177,9 @@ describe('Solitaire additional behavior', () => {
     });
 
     // Act
-    const moveOriginal = useStore.getState().moveCard;
+    const moveOriginal = useGameStore.getState().actions.moveCard;
     const moveSpy = vi.fn();
-    useStore.setState({ moveCard: moveSpy });
+    useGameStore.setState(state => ({ actions: { ...state.actions, moveCard: moveSpy } }));
     render(<Solitaire />);
 
     // create a fake drag event with king
@@ -197,19 +197,19 @@ describe('Solitaire additional behavior', () => {
 
     // Assert
     expect(moveSpy).toHaveBeenCalled();
-    useStore.setState({ moveCard: moveOriginal });
+    useGameStore.setState(state => ({ actions: { ...state.actions, moveCard: moveOriginal } }));
   });
 
   it('waste pile class changes with count', () => {
     // Arrange
-    useStore.setState({ playfield: { ...useStore.getState().playfield, waste: [{ rank: 'ace', suit: 'hearts', face: 'up' }, { rank: '2', suit: 'hearts', face: 'up' }] } });
+    useGameStore.setState({ playfield: { ...useGameStore.getState().playfield, waste: [{ rank: 'ace', suit: 'hearts', face: 'up' }, { rank: '2', suit: 'hearts', face: 'up' }] } });
     render(<Solitaire />);
     const waste = screen.getByTestId('play-area').querySelector('#waste') as HTMLElement;
     expect(waste.className).toEqual('offset-one');
 
     // Act
-    act(() => {
-      useStore.setState({ playfield: { ...useStore.getState().playfield, waste: [{ rank: 'ace', suit: 'hearts', face: 'up' }, { rank: '2', suit: 'hearts', face: 'up' }, { rank: '5', suit: 'clubs', face: 'up' }] } });
+      act(() => {
+      useGameStore.setState({ playfield: { ...useGameStore.getState().playfield, waste: [{ rank: 'ace', suit: 'hearts', face: 'up' }, { rank: '2', suit: 'hearts', face: 'up' }, { rank: '5', suit: 'clubs', face: 'up' }] } });
     });
     const waste2 = screen.getByTestId('play-area').querySelector('#waste') as HTMLElement;
     
@@ -219,9 +219,9 @@ describe('Solitaire additional behavior', () => {
 
   it('pressing Esc key closes the menu', () => {
     // Arrange
-    const toggleOriginal = useStore.getState().toggleMenu;
+    const toggleOriginal = useGameStore.getState().actions.toggleMenu;
     const spy = vi.fn();
-    useStore.setState({ toggleMenu: spy });
+    useGameStore.setState(state => ({ actions: { ...state.actions, toggleMenu: spy } }));
 
     render(<Solitaire />);
     const area = screen.getByTestId('play-area');
@@ -233,6 +233,6 @@ describe('Solitaire additional behavior', () => {
 
     // Assert
     expect(spy).toHaveBeenCalled();
-    useStore.setState({ toggleMenu: toggleOriginal });
+    useGameStore.setState(state => ({ actions: { ...state.actions, toggleMenu: toggleOriginal } }));
   });
 });

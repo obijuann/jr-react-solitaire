@@ -1,18 +1,18 @@
 import '@testing-library/jest-dom/vitest';
 
 import { act, fireEvent, render, screen } from '@testing-library/react';
-import { expect, it, vi, beforeEach } from 'vitest';
-import useStore from '../stores/store';
+import { beforeEach, expect, it, vi } from 'vitest';
+import useGameStore from '../stores/game-store';
 
 beforeEach(() => {
-    useStore.setState({ menuVisible: true, submenuId: "" });
+    useGameStore.setState({ menuVisible: true, submenuId: "", shuffledDeck: [] });
 });
 
 import Menu from './menu';
 
 it("renders the base menu component", () => {
     // Arrange + Act
-    render(<Menu gameActive={false} />);
+    render(<Menu />);
 
     // Assert
     const newButton = screen.getByRole('button', { name: 'New' });
@@ -38,7 +38,7 @@ it("renders the base menu component", () => {
 
 it("firing the 'toggleMenu' event hides the menu component", () => {
     // Arrange + Act
-    render(<Menu gameActive={false} />);
+    render(<Menu />);
 
     // Assert
     const newButton = screen.getByRole('button', { name: 'New' });
@@ -47,7 +47,7 @@ it("firing the 'toggleMenu' event hides the menu component", () => {
     // Act
     act(() => {
         // Wrapped in an act call since this is render-affecting
-        useStore.getState().toggleMenu();
+        useGameStore.getState().actions.toggleMenu();
     });
 
     // Assert
@@ -56,7 +56,7 @@ it("firing the 'toggleMenu' event hides the menu component", () => {
 
 it("firing the 'toggleMenu' event hides the submenu", () => {
     // Arrange + Act
-    render(<Menu gameActive={false} />);
+    render(<Menu />);
 
     // Assert
     const newButton = screen.getByRole('button', { name: 'New' });
@@ -67,7 +67,7 @@ it("firing the 'toggleMenu' event hides the submenu", () => {
     expect(screen.getByRole('button', { name: 'Restart this game' })).toBeInTheDocument();
     act(() => {
         // Wrapped in an act call since this is render-affecting
-        useStore.getState().toggleMenu();
+        useGameStore.getState().actions.toggleMenu();
     });
 
     // Assert
@@ -77,7 +77,7 @@ it("firing the 'toggleMenu' event hides the submenu", () => {
 
 it("renders the new game submenu", () => {
     // Arrange + Act
-    render(<Menu gameActive={false} />);
+    render(<Menu />);
 
     // Assert
     const newButton = screen.getByRole('button', { name: 'New' });
@@ -102,12 +102,13 @@ it("renders the new game submenu", () => {
 
 it("clicking the restart game button calls store.restartGame and closes all menus", () => {
     // Arrange
-    const original = useStore.getState().restartGame;
+    useGameStore.setState({ menuVisible: true, submenuId: "", shuffledDeck: [{ face: "down", rank: "ace", suit: "clubs"}] });
+    const original = useGameStore.getState().actions.restartGame;
     const restartSpy = vi.fn();
-    useStore.setState({ restartGame: restartSpy });
+    useGameStore.setState(state => ({ actions: { ...state.actions, restartGame: restartSpy } }));
 
     // Act
-    render(<Menu gameActive={true} />);
+    render(<Menu />);
 
     // Assert
     const newButton = screen.getByRole('button', { name: 'New' });
@@ -127,17 +128,18 @@ it("clicking the restart game button calls store.restartGame and closes all menu
     expect(screen.queryByRole('button', { name: 'Restart this game' })).not.toBeInTheDocument();
     expect(screen.getByTestId("menu").className).not.toEqual("visible");
 
-    useStore.setState({ restartGame: original });
+    useGameStore.setState(state => ({ actions: { ...state.actions, restartGame: original } }));
 });
 
 it("clicking the quit game button calls store.quitGame and closes all menus", () => {
     // Arrange
-    const original = useStore.getState().quitGame;
+    useGameStore.setState({ menuVisible: true, submenuId: "", shuffledDeck: [{ face: "down", rank: "ace", suit: "clubs"}] });
+    const original = useGameStore.getState().actions.quitGame;
     const quitGameSpy = vi.fn();
-    useStore.setState({ quitGame: quitGameSpy });
+    useGameStore.setState(state => ({ actions: { ...state.actions, quitGame: quitGameSpy } }));
 
     // Act
-    render(<Menu gameActive={true} />);
+    render(<Menu />);
 
     // Assert
     const newButton = screen.getByRole('button', { name: 'New' });
@@ -157,12 +159,12 @@ it("clicking the quit game button calls store.quitGame and closes all menus", ()
     expect(screen.queryByRole('button', { name: 'Quit this game' })).not.toBeInTheDocument();
     expect(screen.getByTestId("menu").className).not.toEqual("visible");
 
-    useStore.setState({ quitGame: original });
+    useGameStore.setState(state => ({ actions: { ...state.actions, quitGame: original } }));
 });
 
 it("renders the help submenu", () => {
     // Arrange + Act
-    render(<Menu gameActive={false} />);
+    render(<Menu />);
 
     // Assert
     const helpButton = screen.getByRole('button', { name: 'Help' });
@@ -173,4 +175,19 @@ it("renders the help submenu", () => {
 
     // Assert
     expect(screen.getByText(/object of the game/i)).toBeInTheDocument();
+});
+
+it("renders the statistics submenu", () => {
+    // Arrange + Act
+    render(<Menu />);
+
+    // Assert
+    const statsMenuButton = screen.getByRole('button', { name: 'Statistics' });
+    expect(statsMenuButton).toBeInTheDocument();
+
+    // Act
+    fireEvent.click(statsMenuButton);
+
+    // Assert
+    expect(screen.getByText(/average/i)).toBeInTheDocument();
 });

@@ -1,6 +1,6 @@
 import './timer.css';
 
-import useStore from '../stores/store';
+import useGameStore from '../stores/game-store';
 import { getFormattedTimer } from '../utils/utils';
 
 /**
@@ -8,7 +8,7 @@ import { getFormattedTimer } from '../utils/utils';
  * Renders the elapsed time of the current game
  */
 export default function Timer() {
-    const gameTimer = useStore(state => state.gameTimer);
+    const gameTimer = useGameStore(state => state.gameTimer);
 
     return (
         <div id="timer">

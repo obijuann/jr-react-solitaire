@@ -1,17 +1,12 @@
 import './menu.css';
 
 import { useEffect, useState } from 'react';
-import useStore from '../stores/store';
-import { throttle } from '../utils/utils';
+import useGameStore from '../stores/game-store';
+import useStatisticsStore from '../stores/statistics-store';
+import { getFormattedTimer, throttle } from '../utils/utils';
 
 const submenuArrowSize: number = 15;
 const submenuWidth: number = 300;
-
-interface MenuComponentProps {
-    gameActive: boolean
-    undoAvailable?: boolean
-    redoAvailable?: boolean
-}
 
 /**
  * Menu component.
@@ -19,15 +14,29 @@ interface MenuComponentProps {
  * is calculated locally to avoid storing DOM measurements in the global store.
  * @param props Component props
  */
-export default function Menu(props: MenuComponentProps) {
+export default function Menu() {
 
     // Set up state management
-    const isMenuVisible = useStore(state => state.menuVisible);
-    const submenuId = useStore(state => state.submenuId);
-    const clearSubmenu = useStore(state => state.clearSubmenu);
-    const toggleSubmenu = useStore(state => state.toggleSubmenu);
+    const gameActive = useGameStore(state => !!state.shuffledDeck.length);
+    const undoAvailable = useGameStore(state => !!state.undoQueue.length);
+    const redoAvailable = useGameStore(state => !!state.redoQueue.length);
+    const isMenuVisible = useGameStore(state => state.menuVisible);
+    const submenuId = useGameStore(state => state.submenuId);
+    const clearSubmenu = useGameStore(state => state.actions.clearSubmenu);
+    const toggleSubmenu = useGameStore(state => state.actions.toggleSubmenu);
     const [subMenuPosStyle, setSubMenuPosStyle] = useState<Record<string, string>>({});
     const [submenuArrowPos, setSubmenuArrowPos] = useState(0);
+    const gameTimer = useGameStore(state => state.gameTimer);
+
+    // Statistics state and computed values
+    const averageWinTime = useStatisticsStore(state => state.getAverageWinTime);
+    const winRate = useStatisticsStore(state => state.getWinRate);
+    const currentStreakText = useStatisticsStore(state => state.getCurrentStreakText);
+    const bestWinTime = useStatisticsStore(state => state.bestWinTime);
+    const totalLosses = useStatisticsStore(state => state.totalLosses);
+    const totalWins = useStatisticsStore(state => state.totalWins);
+    const bestWinStreak = useStatisticsStore(state => state.bestWinStreak);
+    const worstLoseStreak = useStatisticsStore(state => state.worstLosingStreak);
 
     useEffect(() => {
         // Close the submenu on resize
@@ -69,8 +78,10 @@ export default function Menu(props: MenuComponentProps) {
         switch (submenuId) {
             case "help":
                 return renderHelpSubmenu();
-            case "new-game":
+            case "new-menu":
                 return renderStartSubmenu();
+            case "stats":
+                return renderStatisticsSubmenu();
             default:
                 return;
         }
@@ -84,8 +95,8 @@ export default function Menu(props: MenuComponentProps) {
         return (
             <div id="submenu" className="list" style={subMenuPosStyle}>
                 <button className="secondary" id="new-game" onClick={newGameHandler}>New game</button>
-                <button className="secondary" id="restart" onClick={restartGameHandler} disabled={!props.gameActive}>Restart this game</button>
-                <button className="secondary" id="quit" onClick={quitGameHandler} disabled={!props.gameActive}>Quit this game</button>
+                <button className="secondary" id="restart" onClick={restartGameHandler} disabled={!gameActive}>Restart this game</button>
+                <button className="secondary" id="quit" onClick={quitGameHandler} disabled={!gameActive}>Quit this game</button>
             </div>
         );
     }
@@ -141,6 +152,62 @@ export default function Menu(props: MenuComponentProps) {
                 <p>
                     Continue to transfer cards in the tableau and bring cards into play from the stock pile until all the cards are built in suit sequences in the foundation piles to win!
                 </p>
+            </div>
+        );
+    }
+
+    /**
+     * Render the "Statistics" submenu.
+     * @returns JSX.Element
+     */
+    function renderStatisticsSubmenu() {
+        return (
+            <div id="submenu" className="list" style={subMenuPosStyle}>
+                <div id="stats-submenu">
+                    <div className="stats-header">
+                        <button onClick={resetStatistics} className="secondary" id="reset-stats" title='Reset Statistics'></button>
+                        Statistics
+                    </div>
+                    <div className="stats-section-header">Time</div>
+                    <div className="stats-section">
+                        <div>Current</div>
+                        <div>{getFormattedTimer(gameTimer)}</div>
+                    </div>
+                    <div className="stats-section">
+                        <div>Best</div>
+                        <div>{getFormattedTimer(bestWinTime)}</div>
+                    </div>
+                    <div className="stats-section">
+                        <div>Average</div>
+                        <div>{getFormattedTimer(averageWinTime())}</div>
+                    </div>
+                    <div className="stats-section-header">Totals</div>
+                    <div className="stats-section">
+                        <div>Wins</div>
+                        <div>{totalWins}</div>
+                    </div>
+                    <div className="stats-section">
+                        <div>Losses</div>
+                        <div>{totalLosses}</div>
+                    </div>
+                    <div className="stats-section">
+                        <div>Rate</div>
+                        <div>{winRate()}</div>
+                    </div>
+                    <div className="stats-section-header">Streaks</div>
+                    <div className="stats-section">
+                        <div>Wins</div>
+                        <div>{bestWinStreak}</div>
+                    </div>
+                    <div className="stats-section">
+                        <div>Losses</div>
+                        <div>{worstLoseStreak}</div>
+                    </div>
+                    <div className="stats-section">
+                        <div>Current</div>
+                        <div>{currentStreakText()}</div>
+                    </div>
+                </div>
             </div>
         );
     }
@@ -202,8 +269,24 @@ export default function Menu(props: MenuComponentProps) {
      */
     function newGameHandler(e: React.MouseEvent) {
         e.preventDefault();
-        useStore.getState().toggleMenu(true);
-        useStore.getState().newGame();
+
+        // If there is a current game in progress, starting a new game counts as a loss.
+        // Record the loss with the stats store
+        if (gameActive && gameTimer > 0) {
+            useStatisticsStore.getState().actions.recordLoss();
+        }
+
+        useGameStore.getState().actions.toggleMenu(true);
+        useGameStore.getState().actions.newGame();
+    }
+
+    /**
+     * Handler for the "Reset Statistics" action
+     * @param e Mouse event
+     */
+    function resetStatistics(e: React.MouseEvent) {
+        e.preventDefault();
+        useStatisticsStore.getState().actions.resetStatistics();
     }
 
     /**
@@ -213,8 +296,8 @@ export default function Menu(props: MenuComponentProps) {
      */
     function restartGameHandler(e: React.MouseEvent) {
         e.preventDefault();
-        useStore.getState().toggleMenu(true);
-        useStore.getState().restartGame();
+        useGameStore.getState().actions.toggleMenu(true);
+        useGameStore.getState().actions.restartGame();
     }
 
     /**
@@ -223,30 +306,33 @@ export default function Menu(props: MenuComponentProps) {
      */
     function quitGameHandler(e: React.MouseEvent) {
         e.preventDefault();
-        useStore.getState().toggleMenu(true);
-        useStore.getState().quitGame();
+        useGameStore.getState().actions.toggleMenu(true);
+        useGameStore.getState().actions.quitGame();
+        // Log the loss with the stats store
+        useStatisticsStore.getState().actions.recordLoss();
     }
 
     /**
      * Dispatch a redo action to the store.
      */
     function redoMoveHandler() {
-        useStore.getState().redo();
+        useGameStore.getState().actions.redo();
     }
 
     /**
      * Dispatch an undo action to the store.
      */
     function undoMoveHandler() {
-        useStore.getState().undo();
+        useGameStore.getState().actions.undo();
     }
 
     return (
         <div id="menu" data-testid="menu" className={isMenuVisible ? "visible" : ""}>
             <div id="primary-menu">
-                <button className="primary" id="new-game" onClick={handleSubmenuToggle}>New</button>
-                <button className="primary" id="undo" disabled={!props.undoAvailable} onClick={undoMoveHandler}>Undo</button>
-                <button className="primary" id="redo" disabled={!props.redoAvailable} onClick={redoMoveHandler}>Redo</button>
+                <button className="primary" id="new-menu" onClick={handleSubmenuToggle}>New</button>
+                <button className="primary" id="undo" disabled={!undoAvailable} onClick={undoMoveHandler}>Undo</button>
+                <button className="primary" id="redo" disabled={!redoAvailable} onClick={redoMoveHandler}>Redo</button>
+                <button className="primary" id="stats" onClick={handleSubmenuToggle}>Statistics</button>
                 <button className="primary" id="help" onClick={handleSubmenuToggle}>Help</button>
                 {renderSubmenu()}
             </div>

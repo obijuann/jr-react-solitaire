@@ -1,18 +1,18 @@
 import '@testing-library/jest-dom/vitest';
 
-import { beforeEach, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
+import { beforeEach, expect, it, vi } from 'vitest';
 
+import useGameStore from '../stores/game-store';
 import Modal from './modal';
-import useStore from '../stores/store';
 
 beforeEach(() => {
-    useStore.setState({ gameTimer: 0 });
+    useGameStore.setState({ gameTimer: 0 });
 });
 
 it("renders game win modal", () => {
     // Arrange
-    useStore.setState({ gameTimer: 61 }); // 1m 1s
+    useGameStore.setState({ gameTimer: 61 }); // 1m 1s
 
     // Act
     render(<Modal modalType="gamewin" />);
@@ -25,9 +25,9 @@ it("renders game win modal", () => {
 
 it("clicking the 'new game' button publishes a new game event", () => {
     // Arrange
-    const original = useStore.getState().newGame;
+    const original = useGameStore.getState().actions.newGame;
     const newGameSpy = vi.fn();
-    useStore.setState({ newGame: newGameSpy });
+    useGameStore.setState(state => ({ actions: { ...state.actions, newGame: newGameSpy } }));
     render(<Modal modalType="gamewin" />);
 
     // Act
@@ -36,14 +36,14 @@ it("clicking the 'new game' button publishes a new game event", () => {
 
     // Assert
     expect(newGameSpy).toHaveBeenCalled();
-    useStore.setState({ newGame: original });
+    useGameStore.setState(state => ({ actions: { ...state.actions, newGame: original } }));
 });
 
 it("clicking the modal backdrop publishes a new game event", () => {
     // Arrange
-    const original = useStore.getState().newGame;
+    const original = useGameStore.getState().actions.newGame;
     const newGameSpy = vi.fn();
-    useStore.setState({ newGame: newGameSpy });
+    useGameStore.setState(state => ({ actions: { ...state.actions, newGame: newGameSpy } }));
     render(<Modal modalType="gamewin" />);
 
     // Act
@@ -52,5 +52,5 @@ it("clicking the modal backdrop publishes a new game event", () => {
 
     // Assert
     expect(newGameSpy).toHaveBeenCalled();
-    useStore.setState({ newGame: original });
+    useGameStore.setState(state => ({ actions: { ...state.actions, newGame: original } }));
 });

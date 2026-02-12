@@ -1,7 +1,7 @@
 import './modal.css';
 
 import React from 'react';
-import useStore from '../stores/store';
+import useGameStore from '../stores/game-store';
 import { ModalTypes } from '../types/modal-types';
 import { getFormattedTimer } from '../utils/utils';
 
@@ -16,7 +16,7 @@ interface ModalComponentProps {
  */
 export default function Modal(props: ModalComponentProps) {
 
-    const gameTimer = useStore(state => state.gameTimer);
+    const gameTimer = useGameStore(state => state.gameTimer);
 
     /**
      * Handler for the New Game button inside the modal. Starts a new game.
@@ -24,7 +24,7 @@ export default function Modal(props: ModalComponentProps) {
      */
     function newGameHandler(e: React.MouseEvent) {
         e.preventDefault();
-        useStore.getState().newGame();
+        useGameStore.getState().actions.newGame();
     }
 
     /**
