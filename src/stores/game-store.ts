@@ -85,6 +85,12 @@ type GameStoreState = {
         /** Start a brand new game: shuffle, deal and start timer. */
         newGame: () => void;
 
+        /** Pause the game timer if the game is in progress. */
+        pauseGame: () => void;
+
+        /** Resume a previously paused game timer. */
+        resumeGame: () => void;
+
         /** Restart the current game (deal again and reset timer). */
         restartGame: () => void;
 
@@ -182,9 +188,20 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
                 toggleMenu: (hideMenus = false) => {
                     if (hideMenus) {
                         set(() => ({ menuVisible: false, submenuId: "" }));
+                        get().actions.resumeGame();
                         return;
                     }
-                    set(state => ({ menuVisible: !state.menuVisible }));
+
+                    const menuVisible = get().menuVisible;
+
+                    // Opening the menu should pause the game. Closing it should resume the game.
+                    if (menuVisible) {
+                        set(() => ({ menuVisible: false }));
+                        get().actions.resumeGame();
+                    } else {
+                        get().actions.pauseGame();
+                        set(() => ({ menuVisible: true }));
+                    }
                 },
 
                 /**
@@ -276,6 +293,24 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
                     get().actions.shuffleDeck();
                     get().actions.dealDeck();
                     get().actions.startTimer();
+                },
+
+                /**
+                 * Pause the game timer if the game is in progress.
+                 */
+                pauseGame: () => {
+                    if (get().timerId) {
+                        get().actions.stopTimer();
+                    }
+                },
+
+                /**
+                 * Resume a previously paused game timer.
+                 */
+                resumeGame: () => {
+                    if (get().gameTimer && !get().timerId) {
+                        get().actions.startTimer();
+                    }
                 },
 
                 /** Restart the current game state by re-dealing and resetting the timer. */

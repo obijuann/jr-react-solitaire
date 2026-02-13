@@ -558,12 +558,21 @@ describe('Game store actions', () => {
   });
 
   it('toggleMenu and toggleSubmenu behavior', () => {
-    // Arrange
-    useGameStore.setState({ menuVisible: true, submenuId: '' });
+    // Arrange: start with menu hidden so toggling opens it (and should pause)
+    useGameStore.setState({ menuVisible: false, submenuId: '' });
 
-    // Act: toggle menu
+    const pauseSpy = vi.spyOn(useGameStore.getState().actions, 'pauseGame').mockImplementation(() => {});
+    const resumeSpy = vi.spyOn(useGameStore.getState().actions, 'resumeGame').mockImplementation(() => {});
+
+    // Act: open menu (should pause)
+    useGameStore.getState().actions.toggleMenu();
+    expect(useGameStore.getState().menuVisible).toBe(true);
+    expect(pauseSpy).toHaveBeenCalled();
+
+    // Act: close menu (should resume)
     useGameStore.getState().actions.toggleMenu();
     expect(useGameStore.getState().menuVisible).toBe(false);
+    expect(resumeSpy).toHaveBeenCalled();
 
     // Act: show submenu
     useGameStore.getState().actions.toggleSubmenu('settings');
@@ -573,9 +582,41 @@ describe('Game store actions', () => {
     useGameStore.getState().actions.toggleSubmenu('settings');
     expect(useGameStore.getState().submenuId).toBe('');
 
-    // Act: force hide menus
+    // Act: force hide menus (should clear submenu and resume)
+    pauseSpy.mockClear();
+    resumeSpy.mockClear();
     useGameStore.getState().actions.toggleMenu(true);
     expect(useGameStore.getState().menuVisible).toBe(false);
     expect(useGameStore.getState().submenuId).toBe('');
+    expect(resumeSpy).toHaveBeenCalled();
+
+    pauseSpy.mockRestore();
+    resumeSpy.mockRestore();
+  });
+
+  it('pauseGame calls stopTimer when timerId present', () => {
+    // Arrange
+    useGameStore.setState({ timerId: 123 });
+    const stopSpy = vi.spyOn(useGameStore.getState().actions, 'stopTimer').mockImplementation(() => {});
+
+    // Act
+    useGameStore.getState().actions.pauseGame();
+
+    // Assert
+    expect(stopSpy).toHaveBeenCalled();
+    stopSpy.mockRestore();
+  });
+
+  it('resumeGame starts timer when gameTimer > 0 and timerId null', () => {
+    // Arrange
+    useGameStore.setState({ gameTimer: 5, timerId: null });
+    const startSpy = vi.spyOn(useGameStore.getState().actions, 'startTimer').mockImplementation(() => {});
+
+    // Act
+    useGameStore.getState().actions.resumeGame();
+
+    // Assert
+    expect(startSpy).toHaveBeenCalled();
+    startSpy.mockRestore();
   });
 });
