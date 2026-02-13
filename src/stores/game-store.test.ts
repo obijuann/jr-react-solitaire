@@ -24,6 +24,7 @@ beforeEach(() => {
     modalType: undefined,
     gameTimer: 0,
     timerId: null,
+    menuVisible: false
   });
 });
 
@@ -299,6 +300,24 @@ describe('Game store actions', () => {
     }
   });
 
+  it('onStorageRehydrated does not start the timer when the menu is displayed', () => {
+    vi.useFakeTimers();
+    try {
+      // Arrange
+      const spy = vi.spyOn(window, 'setInterval');
+      useGameStore.setState({ gameTimer: 5, timerId: null, shuffledDeck: [], menuVisible: true });
+
+      // Act
+      useGameStore.getState().actions.onStorageRehydrated();
+
+      // Assert
+      expect(spy).not.toHaveBeenCalled();
+      spy.mockRestore();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('onStorageRehydrated does not start timer when no game in progress', () => {
     vi.useFakeTimers();
     try {
@@ -482,7 +501,7 @@ describe('Game store actions', () => {
   it('dealDeck with empty shuffledDeck does not throw and clears queues', () => {
     // Arrange
     useGameStore.setState({ shuffledDeck: [], undoQueue: [{ draw: [], waste: [] }], redoQueue: [{ draw: [], waste: [] }] });
-    const spy = vi.spyOn(useGameStore.getState().actions, 'checkGameState').mockImplementation(() => {});
+    const spy = vi.spyOn(useGameStore.getState().actions, 'checkGameState').mockImplementation(() => { });
 
     // Act / Assert
     expect(() => useGameStore.getState().actions.dealDeck()).not.toThrow();
@@ -561,8 +580,8 @@ describe('Game store actions', () => {
     // Arrange: start with menu hidden so toggling opens it (and should pause)
     useGameStore.setState({ menuVisible: false, submenuId: '' });
 
-    const pauseSpy = vi.spyOn(useGameStore.getState().actions, 'pauseGame').mockImplementation(() => {});
-    const resumeSpy = vi.spyOn(useGameStore.getState().actions, 'resumeGame').mockImplementation(() => {});
+    const pauseSpy = vi.spyOn(useGameStore.getState().actions, 'pauseGame').mockImplementation(() => { });
+    const resumeSpy = vi.spyOn(useGameStore.getState().actions, 'resumeGame').mockImplementation(() => { });
 
     // Act: open menu (should pause)
     useGameStore.getState().actions.toggleMenu();
@@ -597,7 +616,7 @@ describe('Game store actions', () => {
   it('pauseGame calls stopTimer when timerId present', () => {
     // Arrange
     useGameStore.setState({ timerId: 123 });
-    const stopSpy = vi.spyOn(useGameStore.getState().actions, 'stopTimer').mockImplementation(() => {});
+    const stopSpy = vi.spyOn(useGameStore.getState().actions, 'stopTimer').mockImplementation(() => { });
 
     // Act
     useGameStore.getState().actions.pauseGame();
@@ -610,7 +629,7 @@ describe('Game store actions', () => {
   it('resumeGame starts timer when gameTimer > 0 and timerId null', () => {
     // Arrange
     useGameStore.setState({ gameTimer: 5, timerId: null });
-    const startSpy = vi.spyOn(useGameStore.getState().actions, 'startTimer').mockImplementation(() => {});
+    const startSpy = vi.spyOn(useGameStore.getState().actions, 'startTimer').mockImplementation(() => { });
 
     // Act
     useGameStore.getState().actions.resumeGame();

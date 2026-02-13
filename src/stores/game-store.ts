@@ -168,7 +168,8 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
                     }
 
                     const timer = get().gameTimer;
-                    if (timer > 0 || get().shuffledDeck?.length > 0) {
+                    const menuVisible = get().menuVisible;
+                    if (!menuVisible && ( timer > 0 || get().shuffledDeck?.length > 0)) {
                         get().actions.startTimer();
                     }
                 },
@@ -546,7 +547,8 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
                 playfield: state.playfield,
                 redoQueue: state.redoQueue,
                 shuffledDeck: state.shuffledDeck,
-                undoQueue: state.undoQueue
+                undoQueue: state.undoQueue,
+                menuVisible: state.menuVisible
             }),
             onRehydrateStorage: () => (state, error) => {
                 state?.actions?.onStorageRehydrated?.();
@@ -554,7 +556,7 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
                     console.error(`error on store hydration: ${error}`);
                 }
             },
-            version: 2
+            version: 3
         },
     ),
 )
