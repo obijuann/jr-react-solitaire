@@ -31,7 +31,7 @@ const ranks: Ranks[] = ["ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "ja
 export default function Solitaire() {
   const playfieldState = useGameStore(state => state.playfield);
   const modalTypeDisplayed = useGameStore(state => state.modalType);
-  const submenuIdDisplayed = useGameStore(state => state.submenuId);
+  const menuVisible = useGameStore(state => state.menuVisible);
   const actions = useGameStore(state => ({
     newGame: state.actions.newGame,
     restartGame: state.actions.restartGame,
@@ -389,7 +389,7 @@ export default function Solitaire() {
   }
 
   return (
-    <div id="play-area" data-testid="play-area" onClick={hideMenu} className={submenuIdDisplayed ? 'submenu-open' : ''}>
+    <div id="play-area" data-testid="play-area" onClick={hideMenu} className={menuVisible ? 'menu-open' : ''}>
       {renderDrawPile()}
       {renderWastePile()}
       {renderFoundation()}
