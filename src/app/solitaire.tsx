@@ -322,26 +322,26 @@ export default function Solitaire() {
   }
 
   /**
-   * Toggle the global menu visibility when clicking on the play area or menu.
-   * Delegates to the store `toggleMenu` action.
+   * Hide menu visibility when clicking on the play area or menu.
    */
-  function toggleMenu(e: React.MouseEvent) {
+  function hideMenu(e: React.MouseEvent) {
     e.preventDefault();
 
-    const target = e.target as HTMLDivElement;
-    const store = useGameStore.getState();
+    const target = e.target as HTMLElement;
+    const submenuId = useGameStore.getState().submenuId;
 
     // If click originated inside the menu, do not clear the submenu here —
     // Let the menu's own handlers manage it.
-    const clickedInsideMenu = (e.target as HTMLElement)?.closest && (e.target as HTMLElement).closest('#menu');
+    const clickedInsideMenu = target?.closest && target.closest('#menu');
 
-    if (store.submenuId && !clickedInsideMenu) {
-      store.actions.clearSubmenu();
+    if (submenuId && !clickedInsideMenu) {
+      useGameStore.getState().actions.clearSubmenu();
       return;
     }
 
-    if (target && (target.id === "play-area" || target.id === "menu")) {
-      useGameStore.getState().actions.toggleMenu();
+    // Clicking the play area should only hide menus
+    if (target && target.id === "play-area") {
+      useGameStore.getState().actions.toggleMenu(true);
     }
   }
 
@@ -389,7 +389,7 @@ export default function Solitaire() {
   }
 
   return (
-    <div id="play-area" data-testid="play-area" onClick={toggleMenu} className={submenuIdDisplayed ? 'submenu-open' : ''}>
+    <div id="play-area" data-testid="play-area" onClick={hideMenu} className={submenuIdDisplayed ? 'submenu-open' : ''}>
       {renderDrawPile()}
       {renderWastePile()}
       {renderFoundation()}

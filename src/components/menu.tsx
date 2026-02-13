@@ -320,6 +320,15 @@ export default function Menu() {
     }
 
     /**
+     * Menu toggle even for the menu control
+     * @param e Mouse event
+     */
+    function toggleMenu(e: React.MouseEvent) {
+        e.preventDefault();
+        useGameStore.getState().actions.toggleMenu();
+    }
+
+    /**
      * Dispatch an undo action to the store.
      */
     function undoMoveHandler() {
@@ -328,6 +337,9 @@ export default function Menu() {
 
     return (
         <div id="menu" data-testid="menu" className={isMenuVisible ? "visible" : ""}>
+            <div id="menu-control">
+                <button onClick={toggleMenu} title="Toggle Menu (Esc)"></button>
+            </div>
             <div id="primary-menu">
                 <button className="primary" id="new-menu" onClick={handleSubmenuToggle}>New</button>
                 <button className="primary" id="undo" disabled={!undoAvailable} onClick={undoMoveHandler}>Undo</button>
