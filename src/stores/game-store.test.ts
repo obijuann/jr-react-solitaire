@@ -26,6 +26,8 @@ beforeEach(() => {
     timerId: null,
     menuVisible: false
   });
+
+  vi.resetAllMocks();
 });
 
 describe('Game store actions', () => {
@@ -608,6 +610,31 @@ describe('Game store actions', () => {
     expect(useGameStore.getState().menuVisible).toBe(false);
     expect(useGameStore.getState().submenuId).toBe('');
     expect(resumeSpy).toHaveBeenCalled();
+
+    pauseSpy.mockRestore();
+    resumeSpy.mockRestore();
+  });
+
+  it('toggleMenu should not pause/resume the game if a modal is open', () => {
+    // Arrange: start with menu hidden and modal set so toggling opens the menu but does not pause the game
+    useGameStore.setState({ menuVisible: false, submenuId: '', modalType: "gamewin" });
+
+    const pauseSpy = vi.spyOn(useGameStore.getState().actions, 'pauseGame').mockImplementation(() => { });
+    const resumeSpy = vi.spyOn(useGameStore.getState().actions, 'resumeGame').mockImplementation(() => { });
+
+    // Act: open menu (should not pause)
+    useGameStore.getState().actions.toggleMenu();
+
+    // Assert
+    expect(useGameStore.getState().menuVisible).toBe(true);
+    expect(pauseSpy).not.toHaveBeenCalled();
+
+    // Act: close menu (should not resume)
+    useGameStore.getState().actions.toggleMenu();
+
+    // Assert
+    expect(useGameStore.getState().menuVisible).toBe(false);
+    expect(resumeSpy).not.toHaveBeenCalled();
 
     pauseSpy.mockRestore();
     resumeSpy.mockRestore();

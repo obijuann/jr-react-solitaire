@@ -169,7 +169,7 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
 
                     const timer = get().gameTimer;
                     const menuVisible = get().menuVisible;
-                    if (!menuVisible && ( timer > 0 || get().shuffledDeck?.length > 0)) {
+                    if (!menuVisible && (timer > 0 || get().shuffledDeck?.length > 0)) {
                         get().actions.startTimer();
                     }
                 },
@@ -193,16 +193,15 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
                         return;
                     }
 
-                    const menuVisible = get().menuVisible;
-
                     // Opening the menu should pause the game. Closing it should resume the game.
-                    if (menuVisible) {
-                        set(() => ({ menuVisible: false }));
-                        get().actions.resumeGame();
-                    } else {
-                        get().actions.pauseGame();
-                        set(() => ({ menuVisible: true }));
-                    }
+                    // Do not pause/resume the game if the modal is open
+                    const menuVisible = get().menuVisible;
+                    const modalType = get().modalType;
+                    !modalType && menuVisible && get().actions.resumeGame();
+                    !modalType && !menuVisible && get().actions.pauseGame();
+
+                    // Toggle the menu value
+                    set(() => ({ menuVisible: !menuVisible }));
                 },
 
                 /**

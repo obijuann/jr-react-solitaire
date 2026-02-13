@@ -18,6 +18,7 @@ export default function Menu() {
 
     // Set up state management
     const gameActive = useGameStore(state => !!state.shuffledDeck.length);
+    const modalType = useGameStore(state => state.modalType);
     const undoAvailable = useGameStore(state => !!state.undoQueue.length);
     const redoAvailable = useGameStore(state => !!state.redoQueue.length);
     const isMenuVisible = useGameStore(state => state.menuVisible);
@@ -342,8 +343,8 @@ export default function Menu() {
             </div>
             <div id="primary-menu">
                 <button className="primary" id="new-menu" onClick={handleSubmenuToggle}>New</button>
-                <button className="primary" id="undo" disabled={!undoAvailable} onClick={undoMoveHandler}>Undo</button>
-                <button className="primary" id="redo" disabled={!redoAvailable} onClick={redoMoveHandler}>Redo</button>
+                <button className="primary" id="undo" disabled={!undoAvailable || !!modalType} onClick={undoMoveHandler}>Undo</button>
+                <button className="primary" id="redo" disabled={!redoAvailable || !!modalType} onClick={redoMoveHandler}>Redo</button>
                 <button className="primary" id="stats" onClick={handleSubmenuToggle}>Statistics</button>
                 <button className="primary" id="help" onClick={handleSubmenuToggle}>Help</button>
                 {renderSubmenu()}
