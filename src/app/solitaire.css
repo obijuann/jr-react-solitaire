@@ -19,11 +19,10 @@
   justify-content: space-between;
 }
 
-/* Slight blur when a submenu is open: blur all direct children except the menu
-   so the menu and submenu remain crisp and interactive. Also disable pointer
-   events on the blurred content so taps first close the submenu. */
-#play-area.submenu-open > :not(#menu) {
-  filter: blur(3px);
+/* Slight opacity shift to all direct children except the menu when the menu is visible.
+   Also disable pointer events on the content so any clicks first close the menus. */
+#play-area.menu-open > :not(#menu) {
+  filter: opacity(80%);
   pointer-events: none;
 }
 

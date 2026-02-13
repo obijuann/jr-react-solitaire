@@ -24,7 +24,10 @@ beforeEach(() => {
     modalType: undefined,
     gameTimer: 0,
     timerId: null,
+    menuVisible: false
   });
+
+  vi.resetAllMocks();
 });
 
 describe('Game store actions', () => {
@@ -299,6 +302,24 @@ describe('Game store actions', () => {
     }
   });
 
+  it('onStorageRehydrated does not start the timer when the menu is displayed', () => {
+    vi.useFakeTimers();
+    try {
+      // Arrange
+      const spy = vi.spyOn(window, 'setInterval');
+      useGameStore.setState({ gameTimer: 5, timerId: null, shuffledDeck: [], menuVisible: true });
+
+      // Act
+      useGameStore.getState().actions.onStorageRehydrated();
+
+      // Assert
+      expect(spy).not.toHaveBeenCalled();
+      spy.mockRestore();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('onStorageRehydrated does not start timer when no game in progress', () => {
     vi.useFakeTimers();
     try {
@@ -482,7 +503,7 @@ describe('Game store actions', () => {
   it('dealDeck with empty shuffledDeck does not throw and clears queues', () => {
     // Arrange
     useGameStore.setState({ shuffledDeck: [], undoQueue: [{ draw: [], waste: [] }], redoQueue: [{ draw: [], waste: [] }] });
-    const spy = vi.spyOn(useGameStore.getState().actions, 'checkGameState').mockImplementation(() => {});
+    const spy = vi.spyOn(useGameStore.getState().actions, 'checkGameState').mockImplementation(() => { });
 
     // Act / Assert
     expect(() => useGameStore.getState().actions.dealDeck()).not.toThrow();
@@ -558,12 +579,21 @@ describe('Game store actions', () => {
   });
 
   it('toggleMenu and toggleSubmenu behavior', () => {
-    // Arrange
-    useGameStore.setState({ menuVisible: true, submenuId: '' });
+    // Arrange: start with menu hidden so toggling opens it (and should pause)
+    useGameStore.setState({ menuVisible: false, submenuId: '' });
 
-    // Act: toggle menu
+    const pauseSpy = vi.spyOn(useGameStore.getState().actions, 'pauseGame').mockImplementation(() => { });
+    const resumeSpy = vi.spyOn(useGameStore.getState().actions, 'resumeGame').mockImplementation(() => { });
+
+    // Act: open menu (should pause)
+    useGameStore.getState().actions.toggleMenu();
+    expect(useGameStore.getState().menuVisible).toBe(true);
+    expect(pauseSpy).toHaveBeenCalled();
+
+    // Act: close menu (should resume)
     useGameStore.getState().actions.toggleMenu();
     expect(useGameStore.getState().menuVisible).toBe(false);
+    expect(resumeSpy).toHaveBeenCalled();
 
     // Act: show submenu
     useGameStore.getState().actions.toggleSubmenu('settings');
@@ -573,9 +603,66 @@ describe('Game store actions', () => {
     useGameStore.getState().actions.toggleSubmenu('settings');
     expect(useGameStore.getState().submenuId).toBe('');
 
-    // Act: force hide menus
+    // Act: force hide menus (should clear submenu and resume)
+    pauseSpy.mockClear();
+    resumeSpy.mockClear();
     useGameStore.getState().actions.toggleMenu(true);
     expect(useGameStore.getState().menuVisible).toBe(false);
     expect(useGameStore.getState().submenuId).toBe('');
+    expect(resumeSpy).toHaveBeenCalled();
+
+    pauseSpy.mockRestore();
+    resumeSpy.mockRestore();
+  });
+
+  it('toggleMenu should not pause/resume the game if a modal is open', () => {
+    // Arrange: start with menu hidden and modal set so toggling opens the menu but does not pause the game
+    useGameStore.setState({ menuVisible: false, submenuId: '', modalType: "gamewin" });
+
+    const pauseSpy = vi.spyOn(useGameStore.getState().actions, 'pauseGame').mockImplementation(() => { });
+    const resumeSpy = vi.spyOn(useGameStore.getState().actions, 'resumeGame').mockImplementation(() => { });
+
+    // Act: open menu (should not pause)
+    useGameStore.getState().actions.toggleMenu();
+
+    // Assert
+    expect(useGameStore.getState().menuVisible).toBe(true);
+    expect(pauseSpy).not.toHaveBeenCalled();
+
+    // Act: close menu (should not resume)
+    useGameStore.getState().actions.toggleMenu();
+
+    // Assert
+    expect(useGameStore.getState().menuVisible).toBe(false);
+    expect(resumeSpy).not.toHaveBeenCalled();
+
+    pauseSpy.mockRestore();
+    resumeSpy.mockRestore();
+  });
+
+  it('pauseGame calls stopTimer when timerId present', () => {
+    // Arrange
+    useGameStore.setState({ timerId: 123 });
+    const stopSpy = vi.spyOn(useGameStore.getState().actions, 'stopTimer').mockImplementation(() => { });
+
+    // Act
+    useGameStore.getState().actions.pauseGame();
+
+    // Assert
+    expect(stopSpy).toHaveBeenCalled();
+    stopSpy.mockRestore();
+  });
+
+  it('resumeGame starts timer when gameTimer > 0 and timerId null', () => {
+    // Arrange
+    useGameStore.setState({ gameTimer: 5, timerId: null });
+    const startSpy = vi.spyOn(useGameStore.getState().actions, 'startTimer').mockImplementation(() => { });
+
+    // Act
+    useGameStore.getState().actions.resumeGame();
+
+    // Assert
+    expect(startSpy).toHaveBeenCalled();
+    startSpy.mockRestore();
   });
 });

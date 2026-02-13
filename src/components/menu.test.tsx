@@ -32,8 +32,23 @@ it("renders the base menu component", () => {
     expect(helpButton.hasAttribute("disabled")).toBeFalsy();
 
     // Assert no submenus are present
-    expect(screen.queryByRole('button', { name: 'New Game' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'New game' })).not.toBeInTheDocument();
     expect(screen.queryByText(/object of the game/i)).not.toBeInTheDocument();
+});
+
+it("menu control button toggles menu visibility", () => {
+    // Arrange + Act
+    render(<Menu />);
+
+    // Assert the toggle control exists
+    const toggleControl = screen.getByTitle('Toggle Menu (Esc)');
+    expect(toggleControl).toBeInTheDocument();
+
+    // Act - click the toggle control to hide the menu
+    fireEvent.click(toggleControl);
+
+    // Assert the menu is no longer visible
+    expect(screen.getByTestId("menu").className).not.toEqual("visible");
 });
 
 it("firing the 'toggleMenu' event hides the menu component", () => {

@@ -85,6 +85,12 @@ type GameStoreState = {
         /** Start a brand new game: shuffle, deal and start timer. */
         newGame: () => void;
 
+        /** Pause the game timer if the game is in progress. */
+        pauseGame: () => void;
+
+        /** Resume a previously paused game timer. */
+        resumeGame: () => void;
+
         /** Restart the current game (deal again and reset timer). */
         restartGame: () => void;
 
@@ -162,7 +168,8 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
                     }
 
                     const timer = get().gameTimer;
-                    if (timer > 0 || get().shuffledDeck?.length > 0) {
+                    const menuVisible = get().menuVisible;
+                    if (!menuVisible && (timer > 0 || get().shuffledDeck?.length > 0)) {
                         get().actions.startTimer();
                     }
                 },
@@ -182,9 +189,19 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
                 toggleMenu: (hideMenus = false) => {
                     if (hideMenus) {
                         set(() => ({ menuVisible: false, submenuId: "" }));
+                        get().actions.resumeGame();
                         return;
                     }
-                    set(state => ({ menuVisible: !state.menuVisible }));
+
+                    // Opening the menu should pause the game. Closing it should resume the game.
+                    // Do not pause/resume the game if the modal is open
+                    const menuVisible = get().menuVisible;
+                    const modalType = get().modalType;
+                    !modalType && menuVisible && get().actions.resumeGame();
+                    !modalType && !menuVisible && get().actions.pauseGame();
+
+                    // Toggle the menu value
+                    set(() => ({ menuVisible: !menuVisible }));
                 },
 
                 /**
@@ -276,6 +293,24 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
                     get().actions.shuffleDeck();
                     get().actions.dealDeck();
                     get().actions.startTimer();
+                },
+
+                /**
+                 * Pause the game timer if the game is in progress.
+                 */
+                pauseGame: () => {
+                    if (get().timerId) {
+                        get().actions.stopTimer();
+                    }
+                },
+
+                /**
+                 * Resume a previously paused game timer.
+                 */
+                resumeGame: () => {
+                    if (get().gameTimer && !get().timerId) {
+                        get().actions.startTimer();
+                    }
                 },
 
                 /** Restart the current game state by re-dealing and resetting the timer. */
@@ -511,7 +546,8 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
                 playfield: state.playfield,
                 redoQueue: state.redoQueue,
                 shuffledDeck: state.shuffledDeck,
-                undoQueue: state.undoQueue
+                undoQueue: state.undoQueue,
+                menuVisible: state.menuVisible
             }),
             onRehydrateStorage: () => (state, error) => {
                 state?.actions?.onStorageRehydrated?.();
@@ -519,7 +555,7 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
                     console.error(`error on store hydration: ${error}`);
                 }
             },
-            version: 2
+            version: 3
         },
     ),
 )
