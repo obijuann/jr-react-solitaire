@@ -91,8 +91,10 @@ export default function Solitaire() {
 
     if (dragEvent?.target) {
       const cardElement = dragEvent.target as HTMLDivElement;
-      const cardData = cardElement.getAttribute("data-carddata")
-      cardData && dragEvent.dataTransfer.setData("cardData", cardData);
+      const cardData = cardElement.getAttribute("data-carddata");
+      if (cardData) {
+        dragEvent.dataTransfer.setData("cardData", cardData);
+      }
     }
   }
 

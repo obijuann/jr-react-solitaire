@@ -256,7 +256,7 @@ export default function Menu() {
             // Open the submenu
             setSubMenuPosStyle(posStyle);
             setSubmenuArrowPos(arrowPos);
-        } catch (err) {
+        } catch {
             setSubMenuPosStyle({});
             setSubmenuArrowPos(0);
         }
