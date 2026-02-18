@@ -7,7 +7,7 @@ import useGameStore from '../stores/game-store';
 import Modal from './modal';
 
 beforeEach(() => {
-    useGameStore.setState({ gameTimer: 0 });
+    useGameStore.setState({ gameTimer: 0, modalType: "gamewin" });
 });
 
 it("renders game win modal", () => {
@@ -15,7 +15,7 @@ it("renders game win modal", () => {
     useGameStore.setState({ gameTimer: 61 }); // 1m 1s
 
     // Act
-    render(<Modal modalType="gamewin" />);
+    render(<Modal />);
 
     // Assert
     expect(screen.getByText(/congratulations/i)).toBeInTheDocument();
@@ -25,32 +25,51 @@ it("renders game win modal", () => {
 
 it("clicking the 'new game' button publishes a new game event", () => {
     // Arrange
-    const original = useGameStore.getState().actions.newGame;
+    const newGameOriginal = useGameStore.getState().actions.newGame;
+    const quitGameOriginal = useGameStore.getState().actions.quitGame;
     const newGameSpy = vi.fn();
-    useGameStore.setState(state => ({ actions: { ...state.actions, newGame: newGameSpy } }));
-    render(<Modal modalType="gamewin" />);
+    const quitGameSpy = vi.fn();
+    useGameStore.setState(state => ({ actions: { ...state.actions, newGame: newGameSpy, quitGame: quitGameSpy }, }));
+    render(<Modal />);
 
     // Act
     const newGameButton = screen.getByRole('button', { name: 'New Game' })
     fireEvent.click(newGameButton);
 
     // Assert
-    expect(newGameSpy).toHaveBeenCalled();
-    useGameStore.setState(state => ({ actions: { ...state.actions, newGame: original } }));
+    expect(newGameSpy).toHaveBeenCalledOnce();
+    expect(quitGameSpy).not.toHaveBeenCalled();
+    useGameStore.setState(state => ({ actions: { ...state.actions, newGame: newGameOriginal, quitGame: quitGameOriginal } }));
 });
 
-it("clicking the modal backdrop publishes a new game event", () => {
+it("clicking the game win modal backdrop publishes a quit game event", () => {
     // Arrange
-    const original = useGameStore.getState().actions.newGame;
-    const newGameSpy = vi.fn();
-    useGameStore.setState(state => ({ actions: { ...state.actions, newGame: newGameSpy } }));
-    render(<Modal modalType="gamewin" />);
+    const original = useGameStore.getState().actions.quitGame;
+    const quitGameSpy = vi.fn();
+    useGameStore.setState(state => ({ actions: { ...state.actions, quitGame: quitGameSpy } }));
+    render(<Modal />);
 
     // Act
     const backdrop = screen.getByTestId("modal-backdrop")
     fireEvent.click(backdrop);
 
     // Assert
-    expect(newGameSpy).toHaveBeenCalled();
-    useGameStore.setState(state => ({ actions: { ...state.actions, newGame: original } }));
+    expect(quitGameSpy).toHaveBeenCalledOnce();
+    useGameStore.setState(state => ({ actions: { ...state.actions, quitGame: original } }));
+});
+
+it("clicking the modal backdrop outside of a game win closes the modal", () => {
+    // Arrange
+    const quitGameOriginal = useGameStore.getState().actions.quitGame;
+    const quitGameSpy = vi.fn();
+    useGameStore.setState(state => ({ actions: { ...state.actions, quitGame: quitGameSpy, }, modalType: undefined }));
+    render(<Modal />);
+
+    // Act
+    const backdrop = screen.getByTestId("modal-backdrop")
+    fireEvent.click(backdrop);
+
+    // Assert
+    expect(quitGameSpy).not.toHaveBeenCalled();
+    useGameStore.setState(state => ({ actions: { ...state.actions, quitGame: quitGameOriginal } }));
 });

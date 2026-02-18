@@ -30,8 +30,8 @@ const ranks: Ranks[] = ["ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "ja
  */
 export default function Solitaire() {
   const playfieldState = useGameStore(state => state.playfield);
-  const modalTypeDisplayed = useGameStore(state => state.modalType);
   const menuVisible = useGameStore(state => state.menuVisible);
+  const modalType = useGameStore(state => state.modalType);
   const actions = useGameStore(state => ({
     newGame: state.actions.newGame,
     restartGame: state.actions.restartGame,
@@ -312,14 +312,12 @@ export default function Solitaire() {
     );
   }
 
-  /** Conditionally render a `Modal` when `modalTypeDisplayed` is present */
+  /** Conditionally render a `Modal` when `modalType is present */
   function renderModal() {
-    if (!modalTypeDisplayed) return;
+    if (!modalType) return;
 
     return (
-      <Modal
-        modalType={modalTypeDisplayed}
-      />
+      <Modal />
     );
   }
 
