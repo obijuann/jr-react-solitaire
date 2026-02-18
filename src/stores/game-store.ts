@@ -197,8 +197,13 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
                     // Do not pause/resume the game if the modal is open
                     const menuVisible = get().menuVisible;
                     const modalType = get().modalType;
-                    !modalType && menuVisible && get().actions.resumeGame();
-                    !modalType && !menuVisible && get().actions.pauseGame();
+                    if (!modalType) {
+                        if (menuVisible) {
+                            get().actions.resumeGame();
+                        } else {
+                            get().actions.pauseGame();
+                        }
+                    }
 
                     // Toggle the menu value
                     set(() => ({ menuVisible: !menuVisible }));
@@ -350,7 +355,9 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
                         playfield.waste = [];
                     } else if (playfield.draw.length) {
                         const last = playfield.draw.pop();
-                        last && playfield.waste.push(last);
+                        if (last) {
+                            playfield.waste.push(last);
+                        }
                     }
 
                     set(() => ({ playfield, undoQueue: undoQueue }));

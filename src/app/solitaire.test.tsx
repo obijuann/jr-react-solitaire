@@ -135,7 +135,10 @@ describe('Solitaire additional behavior', () => {
 
     // Assert
     expect(spy).toHaveBeenCalled();
-    useGameStore.setState(state => ({ actions: { ...state.actions, drawCard: original } }));
+    act(() => {
+      // Wrapping this in act() call to avoid console warnings
+      useGameStore.setState(state => ({ actions: { ...state.actions, drawCard: original } }));
+    });
   });
 
   it('dragStart sets cardData on dataTransfer', () => {
@@ -197,7 +200,10 @@ describe('Solitaire additional behavior', () => {
 
     // Assert
     expect(moveSpy).toHaveBeenCalled();
-    useGameStore.setState(state => ({ actions: { ...state.actions, moveCard: moveOriginal } }));
+    act(() => {
+      // Wrapping this in act() call to avoid console warnings
+      useGameStore.setState(state => ({ actions: { ...state.actions, moveCard: moveOriginal } }));
+    });
   });
 
   it('waste pile class changes with count', () => {
@@ -208,11 +214,11 @@ describe('Solitaire additional behavior', () => {
     expect(waste.className).toEqual('offset-one');
 
     // Act
-      act(() => {
+    act(() => {
       useGameStore.setState({ playfield: { ...useGameStore.getState().playfield, waste: [{ rank: 'ace', suit: 'hearts', face: 'up' }, { rank: '2', suit: 'hearts', face: 'up' }, { rank: '5', suit: 'clubs', face: 'up' }] } });
     });
     const waste2 = screen.getByTestId('play-area').querySelector('#waste') as HTMLElement;
-    
+
     // Assert
     expect(waste2.className).toEqual('offset-two');
   });
