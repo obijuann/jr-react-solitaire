@@ -2,21 +2,16 @@ import './modal.css';
 
 import React from 'react';
 import useGameStore from '../stores/game-store';
-import { ModalTypes } from '../types/modal-types';
 import { getFormattedTimer } from '../utils/utils';
-
-interface ModalComponentProps {
-    modalType: ModalTypes
-}
 
 /**
  * Modal component.
- * Renders modal backdrop and content based on the provided `modalType`.
- * @param props Component props
+ * Renders modal backdrop and content based on the `modalType`.
  */
-export default function Modal(props: ModalComponentProps) {
+export default function Modal() {
 
     const gameTimer = useGameStore(state => state.gameTimer);
+    const modalType = useGameStore(state => state.modalType);
 
     /**
      * Handler for the New Game button inside the modal. Starts a new game.
@@ -24,15 +19,31 @@ export default function Modal(props: ModalComponentProps) {
      */
     function newGameHandler(e: React.MouseEvent) {
         e.preventDefault();
+        e.stopPropagation();
         useGameStore.getState().actions.newGame();
     }
 
     /**
-     * Render modal inner content for the given type.
-     * @param modalType Modal type to render
+     * Handler for handling click events on the modal backdrop.
+     * @param e Mouse event
+     */
+    function modalBackdropClickHandler(e: React.MouseEvent) {
+        e.preventDefault();
+
+        if (modalType === "gamewin") {
+            // If the user has won the game, reset the playfield
+            useGameStore.getState().actions.quitGame();
+        } else {
+            // Otherwise, just close the modal
+            useGameStore.setState(() => ({ modalType: undefined }));
+        }
+    }
+
+    /**
+     * Render modal inner content
      * @returns JSX.Element | void
      */
-    function renderModalContent(modalType: ModalTypes) {
+    function renderModalContent() {
         switch (modalType) {
             case "gamewin":
                 return (
@@ -48,9 +59,9 @@ export default function Modal(props: ModalComponentProps) {
     }
 
     return (
-        <div data-testid="modal-backdrop" className="modal-backdrop" onClick={newGameHandler}>
+        <div data-testid="modal-backdrop" className="modal-backdrop" onClick={modalBackdropClickHandler}>
             <div className="modal">
-                {renderModalContent(props.modalType)}
+                {renderModalContent()}
             </div>
         </div>
     );
