@@ -221,7 +221,6 @@ button:not(:disabled):active {
 }
 
 @media (max-width: 965px) {
-
     #menu {
         bottom: -120px;
     }
