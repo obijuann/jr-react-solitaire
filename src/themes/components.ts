@@ -1,10 +1,14 @@
 import type { Components } from '@mui/material/styles';
 import { ThemeColorProperties } from './palette';
 
+// Theme-specific component overrides for MUI.
+// These set CSS variables on `:root` and provide global baseline styles
+// used by the app's UI (background, paper, text color, etc.).
 export function makeComponents(colorProps: ThemeColorProperties): Components {
     return {
         MuiCssBaseline: {
             styleOverrides: {
+                // CSS variables exposed for use in the app's CSS files.
                 ':root': {
                     '--accent-color': colorProps.light,
                     '--card-shadow': 'rgba(0,0,0,0.2)',
@@ -15,6 +19,7 @@ export function makeComponents(colorProps: ThemeColorProperties): Components {
                     '--color-text': '#ffffff',
                     '--color-on-primary': '#ffffff',
                 },
+                // Global body background + text color tuned to the theme.
                 body: {
                     background: `radial-gradient(circle at 50% 100%, rgba(255, 255, 255,0.25) 0%, rgba(255, 255, 255,0.1) 50%, rgba(0,0,0,0.3) 95%), ${colorProps.light}`,
                     backgroundRepeat: 'no-repeat',
@@ -22,6 +27,7 @@ export function makeComponents(colorProps: ThemeColorProperties): Components {
                     backgroundSize: 'cover',
                     color: 'var(--color-text)'
                 },
+                // Remove any default paper background image to keep theme visuals consistent.
                 '.MuiPaper-root': {
                     backgroundImage: 'none'
                 }
@@ -29,5 +35,3 @@ export function makeComponents(colorProps: ThemeColorProperties): Components {
         }
     } as Components;
 }
-
-export default makeComponents;
