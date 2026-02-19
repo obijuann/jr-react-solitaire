@@ -1,9 +1,7 @@
 import type { Components } from '@mui/material/styles';
-import { makeGradient, ThemeColorProperties } from './palette';
+import { ThemeColorProperties } from './palette';
 
 export function makeComponents(colorProps: ThemeColorProperties): Components {
-    // TODO: make this a bit better for most themes
-    // const cardPileShadow = colorProps.key === 'midnight' ? midnightCardPileShadow : defaultCardPileShadow;
     return {
         MuiCssBaseline: {
             styleOverrides: {
@@ -18,7 +16,7 @@ export function makeComponents(colorProps: ThemeColorProperties): Components {
                     '--color-on-primary': '#ffffff',
                 },
                 body: {
-                    background: makeGradient(colorProps),
+                    background: `radial-gradient(circle at 50% 100%, rgba(255, 255, 255,0.25) 0%, rgba(255, 255, 255,0.1) 50%, rgba(0,0,0,0.3) 95%), ${colorProps.light}`,
                     backgroundRepeat: 'no-repeat',
                     backgroundAttachment: 'fixed',
                     backgroundSize: 'cover',

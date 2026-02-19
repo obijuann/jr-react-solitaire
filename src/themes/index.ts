@@ -15,8 +15,7 @@ Object.entries(themeColors).forEach(([k, p]) => {
   });
 });
 
-export const defaultThemeKey = 'emerald';
-
+export const defaultThemeKey = 'green';
 export const themeKeys = Object.keys(themes) as Array<keyof typeof themes>;
 
 export function getTheme(key: string): Theme {
