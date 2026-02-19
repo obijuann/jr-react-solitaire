@@ -1,6 +1,6 @@
 #menu {
     --border-radius: 8px;
-    background: rgba(23, 133, 46, .9);
+    background: var(--color-primary);
     bottom: -140px;
     left: 0;
     position: fixed;
@@ -77,8 +77,8 @@
 }
 
 #submenu {
-    background-color: green;
-    border: 2px solid white;
+    background-color: var(--color-primary);
+    border: 2px solid var(--color-on-primary);
     border-radius: var(--border-radius);
     bottom: 145px;
     color: white;
@@ -93,7 +93,7 @@
 #submenu::after {
     border-left: var(--submenu-icon-size) solid transparent;
     border-right: var(--submenu-icon-size) solid transparent;
-    border-top: var(--submenu-icon-size) solid #fff;
+    border-top: var(--submenu-icon-size) solid var(--color-on-primary);
     bottom: 130px;
     content: "";
     height: 0;
@@ -169,26 +169,26 @@
 }
 
 #stats-submenu .stats-header {
-    background-color: green;
+    background-color: var(--color-primary);
     padding: 0;
     position: fixed;
     width: var(--submenu-width);
 }
 
 #stats-submenu .stats-section-header {
-    background-color: darkgreen;
+    background-color: var(--color-primary-dark);
     justify-content: left;
 }
 
 #stats-submenu .stats-section {
-    background-color: green;
+    background-color: var(--color-primary);
     justify-content: space-between;
 }
 
 button {
     border: 0;
     border-radius: var(--border-radius);
-    color: #fff;
+    color: var(--color-on-primary);
     cursor: pointer;
     font-size: 24px;
     margin: 0;

@@ -1,6 +1,6 @@
 .card {
     color: black;
-    filter: drop-shadow(1px 1px 1px black);
+    filter: drop-shadow(1px 1px 1px var(--card-shadow, black));
     height: var(--card-height);
     position: absolute;
     width: var(--card-width);
