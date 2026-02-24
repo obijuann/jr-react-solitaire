@@ -1,6 +1,10 @@
 import './menu.css';
 
+import ClearRoundedIcon from '@mui/icons-material/ClearRounded';
 import KeyboardArrowUpOutlinedIcon from '@mui/icons-material/KeyboardArrowUpOutlined';
+import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
+import ReplayRoundedIcon from '@mui/icons-material/ReplayRounded';
+import RestoreRoundedIcon from '@mui/icons-material/RestoreRounded';
 import { useEffect, useState } from 'react';
 import useGameStore from '../stores/game-store';
 import useStatisticsStore from '../stores/statistics-store';
@@ -96,9 +100,9 @@ export default function Menu() {
     function renderStartSubmenu() {
         return (
             <div id="submenu" className="list" style={subMenuPosStyle}>
-                <button className="secondary" id="new-game" onClick={newGameHandler}>New game</button>
-                <button className="secondary" id="restart" onClick={restartGameHandler} disabled={!gameActive}>Restart this game</button>
-                <button className="secondary" id="quit" onClick={quitGameHandler} disabled={!gameActive}>Quit this game</button>
+                <button className="secondary" id="new-game" onClick={newGameHandler}><PlayArrowRoundedIcon fontSize='large'/>New game</button>
+                <button className="secondary" id="restart" onClick={restartGameHandler} disabled={!gameActive}><ReplayRoundedIcon fontSize='large'/>Restart this game</button>
+                <button className="secondary" id="quit" onClick={quitGameHandler} disabled={!gameActive}><ClearRoundedIcon fontSize='large'/>Quit this game</button>
             </div>
         );
     }
@@ -167,8 +171,8 @@ export default function Menu() {
             <div id="submenu" className="list" style={subMenuPosStyle}>
                 <div id="stats-submenu">
                     <div className="stats-header">
-                        <button onClick={resetStatistics} className="secondary" id="reset-stats" title='Reset Statistics'></button>
-                        Statistics
+                        <button onClick={resetStatistics} className="secondary" id="reset-stats" title='Reset Statistics'><RestoreRoundedIcon fontSize='medium'/></button>
+                        <span>Statistics</span>
                     </div>
                     <div className="stats-section-header">Time</div>
                     <div className="stats-section">
@@ -343,7 +347,7 @@ export default function Menu() {
                 <button onClick={toggleMenu} title="Toggle Menu (Esc)"><KeyboardArrowUpOutlinedIcon fontSize='medium' /></button>
             </div>
             <div id="primary-menu">
-                <button className="primary" id="new-menu" onClick={handleSubmenuToggle}>New</button>
+                <button className="primary" id="new-menu" onClick={handleSubmenuToggle}>Play</button>
                 <button className="primary" id="undo" disabled={!undoAvailable || !!modalType} onClick={undoMoveHandler}>Undo</button>
                 <button className="primary" id="redo" disabled={!redoAvailable || !!modalType} onClick={redoMoveHandler}>Redo</button>
                 <button className="primary" id="stats" onClick={handleSubmenuToggle}>Statistics</button>

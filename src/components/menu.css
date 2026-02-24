@@ -38,8 +38,7 @@
     filter: brightness(1);
 }
 
-#new-menu,
-#new-game {
+#new-menu {
     background-image: url("/icons/play.svg");
 }
 
@@ -53,14 +52,6 @@
 
 #help {
     background-image: url("/icons/question.svg");
-}
-
-#restart {
-    background-image: url("/icons/restart.svg");
-}
-
-#quit {
-    background-image: url("/icons/quit.svg");
 }
 
 #primary-menu {
@@ -137,8 +128,6 @@
 }
 
 #reset-stats {
-    background-image: url("/icons/reset.svg");
-    background-position: center;
     position: absolute;
     left: 6px;
 }
@@ -167,9 +156,8 @@
 
 #stats-submenu .stats-header {
     background-color: var(--color-primary);
-    padding: 0;
     position: fixed;
-    width: var(--submenu-width);
+    width: calc(var(--submenu-width) - 10px);
 }
 
 #stats-submenu .stats-section-header {
@@ -203,13 +191,11 @@ button:disabled {
 }
 
 button.secondary {
-    background: transparent no-repeat left 4px;
-    background-size: 30px;
-    font-size: 18px;
+    align-items: center;
+    background-color: transparent;
+    display: flex;
+    font-size: 20px;
     height: 40px;
-    padding-inline-start: 35px;
-    padding-inline-end: 10px;
-    text-align: justify;
 }
 
 button:not(:disabled):hover,
