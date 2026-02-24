@@ -1,5 +1,6 @@
 import './menu.css';
 
+import KeyboardArrowUpOutlinedIcon from '@mui/icons-material/KeyboardArrowUpOutlined';
 import { useEffect, useState } from 'react';
 import useGameStore from '../stores/game-store';
 import useStatisticsStore from '../stores/statistics-store';
@@ -339,7 +340,7 @@ export default function Menu() {
     return (
         <div id="menu" data-testid="menu" className={isMenuVisible ? "visible" : ""}>
             <div id="menu-control">
-                <button onClick={toggleMenu} title="Toggle Menu (Esc)"></button>
+                <button onClick={toggleMenu} title="Toggle Menu (Esc)"><KeyboardArrowUpOutlinedIcon fontSize='medium' /></button>
             </div>
             <div id="primary-menu">
                 <button className="primary" id="new-menu" onClick={handleSubmenuToggle}>New</button>

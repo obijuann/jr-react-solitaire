@@ -17,16 +17,13 @@
     background: rgba(0, 0, 0, .5);
     cursor: pointer;
     display: flex;
-    height: 20px;
+    height: 24px;
     justify-content: center;
 }
 
 #menu-control button {
-    background: transparent no-repeat center top;
-    background-image: url("/icons/chevron-up.svg");
-    border-radius: unset;
+    background-color: transparent;
     filter: brightness(0.7);
-    font-size: 0;
     transition: transform .5s;
     transform: rotate(180deg);
     width: 100%;
