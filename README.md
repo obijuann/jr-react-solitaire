@@ -22,12 +22,24 @@ In the project directory, you can run:
 ### `npm run dev`
 
 Runs the app in the development mode. \
-The page will reload automatically when you make changes.
+The page will reload automatically when code changes are made.
 
-### `npm test`
+### `npm run preview`
 
-Launches the test runner in the interactive watch mode.
+Runs the app in the production mode.
 
 ### `npm run lint`
 
-Runs the linter and displays any lint errors in the console.
+Runs eslint and stylelint and displays any lint errors in the console.
+
+### `npm vitest`
+
+Launches the test runner and runs all unit tests.
+
+### `npm vitest:watch`
+
+Launches the test runner in the interactive watch mode.
+
+### `npm test`
+
+Full sanity check. Runs a typecheck, all linters, all tests and a build
