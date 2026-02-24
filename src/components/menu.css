@@ -1,7 +1,7 @@
 #menu {
     --border-radius: 8px;
     background: var(--color-primary);
-    bottom: -140px;
+    bottom: -146px;
     left: 0;
     position: fixed;
     transition: bottom .5s;
@@ -36,22 +36,6 @@
 #menu-control button:hover,
 #menu-control button:active {
     filter: brightness(1);
-}
-
-#new-menu {
-    background-image: url("/icons/play.svg");
-}
-
-#redo {
-    background-image: url("/icons/arrow.svg");
-}
-
-#undo {
-    background-image: url("/icons/reverse-arrow.svg");
-}
-
-#help {
-    background-image: url("/icons/question.svg");
 }
 
 #primary-menu {
@@ -132,10 +116,6 @@
     left: 6px;
 }
 
-#stats {
-    background-image: url("/icons/statistics.svg");
-}
-
 #stats-submenu {
     font-size: 18px;
     overflow-y: scroll;
@@ -180,8 +160,7 @@ button {
 }
 
 button.primary {
-    background: transparent no-repeat center top;
-    padding-top: 80px;
+    background-color: transparent;
     width: 100px;
 }
 
@@ -205,13 +184,6 @@ button:not(:disabled):active {
 
 @media (max-width: 965px) {
     #menu {
-        bottom: -120px;
-    }
-
-    button.primary {
-        background-size: contain;
-        font-size: 16px;
-        padding-top: 70px;
-        width: 60px;
+        bottom: -146px;
     }
 }

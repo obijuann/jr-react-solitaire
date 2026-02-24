@@ -20,17 +20,15 @@
 }
 
 .modal button {
-    background: transparent no-repeat left 4px;
-    background-size: 30px;
+    align-items: center;
+    background-color: transparent;
     border: 0;
     color: var(--color-on-primary);
-    cursor: pointer;
-    font-size: 24px;
+    display: flex;
+    font-size: 20px;
     height: 40px;
     margin: 0;
-    padding-inline-end: 10px;
-    padding-inline-start: 35px;
-    text-align: justify;
+    width: 100%;
 }
 
 .modal-backdrop {
@@ -44,8 +42,4 @@
     position: absolute;
     top: 0;
     width: 100vw;
-}
-
-button.new-game {
-    background-image: url("/icons/play.svg");
 }

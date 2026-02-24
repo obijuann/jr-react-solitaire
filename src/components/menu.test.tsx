@@ -15,9 +15,9 @@ it("renders the base menu component", () => {
     render(<Menu />);
 
     // Assert
-    const newButton = screen.getByRole('button', { name: 'New' });
-    expect(newButton).toBeInTheDocument();
-    expect(newButton.hasAttribute("disabled")).toBeFalsy();
+    const playButton = screen.getByRole('button', { name: 'Play' });
+    expect(playButton).toBeInTheDocument();
+    expect(playButton.hasAttribute("disabled")).toBeFalsy();
 
     const undoButton = screen.getByRole('button', { name: 'Undo' });
     expect(undoButton).toBeInTheDocument();
@@ -56,8 +56,8 @@ it("firing the 'toggleMenu' event hides the menu component", () => {
     render(<Menu />);
 
     // Assert
-    const newButton = screen.getByRole('button', { name: 'New' });
-    expect(newButton).toBeInTheDocument();
+    const playButton = screen.getByRole('button', { name: 'Play' });
+    expect(playButton).toBeInTheDocument();
 
     // Act
     act(() => {
@@ -74,11 +74,11 @@ it("firing the 'toggleMenu' event hides the submenu", () => {
     render(<Menu />);
 
     // Assert
-    const newButton = screen.getByRole('button', { name: 'New' });
-    expect(newButton).toBeInTheDocument();
+    const playButton = screen.getByRole('button', { name: 'Play' });
+    expect(playButton).toBeInTheDocument();
 
     // Act
-    fireEvent.click(newButton);
+    fireEvent.click(playButton);
     expect(screen.getByRole('button', { name: 'Restart this game' })).toBeInTheDocument();
     act(() => {
         // Wrapped in an act call since this is render-affecting
@@ -95,11 +95,11 @@ it("renders the new game submenu", () => {
     render(<Menu />);
 
     // Assert
-    const newButton = screen.getByRole('button', { name: 'New' });
-    expect(newButton).toBeInTheDocument();
+    const playButton = screen.getByRole('button', { name: 'Play' });
+    expect(playButton).toBeInTheDocument();
 
     // Act
-    fireEvent.click(newButton);
+    fireEvent.click(playButton);
 
     // Assert
     const newGameButton = screen.getByRole('button', { name: 'New game' });
@@ -126,11 +126,11 @@ it("clicking the restart game button calls store.restartGame and closes all menu
     render(<Menu />);
 
     // Assert
-    const newButton = screen.getByRole('button', { name: 'New' });
-    expect(newButton).toBeInTheDocument();
+    const playButton = screen.getByRole('button', { name: 'Play' });
+    expect(playButton).toBeInTheDocument();
 
     // Act
-    fireEvent.click(newButton);
+    fireEvent.click(playButton);
 
     // Assert
     const restartGameButton = screen.getByRole('button', { name: 'Restart this game' });
@@ -157,11 +157,11 @@ it("clicking the quit game button calls store.quitGame and closes all menus", ()
     render(<Menu />);
 
     // Assert
-    const newButton = screen.getByRole('button', { name: 'New' });
-    expect(newButton).toBeInTheDocument();
+    const playButton = screen.getByRole('button', { name: 'Play' });
+    expect(playButton).toBeInTheDocument();
 
     // Act
-    fireEvent.click(newButton);
+    fireEvent.click(playButton);
 
     // Assert
     const quitGameButton = screen.getByRole('button', { name: 'Quit this game' });

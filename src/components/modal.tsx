@@ -1,5 +1,6 @@
 import './modal.css';
 
+import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
 import React from 'react';
 import useGameStore from '../stores/game-store';
 import { getFormattedTimer } from '../utils/utils';
@@ -50,7 +51,7 @@ export default function Modal() {
                     <React.Fragment>
                         <span>Congratulations!</span>
                         <span>Time: {getFormattedTimer(gameTimer)}</span>
-                        <button className="new-game" onClick={newGameHandler}>New Game</button>
+                        <button className="new-game" onClick={newGameHandler}><PlayArrowRoundedIcon fontSize='large' />New Game</button>
                     </React.Fragment>
                 )
             default:

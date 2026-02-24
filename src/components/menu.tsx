@@ -1,10 +1,14 @@
 import './menu.css';
 
 import ClearRoundedIcon from '@mui/icons-material/ClearRounded';
+import HelpOutlineRoundedIcon from '@mui/icons-material/HelpOutlineRounded';
 import KeyboardArrowUpOutlinedIcon from '@mui/icons-material/KeyboardArrowUpOutlined';
+import LeaderboardRoundedIcon from '@mui/icons-material/LeaderboardRounded';
 import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
+import RedoRoundedIcon from '@mui/icons-material/RedoRounded';
 import ReplayRoundedIcon from '@mui/icons-material/ReplayRounded';
 import RestoreRoundedIcon from '@mui/icons-material/RestoreRounded';
+import UndoRoundedIcon from '@mui/icons-material/UndoRounded';
 import { useEffect, useState } from 'react';
 import useGameStore from '../stores/game-store';
 import useStatisticsStore from '../stores/statistics-store';
@@ -347,11 +351,11 @@ export default function Menu() {
                 <button onClick={toggleMenu} title="Toggle Menu (Esc)"><KeyboardArrowUpOutlinedIcon fontSize='medium' /></button>
             </div>
             <div id="primary-menu">
-                <button className="primary" id="new-menu" onClick={handleSubmenuToggle}>Play</button>
-                <button className="primary" id="undo" disabled={!undoAvailable || !!modalType} onClick={undoMoveHandler}>Undo</button>
-                <button className="primary" id="redo" disabled={!redoAvailable || !!modalType} onClick={redoMoveHandler}>Redo</button>
-                <button className="primary" id="stats" onClick={handleSubmenuToggle}>Statistics</button>
-                <button className="primary" id="help" onClick={handleSubmenuToggle}>Help</button>
+                <button className="primary" id="new-menu" onClick={handleSubmenuToggle}><PlayArrowRoundedIcon sx={{ fontSize: 80 }}/>Play</button>
+                <button className="primary" id="undo" disabled={!undoAvailable || !!modalType} onClick={undoMoveHandler}><UndoRoundedIcon sx={{ fontSize: 80 }}/>Undo</button>
+                <button className="primary" id="redo" disabled={!redoAvailable || !!modalType} onClick={redoMoveHandler}><RedoRoundedIcon sx={{ fontSize: 80 }}/>Redo</button>
+                <button className="primary" id="stats" onClick={handleSubmenuToggle}><LeaderboardRoundedIcon sx={{ fontSize: 80 }} /> Statistics</button>
+                <button className="primary" id="help" onClick={handleSubmenuToggle}><HelpOutlineRoundedIcon sx={{ fontSize: 80 }} />Help</button>
                 {renderSubmenu()}
             </div>
         </div>
