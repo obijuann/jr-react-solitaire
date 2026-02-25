@@ -1,6 +1,6 @@
 #menu {
     --border-radius: 8px;
-    background: var(--color-primary);
+    background: rgba(0, 0, 0, .7);
     bottom: -146px;
     left: 0;
     position: fixed;
@@ -14,7 +14,7 @@
 }
 
 #menu-control {
-    background: rgba(0, 0, 0, .5);
+    background-color: rgba(0, 0, 0, .5);
     cursor: pointer;
     display: flex;
     height: 24px;
@@ -160,8 +160,15 @@ button {
 }
 
 button.primary {
+    align-items: center;
     background-color: transparent;
+    display: flex;
+    flex-direction: column;
     width: 100px;
+}
+
+button.primary svg {
+    font-size: 80px;
 }
 
 button:disabled {
@@ -184,6 +191,20 @@ button:not(:disabled):active {
 
 @media (max-width: 965px) {
     #menu {
-        bottom: -146px;
+        bottom: -60px;
+    }
+
+    #primary-menu {
+        flex-wrap: nowrap;
+        justify-content: center;
+        padding: 8px 30px;
+    }
+
+    button.primary {
+        font-size: 16px;
+    }
+
+    button.primary svg {
+        font-size: 24px;
     }
 }
