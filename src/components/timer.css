@@ -3,5 +3,6 @@
     color: yellow;
     filter: drop-shadow(1px 1px 1px black);
     font-size: 22px;
+    left: 50px;
     position: fixed;
 }

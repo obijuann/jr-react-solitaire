@@ -1,11 +1,26 @@
-#play-area {
+#solitaire {
   --border-radius: 12px;
+}
+
+#play-area {
+  --waste-card-offset-1-px: 70px;
+  --waste-card-offset-1-vw: 5vw;
+  --waste-card-offset-2-px: 35px;
+  --waste-card-offset-2-vw: 2.5vw;
   display: grid;
   grid-template-rows: var(--card-height) 1fr;
   gap: 30px;
   height: calc(100vh - 20px);
   justify-content: space-between;
   margin: 10px auto;
+}
+
+#play-area.rtl {
+  --waste-card-offset-1-px: -70px;
+  --waste-card-offset-1-vw: -5vw;
+  --waste-card-offset-2-px: -35px;
+  --waste-card-offset-2-vw: -2.5vw;
+  direction: rtl;
 }
 
 #foundation,
@@ -19,9 +34,9 @@
   justify-content: space-between;
 }
 
-/* Slight opacity shift to all direct children except the menu when the menu is visible.
+/* Slight opacity shift to all direct children when the menu is visible.
    Also disable pointer events on the content so any clicks first close the menus. */
-#play-area.menu-open > :not(#menu) {
+#play-area.menu-open > div {
   filter: opacity(80%);
   pointer-events: none;
 }
@@ -39,12 +54,12 @@
 }
 
 #waste.offset-two>div:nth-last-child(1) {
-  transform: translateX(min(5vw, 70px));
+  transform: translateX(min(var(--waste-card-offset-1-vw), var(--waste-card-offset-1-px)));
 }
 
 #waste.offset-one>div:nth-last-child(1),
 #waste.offset-two>div:nth-last-child(2) {
-  transform: translateX(min(2.5vw, 35px));
+  transform: translateX(min(var(--waste-card-offset-2-vw), var(--waste-card-offset-2-px)));
 }
 
 #tableau {
