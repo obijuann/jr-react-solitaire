@@ -389,7 +389,7 @@ export default function Solitaire() {
   }
 
   return (
-    <div>
+    <div id="solitaire">
       <div id="play-area" data-testid="play-area" onClick={hideMenu} className={menuVisible ? 'menu-open' : ''}>
         {renderDrawPile()}
         {renderWastePile()}

@@ -1,9 +1,12 @@
+#solitaire {
+  --border-radius: 12px;
+}
+
 #play-area {
   --waste-card-offset-1-px: 70px;
   --waste-card-offset-1-vw: 5vw;
   --waste-card-offset-2-px: 35px;
   --waste-card-offset-2-vw: 2.5vw;
-  --border-radius: 12px;
   display: grid;
   grid-template-rows: var(--card-height) 1fr;
   gap: 30px;
