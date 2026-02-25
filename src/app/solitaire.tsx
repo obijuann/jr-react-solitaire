@@ -389,14 +389,18 @@ export default function Solitaire() {
   }
 
   return (
-    <div id="play-area" data-testid="play-area" onClick={hideMenu} className={menuVisible ? 'menu-open' : ''}>
-      {renderDrawPile()}
-      {renderWastePile()}
-      {renderFoundation()}
-      {renderTableau()}
-      <Menu />
-      <Timer />
-      {renderModal()}
+    <div>
+      <div id="play-area" data-testid="play-area" onClick={hideMenu} className={menuVisible ? 'menu-open' : ''}>
+        {renderDrawPile()}
+        {renderWastePile()}
+        {renderFoundation()}
+        {renderTableau()}
+      </div>
+      <div id="menu-area" data-testid="menu-area" >
+        <Timer />
+        <Menu />
+        {renderModal()}
+      </div>
     </div>
   );
 }

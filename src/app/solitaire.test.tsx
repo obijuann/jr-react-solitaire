@@ -21,7 +21,9 @@ it('renders the play area', () => {
   expect(playArea.querySelector("#foundation")?.childNodes.length).toEqual(4);
   expect(playArea.querySelector("#tableau")).toBeInTheDocument();
   expect(playArea.querySelector("#tableau")?.childNodes.length).toEqual(7);
-  expect(playArea.querySelector("#menu")).toBeInTheDocument();
+
+  const menuArea = screen.getByTestId("menu-area");
+  expect(menuArea.querySelector("#menu")).toBeInTheDocument();
 });
 
 it('Deals the cards when a new game event is published', () => {
@@ -49,7 +51,9 @@ it('Deals the cards when a new game event is published', () => {
   playArea.querySelector("#tableau")?.childNodes.forEach((tableauPile, pileIndex) => {
     expect(tableauPile.childNodes.length).toEqual(pileIndex + 1);
   });
-  expect(playArea.querySelector("#menu")).toBeInTheDocument();
+
+  const menuArea = screen.getByTestId("menu-area");
+  expect(menuArea.querySelector("#menu")).toBeInTheDocument();
 });
 
 it('Removes cards from the playfield when the game is quit', () => {

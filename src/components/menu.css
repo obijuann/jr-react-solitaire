@@ -189,7 +189,7 @@ button:not(:disabled):active {
     background-color: rgba(0, 0, 0, .1);
 }
 
-@media (max-width: 965px) {
+@media (max-width: 889px) {
     #menu {
         bottom: -60px;
     }
