@@ -351,11 +351,11 @@ export default function Menu() {
                 <button onClick={toggleMenu} title="Toggle Menu (Esc)"><KeyboardArrowUpOutlinedIcon fontSize='medium' /></button>
             </div>
             <div id="primary-menu">
-                <button className="primary" id="new-menu" onClick={handleSubmenuToggle}><PlayArrowRoundedIcon sx={{ fontSize: 80 }}/>Play</button>
-                <button className="primary" id="undo" disabled={!undoAvailable || !!modalType} onClick={undoMoveHandler}><UndoRoundedIcon sx={{ fontSize: 80 }}/>Undo</button>
-                <button className="primary" id="redo" disabled={!redoAvailable || !!modalType} onClick={redoMoveHandler}><RedoRoundedIcon sx={{ fontSize: 80 }}/>Redo</button>
-                <button className="primary" id="stats" onClick={handleSubmenuToggle}><LeaderboardRoundedIcon sx={{ fontSize: 80 }} /> Statistics</button>
-                <button className="primary" id="help" onClick={handleSubmenuToggle}><HelpOutlineRoundedIcon sx={{ fontSize: 80 }} />Help</button>
+                <button className="primary" id="new-menu" onClick={handleSubmenuToggle}><PlayArrowRoundedIcon />Play</button>
+                <button className="primary" id="undo" disabled={!undoAvailable || !!modalType} onClick={undoMoveHandler}><UndoRoundedIcon />Undo</button>
+                <button className="primary" id="redo" disabled={!redoAvailable || !!modalType} onClick={redoMoveHandler}><RedoRoundedIcon />Redo</button>
+                <button className="primary" id="stats" onClick={handleSubmenuToggle}><LeaderboardRoundedIcon /> Statistics</button>
+                <button className="primary" id="help" onClick={handleSubmenuToggle}><HelpOutlineRoundedIcon />Help</button>
                 {renderSubmenu()}
             </div>
         </div>
