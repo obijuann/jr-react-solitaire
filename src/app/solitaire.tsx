@@ -1,5 +1,6 @@
 import "./solitaire.css";
 
+import Grid from '@mui/material/Grid';
 import { useEffect } from 'react';
 import { shallow } from 'zustand/shallow';
 import Card from "../components/card";
@@ -301,12 +302,11 @@ export default function Solitaire() {
               onDragOver={dragOverHander}
               onDrop={(event) => dropHandler(event, "tableau", pileIndex)}
             >
-              {
-                cardDataList.map((cardData: CardData, cardIndex: number) => {
-                  return renderCard(cardData, cardIndex, "tableau", pileIndex);
-                })
-              }
-            </div>)
+              {cardDataList.map((cardData: CardData, cardIndex: number) => {
+                return renderCard(cardData, cardIndex, "tableau", pileIndex);
+              })}
+            </div>
+          )
         })}
       </div>
     );
@@ -390,12 +390,32 @@ export default function Solitaire() {
 
   return (
     <div id="solitaire">
-      <div id="play-area" data-testid="play-area" onClick={hideMenu} className={menuVisible ? 'menu-open' : ''}>
-        {renderDrawPile()}
-        {renderWastePile()}
-        {renderFoundation()}
-        {renderTableau()}
-      </div>
+      <Grid
+        container
+        id="play-area"
+        className={menuVisible ? 'menu-open' : ''}
+        data-testid="play-area"
+        onClick={hideMenu}
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(7, 1fr)',
+          gridTemplateRows: 'var(--card-height) 1fr',
+          rowGap: '30px'
+        }}
+      >
+        <Grid item sx={{ gridColumn: '1 / 2', gridRow: '1 / 2', display: 'flex', justifyContent: 'center' }}>
+          {renderDrawPile()}
+        </Grid>
+        <Grid item sx={{ gridColumn: '2 / 4', gridRow: '1 / 2' }}>
+          {renderWastePile()}
+        </Grid>
+        <Grid item sx={{ gridColumn: '4 / 8', gridRow: '1 / 2' }}>
+          {renderFoundation()}
+        </Grid>
+        <Grid item sx={{ gridColumn: '1 / 8', gridRow: '2 / 3' }}>
+          {renderTableau()}
+        </Grid>
+      </Grid>
       <div id="menu-area" data-testid="menu-area" >
         <Timer />
         <Menu />

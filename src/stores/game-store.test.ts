@@ -665,4 +665,19 @@ describe('Game store actions', () => {
     expect(startSpy).toHaveBeenCalled();
     startSpy.mockRestore();
   });
+
+  it('resumeGame starts timer when gameTimer === 0 and timerId null', () => {
+    // Arrange
+    useGameStore.setState({ gameTimer: 0, timerId: null });
+    const startSpy = vi.spyOn(useGameStore.getState().actions, 'startTimer').mockImplementation(() => { });
+
+    // Act
+    useGameStore.getState().actions.resumeGame();
+
+    // Assert
+    expect(startSpy).toHaveBeenCalled();
+    startSpy.mockRestore();
+  });
 });
+
+

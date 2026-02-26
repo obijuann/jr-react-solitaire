@@ -8,6 +8,7 @@ beforeEach(() => {
     useGameStore.setState({ menuVisible: true, submenuId: "", shuffledDeck: [] });
 });
 
+import useStatisticsStore from '../stores/statistics-store';
 import Menu from './menu';
 
 it("renders the base menu component", () => {
@@ -175,6 +176,41 @@ it("clicking the quit game button calls store.quitGame and closes all menus", ()
     expect(screen.getByTestId("menu").className).not.toEqual("visible");
 
     useGameStore.setState(state => ({ actions: { ...state.actions, quitGame: original } }));
+});
+
+it("clicking the new game button during an active game records a loss", () => {
+    // Arrange
+    useGameStore.setState({ menuVisible: true, submenuId: "", shuffledDeck: [{ face: "down", rank: "ace", suit: "clubs"}], gameTimer: 0 });
+    const newGameOriginal = useGameStore.getState().actions.newGame;
+    const recordLossOriginal = useStatisticsStore.getState().actions.recordLoss;
+    const newGameSpy = vi.fn();
+    const recordLossSpy = vi.fn();
+    useGameStore.setState(state => ({ actions: { ...state.actions, newGame: newGameSpy } }));
+    useStatisticsStore.setState(state => ({ actions: { ...state.actions, recordLoss: recordLossSpy } }));
+
+    // Act
+    render(<Menu />);
+
+    // Assert
+    const playButton = screen.getByRole('button', { name: 'Play' });
+    expect(playButton).toBeInTheDocument();
+
+    // Act
+    fireEvent.click(playButton);
+
+    // Assert
+    const newsGameButton = screen.getByRole('button', { name: 'New game' });
+
+    // Act
+    fireEvent.click(newsGameButton);
+
+    // Assert
+    expect(newGameSpy).toHaveBeenCalled();
+    expect(recordLossSpy).toHaveBeenCalled();
+    expect(screen.getByTestId("menu").className).not.toEqual("visible");
+
+    useGameStore.setState(state => ({ actions: { ...state.actions, newGame: newGameOriginal } }));
+    useStatisticsStore.setState(state => ({ actions: { ...state.actions, recordLoss: recordLossOriginal } }));
 });
 
 it("renders the help submenu", () => {
