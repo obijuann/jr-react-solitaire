@@ -282,7 +282,7 @@ export default function Menu() {
 
         // If there is a current game in progress, starting a new game counts as a loss.
         // Record the loss with the stats store
-        if (gameActive && gameTimer > 0) {
+        if (gameActive && gameTimer >= 0) {
             useStatisticsStore.getState().actions.recordLoss();
         }
 
