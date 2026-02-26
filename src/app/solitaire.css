@@ -7,11 +7,7 @@
   --waste-card-offset-1-vw: 5vw;
   --waste-card-offset-2-px: 35px;
   --waste-card-offset-2-vw: 2.5vw;
-  display: grid;
-  grid-template-rows: var(--card-height) 1fr;
-  gap: 30px;
   height: calc(100vh - 20px);
-  justify-content: space-between;
   margin: 10px auto;
 }
 
@@ -24,14 +20,9 @@
 }
 
 #foundation,
-#stock,
 #tableau {
   display: flex;
-}
-
-#foundation {
-  grid-column: 4/8;
-  justify-content: space-between;
+  justify-content: space-around;
 }
 
 /* Slight opacity shift to all direct children when the menu is visible.
@@ -39,14 +30,6 @@
 #play-area.menu-open > div {
   filter: opacity(80%);
   pointer-events: none;
-}
-
-#stock {
-  grid-column: 1/1;
-}
-
-#waste {
-  grid-column: 2/3;
 }
 
 #waste.anim>div {
@@ -60,14 +43,6 @@
 #waste.offset-one>div:nth-last-child(1),
 #waste.offset-two>div:nth-last-child(2) {
   transform: translateX(min(var(--waste-card-offset-2-vw), var(--waste-card-offset-2-px)));
-}
-
-#tableau {
-  grid-column: 1/8;
-  grid-row: 2;
-  height: fit-content;
-  justify-content: space-between;
-  width: 100%;
 }
 
 .card-pile {
