@@ -313,7 +313,7 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
                  * Resume a previously paused game timer.
                  */
                 resumeGame: () => {
-                    if (get().gameTimer && !get().timerId) {
+                    if (get().gameTimer >= 0 && !get().timerId) {
                         get().actions.startTimer();
                     }
                 },
