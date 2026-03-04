@@ -10,9 +10,10 @@ import ReplayRoundedIcon from '@mui/icons-material/ReplayRounded';
 import RestoreRoundedIcon from '@mui/icons-material/RestoreRounded';
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import UndoRoundedIcon from '@mui/icons-material/UndoRounded';
-import { Switch } from '@mui/material';
+import Checkbox from '@mui/material/Checkbox';
 import { ChangeEvent, useEffect, useState } from 'react';
 import useGameStore from '../stores/game-store';
+import usePreferencesStore from '../stores/preferences-store';
 import useStatisticsStore from '../stores/statistics-store';
 import { getFormattedTimer, throttle } from '../utils/utils';
 
@@ -49,6 +50,9 @@ export default function Menu() {
     const totalWins = useStatisticsStore(state => state.totalWins);
     const bestWinStreak = useStatisticsStore(state => state.bestWinStreak);
     const worstLoseStreak = useStatisticsStore(state => state.worstLosingStreak);
+
+    // User preferences
+    const gameTimerEnabled = usePreferencesStore(state => state.gameTimerEnabled);
 
     useEffect(() => {
         // Close the submenu on resize
@@ -178,13 +182,16 @@ export default function Menu() {
         console.log(`Function not implemented. ${event}`);
     }
 
+    function handleTimerSwitchChange(event: ChangeEvent<HTMLInputElement, Element>, checked: boolean): void {
+        event.preventDefault();
+        usePreferencesStore.setState(() => ({ gameTimerEnabled: checked }));
+    }
+
     /**
      * Render the "Preferences" submenu.
      * @returns JSX.Element
      */
     function renderPreferencesSubmenu() {
-
-
         return (
             <div id="submenu" className="list" style={subMenuPosStyle}>
                 <div id="group-submenu">
@@ -194,7 +201,7 @@ export default function Menu() {
                     <div className="group-section-header">General</div>
                     <div className="group-section">
                         <div>Timer</div>
-                        <div><Switch defaultChecked /></div>
+                        <div><Checkbox checked={gameTimerEnabled} size='medium' onChange={handleTimerSwitchChange} /></div>
                     </div>
                     <div className="group-section-header">Appearance</div>
                     <div className="group-section">
