@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { ThemeColorProperties } from '../types/theme';
 import { makeComponents } from './components';
-import type { ThemeColorProperties } from './palette';
 
 describe('makeComponents', () => {
 	it('exposes CSS variables and global body styles from theme colors', () => {

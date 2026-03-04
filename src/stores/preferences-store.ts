@@ -52,7 +52,7 @@ export const usePreferencesStore = create<PreferencesStoreState>()(
                 themeColor: state.themeColor,
                 cardFace: state.cardFace,
                 cardBack: state.cardBack,
-                useGameTimer: state.gameTimerEnabled
+                gameTimerEnabled: state.gameTimerEnabled
             }),
             onRehydrateStorage: () => (state, error) => {
                 if (error) {

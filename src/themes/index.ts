@@ -1,7 +1,8 @@
 import type { Theme } from '@mui/material/styles';
 import { createTheme } from '@mui/material/styles';
+import { ThemeColorProperties } from '../types/theme';
 import { makeComponents } from './components';
-import { makePalette, ThemeColorProperties, themeColors } from './palette';
+import { makePalette, themeColors } from './palette';
 import typography from './typography';
 
 // Container of compiled MUI `Theme` objects keyed by the theme name.

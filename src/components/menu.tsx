@@ -182,9 +182,9 @@ export default function Menu() {
         console.log(`Function not implemented. ${event}`);
     }
 
-    function handleTimerSwitchChange(event: ChangeEvent<HTMLInputElement, Element>, checked: boolean): void {
+    function handleTimerSwitchChange(event: ChangeEvent<HTMLInputElement, Element>): void {
         event.preventDefault();
-        usePreferencesStore.setState(() => ({ gameTimerEnabled: checked }));
+        usePreferencesStore.setState(() => ({ gameTimerEnabled: event.target.checked }));
     }
 
     /**
@@ -201,7 +201,13 @@ export default function Menu() {
                     <div className="group-section-header">General</div>
                     <div className="group-section">
                         <div>Timer</div>
-                        <div><Checkbox checked={gameTimerEnabled} size='medium' onChange={handleTimerSwitchChange} /></div>
+                        <div>
+                            <Checkbox
+                                checked={gameTimerEnabled}
+                                size='medium'
+                                onChange={handleTimerSwitchChange}
+                            />
+                        </div>
                     </div>
                     <div className="group-section-header">Appearance</div>
                     <div className="group-section">
@@ -218,7 +224,8 @@ export default function Menu() {
                                 <option value="green">Green</option>
                                 <option value="yellow">Yellow</option>
                                 <option value="cyan">Cyan</option>
-                                <option value="blue">Violet</option>
+                                <option value="blue">Blue</option>
+                                <option value="violet">Violet</option>
                                 <option value="red">Red</option>
                             </select>
                         </div>
