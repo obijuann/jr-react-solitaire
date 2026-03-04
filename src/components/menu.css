@@ -184,6 +184,10 @@ button.secondary {
     height: 40px;
 }
 
+button.secondary svg {
+    margin-right: 10px;
+}
+
 button:not(:disabled):hover,
 button:not(:disabled):active {
     background-color: rgba(0, 0, 0, .1);
@@ -200,11 +204,29 @@ button:not(:disabled):active {
         padding: 8px 30px;
     }
 
+    #submenu {
+        bottom: 70px;
+    }
+
+    #submenu::after {
+        bottom: 55px;
+    }
+
     button.primary {
         font-size: 16px;
     }
 
     button.primary svg {
         font-size: 24px;
+    }
+
+    button.secondary {
+        font-size: 16px;
+        height: 32px;
+    }
+
+    button.secondary svg {
+        font-size: 20px;
+        margin-right: 5px;
     }
 }
