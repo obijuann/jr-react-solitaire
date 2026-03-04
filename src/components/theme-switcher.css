@@ -1,7 +1,7 @@
 .dev-theme-switcher {
   position: fixed;
   right: 12px;
-  bottom: 12px;
+  bottom: 175px;
   z-index: 1200;
   display: flex;
   align-items: center;
@@ -31,7 +31,7 @@
 @media (max-width: 640px) {
   .dev-theme-switcher {
     right: 8px;
-    bottom: 8px;
+    bottom: 90px;
     padding: 6px;
     font-size: 13px;
   }
