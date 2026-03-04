@@ -116,12 +116,12 @@
     left: 6px;
 }
 
-#stats-submenu {
+#group-submenu {
     font-size: 18px;
     overflow-y: scroll;
 }
 
-#stats-submenu>div {
+#group-submenu>div {
     align-items: center;
     display: flex;
     justify-content: center;
@@ -130,22 +130,22 @@
     padding: 0 10px;
 }
 
-#stats-submenu>div:nth-child(2) {
+#group-submenu>div:nth-child(2) {
     margin-top: 40px;
 }
 
-#stats-submenu .stats-header {
+#group-submenu .group-header {
     background-color: var(--color-primary);
     position: fixed;
     width: calc(var(--submenu-width) - 10px);
 }
 
-#stats-submenu .stats-section-header {
+#group-submenu .group-section-header {
     background-color: var(--color-primary-dark);
     justify-content: left;
 }
 
-#stats-submenu .stats-section {
+#group-submenu .group-section {
     background-color: var(--color-primary);
     justify-content: space-between;
 }

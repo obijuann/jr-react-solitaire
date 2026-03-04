@@ -8,8 +8,10 @@ import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
 import RedoRoundedIcon from '@mui/icons-material/RedoRounded';
 import ReplayRoundedIcon from '@mui/icons-material/ReplayRounded';
 import RestoreRoundedIcon from '@mui/icons-material/RestoreRounded';
+import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import UndoRoundedIcon from '@mui/icons-material/UndoRounded';
-import { useEffect, useState } from 'react';
+import { Switch } from '@mui/material';
+import { ChangeEvent, useEffect, useState } from 'react';
 import useGameStore from '../stores/game-store';
 import useStatisticsStore from '../stores/statistics-store';
 import { getFormattedTimer, throttle } from '../utils/utils';
@@ -92,6 +94,8 @@ export default function Menu() {
                 return renderStartSubmenu();
             case "stats":
                 return renderStatisticsSubmenu();
+            case "prefs":
+                return renderPreferencesSubmenu();
             default:
                 return;
         }
@@ -104,9 +108,9 @@ export default function Menu() {
     function renderStartSubmenu() {
         return (
             <div id="submenu" className="list" style={subMenuPosStyle}>
-                <button className="secondary" id="new-game" onClick={newGameHandler}><PlayArrowRoundedIcon fontSize='large'/>New game</button>
-                <button className="secondary" id="restart" onClick={restartGameHandler} disabled={!gameActive}><ReplayRoundedIcon fontSize='large'/>Restart this game</button>
-                <button className="secondary" id="quit" onClick={quitGameHandler} disabled={!gameActive}><ClearRoundedIcon fontSize='large'/>Quit this game</button>
+                <button className="secondary" id="new-game" onClick={newGameHandler}><PlayArrowRoundedIcon fontSize='large' />New game</button>
+                <button className="secondary" id="restart" onClick={restartGameHandler} disabled={!gameActive}><ReplayRoundedIcon fontSize='large' />Restart this game</button>
+                <button className="secondary" id="quit" onClick={quitGameHandler} disabled={!gameActive}><ClearRoundedIcon fontSize='large' />Quit this game</button>
             </div>
         );
     }
@@ -166,6 +170,97 @@ export default function Menu() {
         );
     }
 
+    function handleThemeChange(event: ChangeEvent<HTMLSelectElement, HTMLSelectElement>): void {
+        console.log(`Function not implemented. ${event}`);
+    }
+
+    function handleCardFrontChange(event: ChangeEvent<HTMLSelectElement, HTMLSelectElement>): void {
+        console.log(`Function not implemented. ${event}`);
+    }
+
+    /**
+     * Render the "Preferences" submenu.
+     * @returns JSX.Element
+     */
+    function renderPreferencesSubmenu() {
+
+
+        return (
+            <div id="submenu" className="list" style={subMenuPosStyle}>
+                <div id="group-submenu">
+                    <div className="group-header">
+                        <span>Preferences</span>
+                    </div>
+                    <div className="group-section-header">General</div>
+                    <div className="group-section">
+                        <div>Timer</div>
+                        <div><Switch defaultChecked /></div>
+                    </div>
+                    <div className="group-section-header">Appearance</div>
+                    <div className="group-section">
+                        <div>
+                            <label id="theme-select-label">Theme</label>
+                        </div>
+                        <div>
+                            <select
+                                aria-labelledby="theme-select-label"
+                                id="theme-select"
+                                value="green"
+                                onChange={handleThemeChange}
+                            >
+                                <option value="green">Green</option>
+                                <option value="yellow">Yellow</option>
+                                <option value="cyan">Cyan</option>
+                                <option value="blue">Violet</option>
+                                <option value="red">Red</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div className="group-section">
+                        <div>
+                            <label id="card-front-select-label">Card front</label>
+                        </div>
+                        <div>
+                            <select
+                                id="card-front-select"
+                                aria-labelledby="card-front-select-label"
+                                value={"english"}
+                                onChange={handleCardFrontChange}
+                            >
+                                <option value="english">English</option>
+                                <option value="french">French</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div className="group-section">
+                        <label id="card-back-select-label">Card back</label>
+                        <div>
+                            <select
+                                id="card-back-select"
+                                aria-labelledby="card-back-select-label"
+                                value="blue"
+                                onChange={handleThemeChange}
+                            >
+                                <option value="abstract_clouds">Clouds</option>
+                                <option value="abstract_scene">Landscape</option>
+                                <option value="abstract">Abstract</option>
+                                <option value="astronaut">Astronaut</option>
+                                <option value="blue">Blue</option>
+                                <option value="blue2">Blue 2</option>
+                                <option value="cars">Cars</option>
+                                <option value="castle">Castle</option>
+                                <option value="fish">Fish</option>
+                                <option value="frog">Frog</option>
+                                <option value="red">Red</option>
+                                <option value="red2">Red 2</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     /**
      * Render the "Statistics" submenu.
      * @returns JSX.Element
@@ -173,47 +268,47 @@ export default function Menu() {
     function renderStatisticsSubmenu() {
         return (
             <div id="submenu" className="list" style={subMenuPosStyle}>
-                <div id="stats-submenu">
-                    <div className="stats-header">
-                        <button onClick={resetStatistics} className="secondary" id="reset-stats" title='Reset Statistics'><RestoreRoundedIcon fontSize='medium'/></button>
+                <div id="group-submenu">
+                    <div className="group-header">
+                        <button onClick={resetStatistics} className="secondary" id="reset-stats" title='Reset Statistics'><RestoreRoundedIcon fontSize='medium' /></button>
                         <span>Statistics</span>
                     </div>
-                    <div className="stats-section-header">Time</div>
-                    <div className="stats-section">
+                    <div className="group-section-header">Time</div>
+                    <div className="group-section">
                         <div>Current</div>
                         <div>{getFormattedTimer(gameTimer)}</div>
                     </div>
-                    <div className="stats-section">
+                    <div className="group-section">
                         <div>Best</div>
                         <div>{getFormattedTimer(bestWinTime)}</div>
                     </div>
-                    <div className="stats-section">
+                    <div className="group-section">
                         <div>Average</div>
                         <div>{getFormattedTimer(averageWinTime())}</div>
                     </div>
-                    <div className="stats-section-header">Totals</div>
-                    <div className="stats-section">
+                    <div className="group-section-header">Totals</div>
+                    <div className="group-section">
                         <div>Wins</div>
                         <div>{totalWins}</div>
                     </div>
-                    <div className="stats-section">
+                    <div className="group-section">
                         <div>Losses</div>
                         <div>{totalLosses}</div>
                     </div>
-                    <div className="stats-section">
+                    <div className="group-section">
                         <div>Rate</div>
                         <div>{winRate()}</div>
                     </div>
-                    <div className="stats-section-header">Streaks</div>
-                    <div className="stats-section">
+                    <div className="group-section-header">Streaks</div>
+                    <div className="group-section">
                         <div>Wins</div>
                         <div>{bestWinStreak}</div>
                     </div>
-                    <div className="stats-section">
+                    <div className="group-section">
                         <div>Losses</div>
                         <div>{worstLoseStreak}</div>
                     </div>
-                    <div className="stats-section">
+                    <div className="group-section">
                         <div>Current</div>
                         <div>{currentStreakText()}</div>
                     </div>
@@ -354,6 +449,7 @@ export default function Menu() {
                 <button className="primary" id="new-menu" onClick={handleSubmenuToggle}><PlayArrowRoundedIcon />Play</button>
                 <button className="primary" id="undo" disabled={!undoAvailable || !!modalType} onClick={undoMoveHandler}><UndoRoundedIcon />Undo</button>
                 <button className="primary" id="redo" disabled={!redoAvailable || !!modalType} onClick={redoMoveHandler}><RedoRoundedIcon />Redo</button>
+                <button className="primary" id="prefs" onClick={handleSubmenuToggle}><SettingsRoundedIcon /> Preferences</button>
                 <button className="primary" id="stats" onClick={handleSubmenuToggle}><LeaderboardRoundedIcon /> Statistics</button>
                 <button className="primary" id="help" onClick={handleSubmenuToggle}><HelpOutlineRoundedIcon />Help</button>
                 {renderSubmenu()}
