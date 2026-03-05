@@ -11,6 +11,9 @@ import RestoreRoundedIcon from '@mui/icons-material/RestoreRounded';
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import UndoRoundedIcon from '@mui/icons-material/UndoRounded';
 import Checkbox from '@mui/material/Checkbox';
+import FormControl from '@mui/material/FormControl';
+import MenuItem from '@mui/material/MenuItem';
+import Select, { SelectChangeEvent } from '@mui/material/Select';
 import { ChangeEvent, useEffect, useState } from 'react';
 import useGameStore from '../stores/game-store';
 import usePreferencesStore from '../stores/preferences-store';
@@ -185,7 +188,7 @@ export default function Menu() {
      * Update the user preference for theme
      * @param e Change event from the select element
      */
-    function handleThemeChange(e: ChangeEvent<HTMLSelectElement, HTMLSelectElement>): void {
+    function handleThemeChange(e: SelectChangeEvent<ThemeColors>): void {
         e.preventDefault();
         usePreferencesStore.setState(() => ({ themeColor: e.target.value as ThemeColors }));
     }
@@ -194,7 +197,7 @@ export default function Menu() {
      * Update the user preference for card face artwork
      * @param e Change event from the select element
      */
-    function handleCardFaceChange(e: ChangeEvent<HTMLSelectElement, HTMLSelectElement>): void {
+    function handleCardFaceChange(e: SelectChangeEvent<CardFaces>): void {
         e.preventDefault();
         usePreferencesStore.setState(() => ({ cardFace: e.target.value as CardFaces }));
     }
@@ -203,7 +206,7 @@ export default function Menu() {
      * Update the user preference for card rear artwork
      * @param e Change event from the select element
      */
-    function handleCardBackChange(e: ChangeEvent<HTMLSelectElement, HTMLSelectElement>): void {
+    function handleCardBackChange(e: SelectChangeEvent<CardBacks>): void {
         e.preventDefault();
         usePreferencesStore.setState(() => ({ cardBack: e.target.value as CardBacks }));
     }
@@ -245,21 +248,23 @@ export default function Menu() {
                             <label id="theme-select-label">Theme</label>
                         </div>
                         <div>
-                            <select
-                                aria-labelledby="theme-select-label"
-                                defaultValue={themeColor}
-                                id="theme-select"
-                                name="theme"
-                                onChange={handleThemeChange}
-                            >
-                                {
-                                    Object.entries(themeColors).map(([themeKey, themeProps]) => (
-                                        <option key={themeKey} value={themeKey}>
-                                            {themeProps.label}
-                                        </option>
-                                    ))
-                                }
-                            </select>
+                            <FormControl size="small" sx={{ height: 35, minWidth: 120 }}>
+                                <Select
+                                    labelId="theme-select-label"
+                                    id="theme-select"
+                                    value={themeColor}
+                                    onChange={handleThemeChange}
+                                    displayEmpty
+                                >
+                                    {
+                                        Object.entries(themeColors).map(([themeKey, themeProps]) => (
+                                            <MenuItem key={themeKey} value={themeKey}>
+                                                {themeProps.label}
+                                            </MenuItem>
+                                        ))
+                                    }
+                                </Select>
+                            </FormControl>
                         </div>
                     </div>
                     <div className="group-section">
@@ -267,41 +272,45 @@ export default function Menu() {
                             <label id="card-face-select-label">Card face</label>
                         </div>
                         <div>
-                            <select
-                                aria-labelledby="card-face-select-label"
-                                defaultValue={cardFace}
-                                id="card-face-select"
-                                name="card-face"
-                                onChange={handleCardFaceChange}
-                            >
-                                {
-                                    Object.entries(cardFaceArtwork).map(([cardFace, cardFaceArtwork]) => (
-                                        <option key={cardFace} value={cardFace}>
-                                            {cardFaceArtwork.label}
-                                        </option>
-                                    ))
-                                }
-                            </select>
+                            <FormControl size="small" sx={{ height: 35, minWidth: 120 }}>
+                                <Select
+                                    labelId="card-face-select-label"
+                                    id="card-face-select"
+                                    value={cardFace}
+                                    onChange={handleCardFaceChange}
+                                    displayEmpty
+                                >
+                                    {
+                                        Object.entries(cardFaceArtwork).map(([cardFace, cardFaceArtwork]) => (
+                                            <MenuItem key={cardFace} value={cardFace}>
+                                                {cardFaceArtwork.label}
+                                            </MenuItem>
+                                        ))
+                                    }
+                                </Select>
+                            </FormControl>
                         </div>
                     </div>
                     <div className="group-section">
                         <label id="card-back-select-label">Card back</label>
                         <div>
-                            <select
-                                aria-labelledby="card-back-select-label"
-                                defaultValue={cardBack}
-                                id="card-back-select"
-                                name="card-back"
-                                onChange={handleCardBackChange}
-                            >
-                                {
-                                    Object.entries(cardBackArtwork).map(([cardBack, cardFaceArtwork]) => (
-                                        <option key={cardBack} value={cardBack}>
-                                            {cardFaceArtwork.label}
-                                        </option>
-                                    ))
-                                }
-                            </select>
+                            <FormControl size="small" sx={{ height: 35, minWidth: 120 }}>
+                                <Select
+                                    labelId="card-back-select-label"
+                                    id="card-back-select"
+                                    value={cardBack}
+                                    onChange={handleCardBackChange}
+                                    displayEmpty
+                                >
+                                    {
+                                        Object.entries(cardBackArtwork).map(([cardBack, cardBackArtwork]) => (
+                                            <MenuItem key={cardBack} value={cardBack}>
+                                                {cardBackArtwork.label}
+                                            </MenuItem>
+                                        ))
+                                    }
+                                </Select>
+                            </FormControl>
                         </div>
                     </div>
                 </div>
