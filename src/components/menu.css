@@ -56,10 +56,21 @@
     color: white;
     max-height: 400px;
     overflow: hidden;
+    overflow-y: auto;
     padding: 5px;
     position: absolute;
+    scrollbar-color: white transparent;
+    scrollbar-width: thin;
     width: var(--submenu-width);
     z-index: 1001;
+}
+
+#submenu,
+#group-submenu {
+    overflow: hidden;
+    overflow-y: auto;
+    scrollbar-color: rgba(0, 0, 0, .2) transparent;
+    scrollbar-width: thin;
 }
 
 #submenu::after {
@@ -90,27 +101,6 @@
     margin: 0;
 }
 
-#submenu::-webkit-scrollbar {
-    width: 8px;
-}
-
-#submenu::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-#submenu::-webkit-scrollbar-thumb {
-    border-radius: var(--border-radius);
-    background: rgba(0, 0, 0, .2);
-}
-
-#submenu::-webkit-scrollbar-thumb:hover {
-    background: rgba(0, 0, 0, .5);
-}
-
-#submenu.help {
-    overflow-y: scroll;
-}
-
 #reset-stats {
     position: absolute;
     left: 6px;
@@ -118,20 +108,19 @@
 
 #group-submenu {
     font-size: 18px;
-    overflow-y: scroll;
 }
 
 #group-submenu>div {
     align-items: center;
     display: flex;
     justify-content: center;
-    height: 40px;
+    height: 45px;
     margin: 0;
     padding: 0 10px;
 }
 
 #group-submenu>div:nth-child(2) {
-    margin-top: 40px;
+    margin-top: 45px;
 }
 
 #group-submenu .group-header {
