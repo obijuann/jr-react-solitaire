@@ -44,9 +44,57 @@
 }
 
 .back {
-    background-image: url("/cards/backs/blue.svg");
+    background-color: white;
     background-repeat: no-repeat;
     background-size: 100%;
+}
+
+.back.abstract_clouds {
+    background-image: url("/cards/backs/abstract_clouds.svg");
+}
+
+.back.abstract_scene {
+    background-image: url("/cards/backs/abstract_scene.svg");
+}
+
+.back.abstract {
+    background-image: url("/cards/backs/abstract.svg");
+}
+
+.back.astronaut {
+    background-image: url("/cards/backs/astronaut.svg");
+}
+
+.back.blue {
+    background-image: url("/cards/backs/blue.svg");
+}
+
+.back.blue2 {
+    background-image: url("/cards/backs/blue2.svg");
+}
+
+.back.cars {
+    background-image: url("/cards/backs/cars.svg");
+}
+
+.back.castle {
+    background-image: url("/cards/backs/castle.svg");
+}
+
+.back.fish {
+    background-image: url("/cards/backs/fish.svg");
+}
+
+.back.frog {
+    background-image: url("/cards/backs/frog.svg");
+}
+
+.back.red {
+    background-image: url("/cards/backs/red.svg");
+}
+
+.back.red2 {
+    background-image: url("/cards/backs/red2.svg");
 }
 
 .face {
@@ -125,13 +173,29 @@
 }
 
 @media (min-width: 890px) {
-    .face {
-        background-image: url("/cards/fronts/1300_classic_en-min.png");
+    .face.english {
+        background-image: url("/cards/fronts/1300_english.png");
+    }
+
+    .face.french {
+        background-image: url("/cards/fronts/1300_french.png");
+    }
+
+    .face.simple {
+        background-image: url("/cards/fronts/1300_simple.png");
     }
 }
 
 @media (max-width: 889px) {
-    .face {
-        background-image: url("/cards/fronts/650_simple-min.png");
+    .face.english {
+        background-image: url("/cards/fronts/650_english.png");
+    }
+
+    .face.french {
+        background-image: url("/cards/fronts/650_french.png");
+    }
+
+    .face.simple {
+        background-image: url("/cards/fronts/650_simple.png");
     }
 }

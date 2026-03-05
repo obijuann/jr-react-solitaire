@@ -1,29 +1,30 @@
 import './card.css';
 
 import { DragEventHandler } from 'react';
+import usePreferencesStore from "../stores/preferences-store";
 import { CardArtworkProperties, CardBacks, CardData, CardFaces } from '../types/card-data';
 
 // Mapping of card face types to image paths and user-friendly labels
 export const cardFaceArtwork: Record<CardFaces, CardArtworkProperties> = {
-    "english": { imagePath: "", label: "English" },
-    "french": { imagePath: "", label: "French" },
-    "simple": { imagePath: "", label: "Simple" },
+    "english": { label: "English" },
+    "french": { label: "French" },
+    "simple": { label: "Simple" },
 };
 
 // Mapping of card back types to image paths and user-friendly labels
 export const cardBackArtwork: Record<CardBacks, CardArtworkProperties> = {
-    "abstract_clouds": { imagePath: "", label: "Clouds" },
-    "abstract_scene": { imagePath: "", label: "Landscape" },
-    "abstract": { imagePath: "", label: "Abstract" },
-    "astronaut": { imagePath: "", label: "Astronaut" },
-    "blue": { imagePath: "", label: "Blue" },
-    "blue2": { imagePath: "", label: "Blue 2" },
-    "cars": { imagePath: "", label: "Cars" },
-    "castle": { imagePath: "", label: "Castle" },
-    "fish": { imagePath: "", label: "Fish" },
-    "frog": { imagePath: "", label: "Frog" },
-    "red": { imagePath: "", label: "Red" },
-    "red2": { imagePath: "", label: "Red 2" }
+    "abstract_clouds": { label: "Clouds" },
+    "abstract_scene": { label: "Landscape" },
+    "abstract": { label: "Abstract" },
+    "astronaut": { label: "Astronaut" },
+    "blue": { label: "Blue" },
+    "blue2": { label: "Blue 2" },
+    "cars": { label: "Cars" },
+    "castle": { label: "Castle" },
+    "fish": { label: "Fish" },
+    "frog": { label: "Frog" },
+    "red": { label: "Red" },
+    "red2": { label: "Red 2" }
 };
 
 /**
@@ -47,6 +48,9 @@ interface CardComponentProps extends CardData {
  */
 export default function Card(props: CardComponentProps) {
 
+  const cardFace = usePreferencesStore(state => state.cardFace);  
+  const cardBack = usePreferencesStore(state => state.cardBack);  
+
   let styleOverride;
   if (props.offset) {
     styleOverride = {
@@ -69,8 +73,8 @@ export default function Card(props: CardComponentProps) {
       style={styleOverride}
     >
       <div className="card-inner">
-        <div className="back" />
-        <div className={`face rank_${props.rank} ${props.suit}`} />
+        <div className={`back ${cardBack}`} />
+        <div className={`face ${cardFace} rank_${props.rank} ${props.suit}`} />
       </div>
     </div>
   );

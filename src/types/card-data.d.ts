@@ -27,6 +27,5 @@ export type CardBacks = "abstract_clouds" | "abstract_scene" | "abstract" | "ast
 
 // Basic set of properties for card face and back artwork.
 export type CardArtworkProperties = {
-    imagePath: string;
     label: string;
 };
