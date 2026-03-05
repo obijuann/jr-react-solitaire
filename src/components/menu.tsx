@@ -15,7 +15,11 @@ import { ChangeEvent, useEffect, useState } from 'react';
 import useGameStore from '../stores/game-store';
 import usePreferencesStore from '../stores/preferences-store';
 import useStatisticsStore from '../stores/statistics-store';
+import { themeColors } from '../themes/palette';
+import { CardBacks, CardFaces } from '../types/card-data';
+import { ThemeColors } from '../types/theme';
 import { getFormattedTimer, throttle } from '../utils/utils';
+import { cardBackArtwork, cardFaceArtwork } from "./card";
 
 const submenuArrowSize: number = 15;
 const submenuWidth: number = 300;
@@ -52,6 +56,9 @@ export default function Menu() {
     const worstLoseStreak = useStatisticsStore(state => state.worstLosingStreak);
 
     // User preferences
+    const themeColor = usePreferencesStore(state => state.themeColor);
+    const cardBack = usePreferencesStore(state => state.cardBack);
+    const cardFace = usePreferencesStore(state => state.cardFace);
     const gameTimerEnabled = usePreferencesStore(state => state.gameTimerEnabled);
 
     useEffect(() => {
@@ -174,17 +181,40 @@ export default function Menu() {
         );
     }
 
-    function handleThemeChange(event: ChangeEvent<HTMLSelectElement, HTMLSelectElement>): void {
-        console.log(`Function not implemented. ${event}`);
+    /**
+     * Update the user preference for theme
+     * @param e Change event from the select element
+     */
+    function handleThemeChange(e: ChangeEvent<HTMLSelectElement, HTMLSelectElement>): void {
+        e.preventDefault();
+        usePreferencesStore.setState(() => ({ themeColor: e.target.value as ThemeColors }));
     }
 
-    function handleCardFrontChange(event: ChangeEvent<HTMLSelectElement, HTMLSelectElement>): void {
-        console.log(`Function not implemented. ${event}`);
+    /**
+     * Update the user preference for card face artwork
+     * @param e Change event from the select element
+     */
+    function handleCardFaceChange(e: ChangeEvent<HTMLSelectElement, HTMLSelectElement>): void {
+        e.preventDefault();
+        usePreferencesStore.setState(() => ({ cardFace: e.target.value as CardFaces }));
     }
 
-    function handleTimerSwitchChange(event: ChangeEvent<HTMLInputElement, Element>): void {
-        event.preventDefault();
-        usePreferencesStore.setState(() => ({ gameTimerEnabled: event.target.checked }));
+    /**
+     * Update the user preference for card rear artwork
+     * @param e Change event from the select element
+     */
+    function handleCardBackChange(e: ChangeEvent<HTMLSelectElement, HTMLSelectElement>): void {
+        e.preventDefault();
+        usePreferencesStore.setState(() => ({ cardBack: e.target.value as CardBacks }));
+    }
+
+    /**
+     * Update the user preference for using the game timer
+     * @param e Change event from the input element
+     */
+    function handleTimerSwitchChange(e: ChangeEvent<HTMLInputElement, Element>): void {
+        e.preventDefault();
+        usePreferencesStore.setState(() => ({ gameTimerEnabled: e.target.checked }));
     }
 
     /**
@@ -204,7 +234,7 @@ export default function Menu() {
                         <div>
                             <Checkbox
                                 checked={gameTimerEnabled}
-                                size='medium'
+                                size="medium"
                                 onChange={handleTimerSwitchChange}
                             />
                         </div>
@@ -217,32 +247,40 @@ export default function Menu() {
                         <div>
                             <select
                                 aria-labelledby="theme-select-label"
+                                defaultValue={themeColor}
                                 id="theme-select"
-                                value="green"
+                                name="theme"
                                 onChange={handleThemeChange}
                             >
-                                <option value="green">Green</option>
-                                <option value="yellow">Yellow</option>
-                                <option value="cyan">Cyan</option>
-                                <option value="blue">Blue</option>
-                                <option value="violet">Violet</option>
-                                <option value="red">Red</option>
+                                {
+                                    Object.entries(themeColors).map(([themeKey, themeProps]) => (
+                                        <option key={themeKey} value={themeKey}>
+                                            {themeProps.label}
+                                        </option>
+                                    ))
+                                }
                             </select>
                         </div>
                     </div>
                     <div className="group-section">
                         <div>
-                            <label id="card-front-select-label">Card front</label>
+                            <label id="card-face-select-label">Card face</label>
                         </div>
                         <div>
                             <select
-                                id="card-front-select"
-                                aria-labelledby="card-front-select-label"
-                                value={"english"}
-                                onChange={handleCardFrontChange}
+                                aria-labelledby="card-face-select-label"
+                                defaultValue={cardFace}
+                                id="card-face-select"
+                                name="card-face"
+                                onChange={handleCardFaceChange}
                             >
-                                <option value="english">English</option>
-                                <option value="french">French</option>
+                                {
+                                    Object.entries(cardFaceArtwork).map(([cardFace, cardFaceArtwork]) => (
+                                        <option key={cardFace} value={cardFace}>
+                                            {cardFaceArtwork.label}
+                                        </option>
+                                    ))
+                                }
                             </select>
                         </div>
                     </div>
@@ -250,23 +288,19 @@ export default function Menu() {
                         <label id="card-back-select-label">Card back</label>
                         <div>
                             <select
-                                id="card-back-select"
                                 aria-labelledby="card-back-select-label"
-                                value="blue"
-                                onChange={handleThemeChange}
+                                defaultValue={cardBack}
+                                id="card-back-select"
+                                name="card-back"
+                                onChange={handleCardBackChange}
                             >
-                                <option value="abstract_clouds">Clouds</option>
-                                <option value="abstract_scene">Landscape</option>
-                                <option value="abstract">Abstract</option>
-                                <option value="astronaut">Astronaut</option>
-                                <option value="blue">Blue</option>
-                                <option value="blue2">Blue 2</option>
-                                <option value="cars">Cars</option>
-                                <option value="castle">Castle</option>
-                                <option value="fish">Fish</option>
-                                <option value="frog">Frog</option>
-                                <option value="red">Red</option>
-                                <option value="red2">Red 2</option>
+                                {
+                                    Object.entries(cardBackArtwork).map(([cardBack, cardFaceArtwork]) => (
+                                        <option key={cardBack} value={cardBack}>
+                                            {cardFaceArtwork.label}
+                                        </option>
+                                    ))
+                                }
                             </select>
                         </div>
                     </div>

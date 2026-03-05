@@ -8,7 +8,8 @@ describe('makeComponents', () => {
 		const props: ThemeColorProperties = {
 			primary: '#112233',
 			dark: '#001122',
-			light: '#445566'
+			light: '#445566',
+			label: 'test'
 		};
 
 		// Act

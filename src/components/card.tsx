@@ -1,7 +1,30 @@
 import './card.css';
 
 import { DragEventHandler } from 'react';
-import { CardData } from '../types/card-data';
+import { CardArtworkProperties, CardBacks, CardData, CardFaces } from '../types/card-data';
+
+// Mapping of card face types to image paths and user-friendly labels
+export const cardFaceArtwork: Record<CardFaces, CardArtworkProperties> = {
+    "english": { imagePath: "", label: "English" },
+    "french": { imagePath: "", label: "French" },
+    "simple": { imagePath: "", label: "Simple" },
+};
+
+// Mapping of card back types to image paths and user-friendly labels
+export const cardBackArtwork: Record<CardBacks, CardArtworkProperties> = {
+    "abstract_clouds": { imagePath: "", label: "Clouds" },
+    "abstract_scene": { imagePath: "", label: "Landscape" },
+    "abstract": { imagePath: "", label: "Abstract" },
+    "astronaut": { imagePath: "", label: "Astronaut" },
+    "blue": { imagePath: "", label: "Blue" },
+    "blue2": { imagePath: "", label: "Blue 2" },
+    "cars": { imagePath: "", label: "Cars" },
+    "castle": { imagePath: "", label: "Castle" },
+    "fish": { imagePath: "", label: "Fish" },
+    "frog": { imagePath: "", label: "Frog" },
+    "red": { imagePath: "", label: "Red" },
+    "red2": { imagePath: "", label: "Red 2" }
+};
 
 /**
  * Props for the `Card` component. Extends `CardData` with render and
@@ -17,7 +40,7 @@ interface CardComponentProps extends CardData {
 }
 
 /**
- * Render a single playing card. The component renders front/back faces,
+ * Render a single playing card. The component renders face/back faces,
  * applies suit/rank classes and supports dragging when `draggable` is true.
  * @param props Card component props
  * @returns JSX.Element
@@ -47,7 +70,7 @@ export default function Card(props: CardComponentProps) {
     >
       <div className="card-inner">
         <div className="back" />
-        <div className={`front rank_${props.rank} ${props.suit}`} />
+        <div className={`face rank_${props.rank} ${props.suit}`} />
       </div>
     </div>
   );

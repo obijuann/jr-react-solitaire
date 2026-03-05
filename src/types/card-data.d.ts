@@ -20,7 +20,13 @@ export interface CardData {
 }
 
 // Available card faces.
-export type CardFaces = "english" | "french";
+export type CardFaces = "english" | "french" | "simple";
 
 // Available card backs.
 export type CardBacks = "abstract_clouds" | "abstract_scene" | "abstract" | "astronaut" | "blue" | "blue2" | "cars" | "castle" | "fish" | "frog" | "red" | "red2";
+
+// Basic set of properties for card face and back artwork.
+export type CardArtworkProperties = {
+    imagePath: string;
+    label: string;
+};

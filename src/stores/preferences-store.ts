@@ -3,7 +3,6 @@ import { persist } from "zustand/middleware";
 import { CardBacks, CardFaces } from "../types/card-data";
 import { ThemeColors } from "../types/theme";
 
-
 type PreferencesStoreState = {
     /** User's preferred theme color. */
     themeColor: ThemeColors;

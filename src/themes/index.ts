@@ -20,6 +20,7 @@ Object.entries(themeColors).forEach(([k, p]) => {
 
 // Key used when a requested theme is missing.
 export const defaultThemeKey = 'green';
+
 // Available theme keys (useful for UI selection menus).
 export const themeKeys = Object.keys(themes) as Array<keyof typeof themes>;
 

@@ -6,4 +6,5 @@ export type ThemeColorProperties = {
     primary: string;
     dark: string;
     light: string;
+    label: string;
 };

@@ -5,19 +5,16 @@ import { ThemeProvider } from '@mui/material/styles';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import Solitaire from './app/solitaire';
-import ThemeSwitcher from './components/theme-switcher';
-import { defaultThemeKey, getTheme } from './themes';
+import usePreferencesStore from './stores/preferences-store';
+import { getTheme } from './themes';
 
 function AppWrapper() {
-  const [themeKey, setThemeKey] = React.useState<string>(defaultThemeKey);
-  const theme = React.useMemo(() => getTheme(themeKey), [themeKey]);
-  const isDev = Boolean(import.meta.env.DEV);
-
+  const themeColor = usePreferencesStore(state => state.themeColor);
+  
   return (
-    <ThemeProvider theme={theme}>
+    <ThemeProvider theme={getTheme(themeColor)}>
       <CssBaseline />
       <Solitaire />
-      {isDev ? <ThemeSwitcher value={themeKey} onChange={setThemeKey} /> : null}
     </ThemeProvider>
   );
 }
