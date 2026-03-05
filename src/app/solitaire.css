@@ -28,7 +28,7 @@
 /* Slight opacity shift to all direct children when the menu is visible.
    Also disable pointer events on the content so any clicks first close the menus. */
 #play-area.menu-open > div {
-  filter: opacity(80%);
+  filter: opacity(90%);
   pointer-events: none;
 }
 
