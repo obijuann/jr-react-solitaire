@@ -203,7 +203,7 @@ export default function Menu() {
     }
 
     /**
-     * Update the user preference for card rear artwork
+     * Update the user preference for card back artwork
      * @param e Change event from the select element
      */
     function handleCardBackChange(e: SelectChangeEvent<CardBacks>): void {
@@ -245,16 +245,16 @@ export default function Menu() {
                     <div className="group-section-header">Appearance</div>
                     <div className="group-section">
                         <div>
-                            <label id="theme-select-label">Theme</label>
+                            Theme
                         </div>
                         <div>
-                            <FormControl size="small" sx={{ height: 35, minWidth: 120 }}>
+                            <FormControl size="small" sx={{ m: 0, minWidth: 120 }}>
                                 <Select
-                                    labelId="theme-select-label"
-                                    id="theme-select"
-                                    value={themeColor}
-                                    onChange={handleThemeChange}
                                     displayEmpty
+                                    id="theme-select"
+                                    inputProps={{ 'aria-label': 'Theme' }}
+                                    onChange={handleThemeChange}
+                                    value={themeColor}
                                 >
                                     {
                                         Object.entries(themeColors).map(([themeKey, themeProps]) => (
@@ -269,16 +269,16 @@ export default function Menu() {
                     </div>
                     <div className="group-section">
                         <div>
-                            <label id="card-face-select-label">Card face</label>
+                            Card Face
                         </div>
                         <div>
-                            <FormControl size="small" sx={{ height: 35, minWidth: 120 }}>
+                            <FormControl size="small" sx={{ m: 0, minWidth: 120 }}>
                                 <Select
-                                    labelId="card-face-select-label"
-                                    id="card-face-select"
-                                    value={cardFace}
-                                    onChange={handleCardFaceChange}
                                     displayEmpty
+                                    id="card-face-select"
+                                    inputProps={{ 'aria-label': 'Card face' }}
+                                    onChange={handleCardFaceChange}
+                                    value={cardFace}
                                 >
                                     {
                                         Object.entries(cardFaceArtwork).map(([cardFace, cardFaceArtwork]) => (
@@ -292,15 +292,17 @@ export default function Menu() {
                         </div>
                     </div>
                     <div className="group-section">
-                        <label id="card-back-select-label">Card back</label>
                         <div>
-                            <FormControl size="small" sx={{ height: 35, minWidth: 120 }}>
+                            Card Back
+                        </div>
+                        <div>
+                            <FormControl size="small" sx={{ m: 0, minWidth: 120 }}>
                                 <Select
-                                    labelId="card-back-select-label"
-                                    id="card-back-select"
-                                    value={cardBack}
-                                    onChange={handleCardBackChange}
                                     displayEmpty
+                                    id="card-back-select"
+                                    inputProps={{ 'aria-label': 'Card back' }}
+                                    onChange={handleCardBackChange}
+                                    value={cardBack}
                                 >
                                     {
                                         Object.entries(cardBackArtwork).map(([cardBack, cardBackArtwork]) => (
