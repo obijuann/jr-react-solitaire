@@ -32,6 +32,16 @@ export function makeComponents(colorProps: ThemeColorProperties): Components {
                     backgroundImage: 'none'
                 }
             }
+        },
+        MuiButtonBase: {
+            defaultProps: {
+                disableRipple: true
+            },
+        },
+        MuiSelect: {
+            defaultProps: {
+                displayEmpty: true
+            }
         }
     } as Components;
 }

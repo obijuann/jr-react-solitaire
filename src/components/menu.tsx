@@ -20,12 +20,13 @@ import usePreferencesStore from '../stores/preferences-store';
 import useStatisticsStore from '../stores/statistics-store';
 import { themeColors } from '../themes/palette';
 import { CardBacks, CardFaces } from '../types/card-data';
-import { ThemeColors } from '../types/theme';
+import { ThemeColors } from "../types/theme";
 import { getFormattedTimer, throttle } from '../utils/utils';
 import { cardBackArtwork, cardFaceArtwork } from "./card";
 
 const submenuArrowSize: number = 15;
 const submenuWidth: number = 300;
+
 
 /**
  * Menu component.
@@ -189,7 +190,6 @@ export default function Menu() {
      * @param e Change event from the select element
      */
     function handleThemeChange(e: SelectChangeEvent<ThemeColors>): void {
-        e.preventDefault();
         usePreferencesStore.setState(() => ({ themeColor: e.target.value as ThemeColors }));
     }
 
@@ -198,7 +198,6 @@ export default function Menu() {
      * @param e Change event from the select element
      */
     function handleCardFaceChange(e: SelectChangeEvent<CardFaces>): void {
-        e.preventDefault();
         usePreferencesStore.setState(() => ({ cardFace: e.target.value as CardFaces }));
     }
 
@@ -207,7 +206,6 @@ export default function Menu() {
      * @param e Change event from the select element
      */
     function handleCardBackChange(e: SelectChangeEvent<CardBacks>): void {
-        e.preventDefault();
         usePreferencesStore.setState(() => ({ cardBack: e.target.value as CardBacks }));
     }
 
@@ -215,8 +213,7 @@ export default function Menu() {
      * Update the user preference for using the game timer
      * @param e Change event from the input element
      */
-    function handleTimerSwitchChange(e: ChangeEvent<HTMLInputElement, Element>): void {
-        e.preventDefault();
+    function handleTimerSwitchChange(e: ChangeEvent<HTMLInputElement>): void {
         usePreferencesStore.setState(() => ({ gameTimerEnabled: e.target.checked }));
     }
 
@@ -239,6 +236,12 @@ export default function Menu() {
                                 checked={gameTimerEnabled}
                                 size="medium"
                                 onChange={handleTimerSwitchChange}
+                                sx={{
+                                    color: "white",
+                                    padding: 0,
+                                    "& .MuiSvgIcon-root": { fontSize: 35 },
+                                    '&.Mui-checked': { color: "white" },
+                                }}
                             />
                         </div>
                     </div>
@@ -250,11 +253,14 @@ export default function Menu() {
                         <div>
                             <FormControl size="small" sx={{ m: 0, minWidth: 120 }}>
                                 <Select
-                                    displayEmpty
                                     id="theme-select"
                                     inputProps={{ 'aria-label': 'Theme' }}
                                     onChange={handleThemeChange}
                                     value={themeColor}
+                                    sx={{
+                                        "& .MuiSvgIcon-root": { color: "unset" },
+                                        "& .MuiOutlinedInput-notchedOutline": { borderColor: "transparent" },
+                                    }}
                                 >
                                     {
                                         Object.entries(themeColors).map(([themeKey, themeProps]) => (
@@ -274,11 +280,14 @@ export default function Menu() {
                         <div>
                             <FormControl size="small" sx={{ m: 0, minWidth: 120 }}>
                                 <Select
-                                    displayEmpty
                                     id="card-face-select"
                                     inputProps={{ 'aria-label': 'Card face' }}
                                     onChange={handleCardFaceChange}
                                     value={cardFace}
+                                    sx={{
+                                        "& .MuiSvgIcon-root": { color: "unset" },
+                                        "& .MuiOutlinedInput-notchedOutline": { borderColor: "transparent" },
+                                    }}
                                 >
                                     {
                                         Object.entries(cardFaceArtwork).map(([cardFace, cardFaceArtwork]) => (
@@ -298,11 +307,14 @@ export default function Menu() {
                         <div>
                             <FormControl size="small" sx={{ m: 0, minWidth: 120 }}>
                                 <Select
-                                    displayEmpty
                                     id="card-back-select"
                                     inputProps={{ 'aria-label': 'Card back' }}
                                     onChange={handleCardBackChange}
                                     value={cardBack}
+                                    sx={{
+                                        "& .MuiSvgIcon-root": { color: "unset" },
+                                        "& .MuiOutlinedInput-notchedOutline": { borderColor: "transparent" },
+                                    }}
                                 >
                                     {
                                         Object.entries(cardBackArtwork).map(([cardBack, cardBackArtwork]) => (
