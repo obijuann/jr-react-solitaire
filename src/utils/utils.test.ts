@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { throttle, getFormattedTimer } from './utils';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { getFormattedTimer, throttle } from './utils';
 
 /**
  * Unit tests for throttle utility ensuring it limits calls.
@@ -43,6 +43,10 @@ describe('throttle', () => {
  * for seconds, minutes, hours and 24-hour reset behavior.
  */
 describe('getFormattedTimer', () => {
+  it('formats zero value as --:--', () => {
+    expect(getFormattedTimer(0)).toBe('--:--');
+  });
+
   it('formats seconds-only values as MM:SS', () => {
     expect(getFormattedTimer(5)).toBe('00:05');
   });

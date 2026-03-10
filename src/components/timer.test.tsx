@@ -18,7 +18,7 @@ it("renders empty timer", () => {
     render(<Timer />);
 
     // Assert
-    expect(screen.getByText(/00:00/i)).toBeInTheDocument();
+    expect(screen.getByText(/--:--/i)).toBeInTheDocument();
 });
 
 it("renders timer", () => {
