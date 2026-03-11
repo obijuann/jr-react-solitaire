@@ -6,8 +6,10 @@ import useGameStore from '../stores/game-store';
 
 beforeEach(() => {
     useGameStore.setState({ menuVisible: true, submenuId: "", shuffledDeck: [] });
+    usePreferencesStore.setState({ gameTimerEnabled: true });
 });
 
+import usePreferencesStore from "../stores/preferences-store";
 import useStatisticsStore from '../stores/statistics-store';
 import Menu from './menu';
 
@@ -240,5 +242,23 @@ it("renders the statistics submenu", () => {
     fireEvent.click(statsMenuButton);
 
     // Assert
-    expect(screen.getByText(/average/i)).toBeInTheDocument();
+    expect(screen.queryByTestId("time-stats")).toBeInTheDocument();
+    expect(screen.getByText(/streaks/i)).toBeInTheDocument();
+});
+
+it("renders the statistics submenu without the game timer section", () => {
+    // Arrange + Act
+    usePreferencesStore.setState({ gameTimerEnabled: false });
+    render(<Menu />);
+
+    // Assert
+    const statsMenuButton = screen.getByRole('button', { name: 'Statistics' });
+    expect(statsMenuButton).toBeInTheDocument();
+
+    // Act
+    fireEvent.click(statsMenuButton);
+
+    // Assert
+    expect(screen.queryByTestId("time-stats")).not.toBeInTheDocument();
+    expect(screen.getByText(/streaks/i)).toBeInTheDocument();
 });

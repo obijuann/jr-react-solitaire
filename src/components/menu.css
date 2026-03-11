@@ -110,7 +110,9 @@
     font-size: 18px;
 }
 
-#group-submenu>div {
+#group-submenu .group-header,
+#group-submenu .group-section-header,
+#group-submenu .group-section {
     align-items: center;
     display: flex;
     justify-content: center;

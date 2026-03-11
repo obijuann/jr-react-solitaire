@@ -344,19 +344,7 @@ export default function Menu() {
                         <button onClick={resetStatistics} className="secondary" id="reset-stats" title='Reset Statistics'><RestoreRoundedIcon fontSize='medium' /></button>
                         <span>Statistics</span>
                     </div>
-                    <div className="group-section-header">Time</div>
-                    <div className="group-section">
-                        <div>Current</div>
-                        <div>{getFormattedTimer(gameTimer)}</div>
-                    </div>
-                    <div className="group-section">
-                        <div>Best</div>
-                        <div>{getFormattedTimer(bestWinTime)}</div>
-                    </div>
-                    <div className="group-section">
-                        <div>Average</div>
-                        <div>{getFormattedTimer(averageWinTime())}</div>
-                    </div>
+                    {renderTimeStatistics()}
                     <div className="group-section-header">Totals</div>
                     <div className="group-section">
                         <div>Wins</div>
@@ -386,6 +374,33 @@ export default function Menu() {
                 </div>
             </div>
         );
+    }
+
+
+    /**
+     * Render the statistics related to game time. Returns null if the the user has disabled the game timer.
+     * @returns JSX.Element
+     */
+    function renderTimeStatistics() {
+        if (gameTimerEnabled) {
+            return (
+                <div data-testid="time-stats">
+                    <div className="group-section-header">Time</div>
+                    <div className="group-section">
+                        <div>Current</div>
+                        <div>{getFormattedTimer(gameTimer)}</div>
+                    </div>
+                    <div className="group-section">
+                        <div>Best</div>
+                        <div>{getFormattedTimer(bestWinTime)}</div>
+                    </div>
+                    <div className="group-section">
+                        <div>Average</div>
+                        <div>{getFormattedTimer(averageWinTime())}</div>
+                    </div>
+                </div>
+            );
+        }
     }
 
     /**

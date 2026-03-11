@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import usePreferencesStore from "./preferences-store";
 
 type StatisticsStoreState = {
     /** Number of wins in the best winning streak. */
@@ -14,6 +15,8 @@ type StatisticsStoreState = {
     totalLosses: number;
     /** Total number of games won. */
     totalWins: number;
+    /** Total number of games won with the timer enabled. */
+    totalTimedWins: number;
     /** Cumulative time in wins. */
     totalGameTime: number;
     /** Number of losses in the worst losing streak. */
@@ -47,6 +50,7 @@ export const useStatisticsStore = create<StatisticsStoreState>()(
             currentStreak: 0,
             totalLosses: 0,
             totalWins: 0,
+            totalTimedWins: 0,
             totalGameTime: 0,
             worstLosingStreak: 0,
 
@@ -55,8 +59,8 @@ export const useStatisticsStore = create<StatisticsStoreState>()(
              * @returns Average time per win in seconds
              */
             getAverageWinTime: () => {
-                const { totalGameTime, totalWins } = get();
-                return totalWins ? Math.round(totalGameTime / totalWins) : 0;
+                const { totalGameTime, totalTimedWins } = get();
+                return totalTimedWins ? Math.round(totalGameTime / totalTimedWins) : 0;
             },
 
             /**
@@ -94,8 +98,13 @@ export const useStatisticsStore = create<StatisticsStoreState>()(
                     // Increase the win total
                     const gamesWon = get().totalWins + 1;
 
-                    // Add game time to the current total
-                    const totalGameTime = get().totalGameTime + gameTime;
+                    // Add game time to the current total if the game timer is enabled
+                    let totalGameTime = get().totalGameTime;
+                    let totalTimedWins = get().totalTimedWins;
+                    if (usePreferencesStore.getState().gameTimerEnabled) {
+                        totalGameTime += gameTime;
+                        totalTimedWins++;
+                    }
 
                     // Update the streak
                     const currentStreak = get().currentStreakType === "win" ? get().currentStreak + 1 : 1;
@@ -106,7 +115,7 @@ export const useStatisticsStore = create<StatisticsStoreState>()(
                     const bestWinTime = gameTime < currentBestWinTime ? gameTime : currentBestWinTime;
 
                     // Update the state
-                    set(() => ({ bestWinStreak, bestWinTime, currentStreak, currentStreakType: "win", totalWins: gamesWon, totalGameTime }));
+                    set(() => ({ bestWinStreak, bestWinTime, currentStreak, currentStreakType: "win", totalWins: gamesWon, totalTimedWins, totalGameTime }));
                 },
 
                 /**
@@ -135,10 +144,11 @@ export const useStatisticsStore = create<StatisticsStoreState>()(
                         currentStreakType: undefined,
                         totalLosses: 0,
                         totalWins: 0,
+                        totalTimedWins: 0,
                         totalGameTime: 0,
                         worstLosingStreak: 0
                     }))
-                }
+                },
             },
         }),
         {
@@ -150,6 +160,7 @@ export const useStatisticsStore = create<StatisticsStoreState>()(
                 currentStreakType: state.currentStreakType,
                 totalLosses: state.totalLosses,
                 totalWins: state.totalWins,
+                totalTimedWins: state.totalTimedWins,
                 totalGameTime: state.totalGameTime,
                 worstLosingStreak: state.worstLosingStreak
             }),
@@ -159,7 +170,20 @@ export const useStatisticsStore = create<StatisticsStoreState>()(
                     state?.actions?.resetStatistics?.();
                 }
             },
-            version: 1
+            migrate: (persistedState, version) => {
+
+                const persisted = persistedState as StatisticsStoreState;
+
+                // Version two added a separate store for total timed games
+                // If the state was rehydrated with zero timed wins but non-zero wins,
+                // set the default timed win number to match the number of wins
+                if (version < 2 && persisted.totalWins && !persisted.totalTimedWins) {
+                    persisted.totalTimedWins = persisted.totalWins;
+                }
+
+                return persisted as unknown;
+            },
+            version: 2
         },
     ),
 )
