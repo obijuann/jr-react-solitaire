@@ -4,6 +4,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, expect, it, vi } from 'vitest';
 
 import useGameStore from '../stores/game-store';
+import usePreferencesStore from "../stores/preferences-store";
 import Modal from './modal';
 
 beforeEach(() => {
@@ -20,6 +21,20 @@ it("renders game win modal", () => {
     // Assert
     expect(screen.getByText(/congratulations/i)).toBeInTheDocument();
     expect(screen.getByText(/Time: 01:01/i)).toBeInTheDocument();
+    expect(screen.getByText(/New Game/i)).toBeInTheDocument();
+});
+
+it("renders game win modal without a time if the user has disabled the game timer", () => {
+    // Arrange
+    useGameStore.setState({ gameTimer: 0 });
+    usePreferencesStore.setState({ gameTimerEnabled: false });
+
+    // Act
+    render(<Modal />);
+
+    // Assert
+    expect(screen.getByText(/congratulations/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Time:/i)).not.toBeInTheDocument();
     expect(screen.getByText(/New Game/i)).toBeInTheDocument();
 });
 

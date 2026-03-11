@@ -242,7 +242,7 @@ it("renders the statistics submenu", () => {
     fireEvent.click(statsMenuButton);
 
     // Assert
-    expect(screen.queryByTestId("time-stats")).toBeInTheDocument();
+    expect(screen.getByText(/average/i)).toBeInTheDocument();
     expect(screen.getByText(/streaks/i)).toBeInTheDocument();
 });
 
@@ -259,7 +259,7 @@ it("renders the statistics submenu without the game timer section", () => {
     fireEvent.click(statsMenuButton);
 
     // Assert
-    expect(screen.queryByTestId("time-stats")).not.toBeInTheDocument();
+    expect(screen.queryByText(/average/i)).not.toBeInTheDocument();
     expect(screen.getByText(/streaks/i)).toBeInTheDocument();
 });
 

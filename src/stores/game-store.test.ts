@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { CardData } from '../types/card-data';
 import useGameStore from './game-store';
+import usePreferencesStore from "./preferences-store";
 import useStatisticsStore from './statistics-store';
 
 function makeDeck(): CardData[] {
@@ -16,6 +17,8 @@ function makeDeck(): CardData[] {
 }
 
 beforeEach(() => {
+  usePreferencesStore.setState({ gameTimerEnabled: true });
+
   useGameStore.setState({
     playfield: { draw: [], waste: [], foundation: [[], [], [], []], tableau: [[], [], [], [], [], [], []] },
     shuffledDeck: [],
@@ -206,6 +209,22 @@ describe('Game store actions', () => {
 
       // Assert
       expect(useGameStore.getState().gameTimer).toBeGreaterThanOrEqual(3);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('startTimer does not increment gameTimer when the user has disabled timers', () => {
+    // Arrange
+    vi.useFakeTimers();
+    usePreferencesStore.setState({ gameTimerEnabled: false });
+    try {
+      // Act
+      useGameStore.getState().actions.startTimer();
+      vi.advanceTimersByTime(3100);
+
+      // Assert
+      expect(useGameStore.getState().gameTimer).toEqual(0);
     } finally {
       vi.useRealTimers();
     }

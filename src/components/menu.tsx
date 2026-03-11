@@ -15,7 +15,7 @@ import Checkbox from '@mui/material/Checkbox';
 import FormControl from '@mui/material/FormControl';
 import MenuItem from '@mui/material/MenuItem';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
-import { ChangeEvent, useEffect, useState } from 'react';
+import React, { ChangeEvent, useEffect, useState } from "react";
 import useGameStore from '../stores/game-store';
 import usePreferencesStore from '../stores/preferences-store';
 import useStatisticsStore from '../stores/statistics-store';
@@ -393,7 +393,7 @@ export default function Menu() {
     function renderTimeStatistics() {
         if (gameTimerEnabled) {
             return (
-                <div data-testid="time-stats">
+                <React.Fragment>
                     <div className="group-section-header">Time</div>
                     <div className="group-section">
                         <div>Current</div>
@@ -407,7 +407,7 @@ export default function Menu() {
                         <div>Average</div>
                         <div>{getFormattedTimer(averageWinTime())}</div>
                     </div>
-                </div>
+                </React.Fragment>
             );
         }
     }
