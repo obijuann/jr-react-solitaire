@@ -6,7 +6,7 @@ import useGameStore from '../stores/game-store';
 
 beforeEach(() => {
     useGameStore.setState({ menuVisible: true, submenuId: "", shuffledDeck: [] });
-    usePreferencesStore.setState({ gameTimerEnabled: true });
+    usePreferencesStore.setState({ themeColor: "green", cardFace: "english", cardBack: "blue", gameTimerEnabled: true });
 });
 
 import usePreferencesStore from "../stores/preferences-store";
@@ -120,7 +120,7 @@ it("renders the new game submenu", () => {
 
 it("clicking the restart game button calls store.restartGame and closes all menus", () => {
     // Arrange
-    useGameStore.setState({ menuVisible: true, submenuId: "", shuffledDeck: [{ face: "down", rank: "ace", suit: "clubs"}] });
+    useGameStore.setState({ menuVisible: true, submenuId: "", shuffledDeck: [{ face: "down", rank: "ace", suit: "clubs" }] });
     const original = useGameStore.getState().actions.restartGame;
     const restartSpy = vi.fn();
     useGameStore.setState(state => ({ actions: { ...state.actions, restartGame: restartSpy } }));
@@ -151,7 +151,7 @@ it("clicking the restart game button calls store.restartGame and closes all menu
 
 it("clicking the quit game button calls store.quitGame and closes all menus", () => {
     // Arrange
-    useGameStore.setState({ menuVisible: true, submenuId: "", shuffledDeck: [{ face: "down", rank: "ace", suit: "clubs"}] });
+    useGameStore.setState({ menuVisible: true, submenuId: "", shuffledDeck: [{ face: "down", rank: "ace", suit: "clubs" }] });
     const original = useGameStore.getState().actions.quitGame;
     const quitGameSpy = vi.fn();
     useGameStore.setState(state => ({ actions: { ...state.actions, quitGame: quitGameSpy } }));
@@ -182,7 +182,7 @@ it("clicking the quit game button calls store.quitGame and closes all menus", ()
 
 it("clicking the new game button during an active game records a loss", () => {
     // Arrange
-    useGameStore.setState({ menuVisible: true, submenuId: "", shuffledDeck: [{ face: "down", rank: "ace", suit: "clubs"}], gameTimer: 0 });
+    useGameStore.setState({ menuVisible: true, submenuId: "", shuffledDeck: [{ face: "down", rank: "ace", suit: "clubs" }], gameTimer: 0 });
     const newGameOriginal = useGameStore.getState().actions.newGame;
     const recordLossOriginal = useStatisticsStore.getState().actions.recordLoss;
     const newGameSpy = vi.fn();
@@ -261,4 +261,44 @@ it("renders the statistics submenu without the game timer section", () => {
     // Assert
     expect(screen.queryByTestId("time-stats")).not.toBeInTheDocument();
     expect(screen.getByText(/streaks/i)).toBeInTheDocument();
+});
+
+it("renders the user preferences submenu", () => {
+    // Arrange + Act
+    usePreferencesStore.setState({ themeColor: "cyan", cardFace: "simple", cardBack: "abstract" });
+    render(<Menu />);
+
+    // Assert
+    const prefsMenuButton = screen.getByRole('button', { name: 'Preferences' });
+    expect(prefsMenuButton).toBeInTheDocument();
+
+    // Act
+    fireEvent.click(prefsMenuButton);
+
+    // Assert
+    expect(screen.getByText(/appearance/i)).toBeInTheDocument();
+    expect(screen.getByRole("checkbox", { checked: true })).toBeInTheDocument();
+    expect(screen.getByText(/cyan/i)).toBeInTheDocument();
+    expect(screen.getByText(/simple/i)).toBeInTheDocument();
+    expect(screen.getByText(/abstract/i)).toBeInTheDocument();
+});
+
+it("renders the user preferences submenu with the unchecked game timer", () => {
+    // Arrange + Act
+    usePreferencesStore.setState({ gameTimerEnabled: false });
+    render(<Menu />);
+
+    // Assert
+    const prefsMenuButton = screen.getByRole('button', { name: 'Preferences' });
+    expect(prefsMenuButton).toBeInTheDocument();
+
+    // Act
+    fireEvent.click(prefsMenuButton);
+
+    // Assert
+    expect(screen.getByText(/appearance/i)).toBeInTheDocument();
+    expect(screen.getByRole("checkbox", { checked: false })).toBeInTheDocument();
+    expect(screen.getByText(/green/i)).toBeInTheDocument();
+    expect(screen.getByText(/english/i)).toBeInTheDocument();
+    expect(screen.getByText(/blue/i)).toBeInTheDocument();
 });

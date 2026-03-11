@@ -10,6 +10,7 @@ import ReplayRoundedIcon from '@mui/icons-material/ReplayRounded';
 import RestoreRoundedIcon from '@mui/icons-material/RestoreRounded';
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import UndoRoundedIcon from '@mui/icons-material/UndoRounded';
+import { Tooltip } from "@mui/material";
 import Checkbox from '@mui/material/Checkbox';
 import FormControl from '@mui/material/FormControl';
 import MenuItem from '@mui/material/MenuItem';
@@ -26,7 +27,6 @@ import { cardBackArtwork, cardFaceArtwork } from "./card";
 
 const submenuArrowSize: number = 15;
 const submenuWidth: number = 300;
-
 
 /**
  * Menu component.
@@ -232,17 +232,26 @@ export default function Menu() {
                     <div className="group-section">
                         <div>Timer</div>
                         <div>
-                            <Checkbox
-                                checked={gameTimerEnabled}
-                                size="medium"
-                                onChange={handleTimerSwitchChange}
-                                sx={{
-                                    color: "white",
-                                    padding: 0,
-                                    "& .MuiSvgIcon-root": { fontSize: 35 },
-                                    '&.Mui-checked': { color: "white" },
-                                }}
-                            />
+                            <Tooltip
+                                arrow
+                                placement="top"
+                                title={gameActive ? "Timer cannot be enabled or disabled during an active game" : ""}
+                            >
+                                <div>
+                                    <Checkbox
+                                        checked={gameTimerEnabled}
+                                        disabled={gameActive}
+                                        size="medium"
+                                        onChange={handleTimerSwitchChange}
+                                        sx={{
+                                            color: "white",
+                                            padding: 0,
+                                            "& .MuiSvgIcon-root": { fontSize: 35 },
+                                            '&.Mui-checked': { color: gameActive ? "rgba(0, 0, 0, 0.26)" : "white" },
+                                        }}
+                                    />
+                                </div>
+                            </Tooltip>
                         </div>
                     </div>
                     <div className="group-section-header">Appearance</div>
