@@ -1,6 +1,7 @@
 import './timer.css';
 
 import useGameStore from '../stores/game-store';
+import usePreferencesStore from "../stores/preferences-store";
 import { getFormattedTimer } from '../utils/utils';
 
 /**
@@ -9,6 +10,11 @@ import { getFormattedTimer } from '../utils/utils';
  */
 export default function Timer() {
     const gameTimer = useGameStore(state => state.gameTimer);
+    const gameTimerEnabled = usePreferencesStore(state => state.gameTimerEnabled);
+
+    if (!gameTimerEnabled) {
+        return;
+    }
 
     return (
         <div id="timer">
