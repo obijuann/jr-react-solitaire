@@ -98,21 +98,23 @@ export const useStatisticsStore = create<StatisticsStoreState>()(
                     // Increase the win total
                     const gamesWon = get().totalWins + 1;
 
-                    // Add game time to the current total if the game timer is enabled
                     let totalGameTime = get().totalGameTime;
                     let totalTimedWins = get().totalTimedWins;
+                    let bestWinTime = get().bestWinTime;
+
                     if (usePreferencesStore.getState().gameTimerEnabled) {
+                        // Add game time to the current total
                         totalGameTime += gameTime;
                         totalTimedWins++;
+
+                        // Check to see if this is a new record time
+                        const currentBestWinTime = bestWinTime || gameTime;
+                        bestWinTime = gameTime < currentBestWinTime ? gameTime : currentBestWinTime;
                     }
 
                     // Update the streak
                     const currentStreak = get().currentStreakType === "win" ? get().currentStreak + 1 : 1;
                     const bestWinStreak = currentStreak > get().bestWinStreak ? currentStreak : get().bestWinStreak;
-
-                    // Check to see if this is a new record time
-                    const currentBestWinTime = get().bestWinTime || gameTime;
-                    const bestWinTime = gameTime < currentBestWinTime ? gameTime : currentBestWinTime;
 
                     // Update the state
                     set(() => ({ bestWinStreak, bestWinTime, currentStreak, currentStreakType: "win", totalWins: gamesWon, totalTimedWins, totalGameTime }));

@@ -167,7 +167,7 @@ describe('Statistics store actions', () => {
             currentStreak: 1,
             currentStreakType: "win",
             totalLosses: 1,
-            totalWins: 4,            
+            totalWins: 4,
             totalTimedWins: 3,
             totalGameTime: 500,
         });
@@ -184,37 +184,6 @@ describe('Statistics store actions', () => {
         expect(useStatisticsStore.getState().totalWins).toBe(5);
         expect(useStatisticsStore.getState().totalTimedWins).toBe(4);
         expect(useStatisticsStore.getState().totalGameTime).toBe(740);
-    });
-
-    it('recordWin adds does not add a timed win or increment total game time if the timer is disabled', () => {
-        // Arrange 
-        useStatisticsStore.setState({
-            bestWinStreak: 2,
-            bestWinTime: 120,
-            currentStreak: 1,
-            currentStreakType: "win",
-            totalLosses: 1,
-            totalWins: 4,
-            totalTimedWins: 3,
-            totalGameTime: 500,
-        });
-
-        usePreferencesStore.setState({
-            gameTimerEnabled: false
-        });
-
-        // Act
-        useStatisticsStore.getState().actions.recordWin(240);
-
-        // Assert
-        expect(useStatisticsStore.getState().bestWinStreak).toBe(2);
-        expect(useStatisticsStore.getState().bestWinTime).toBe(120);
-        expect(useStatisticsStore.getState().currentStreak).toBe(2);
-        expect(useStatisticsStore.getState().currentStreakType).toBe("win");
-        expect(useStatisticsStore.getState().totalLosses).toBe(1);
-        expect(useStatisticsStore.getState().totalWins).toBe(5);
-        expect(useStatisticsStore.getState().totalTimedWins).toBe(3);
-        expect(useStatisticsStore.getState().totalGameTime).toBe(500);
     });
 
     it('recordWin breaks a losing streak', () => {
@@ -269,6 +238,64 @@ describe('Statistics store actions', () => {
         expect(useStatisticsStore.getState().totalWins).toBe(11);
         expect(useStatisticsStore.getState().totalTimedWins).toBe(11);
         expect(useStatisticsStore.getState().totalGameTime).toBe(1440);
+    });
+
+    it('recordWin adds does not add a timed win or increment total game time if the timer is disabled', () => {
+        // Arrange 
+        useStatisticsStore.setState({
+            bestWinStreak: 2,
+            bestWinTime: 120,
+            currentStreak: 1,
+            currentStreakType: "win",
+            totalLosses: 1,
+            totalWins: 4,
+            totalTimedWins: 3,
+            totalGameTime: 500,
+        });
+
+        usePreferencesStore.setState({
+            gameTimerEnabled: false
+        });
+
+        // Act
+        useStatisticsStore.getState().actions.recordWin(119);
+
+        // Assert
+        expect(useStatisticsStore.getState().bestWinStreak).toBe(2);
+        expect(useStatisticsStore.getState().bestWinTime).toBe(120);
+        expect(useStatisticsStore.getState().currentStreak).toBe(2);
+        expect(useStatisticsStore.getState().currentStreakType).toBe("win");
+        expect(useStatisticsStore.getState().totalLosses).toBe(1);
+        expect(useStatisticsStore.getState().totalWins).toBe(5);
+        expect(useStatisticsStore.getState().totalTimedWins).toBe(3);
+        expect(useStatisticsStore.getState().totalGameTime).toBe(500);
+    });
+
+    it('recordWin updates timed values for the first timed win', () => {
+        // Arrange 
+        useStatisticsStore.setState({
+            bestWinStreak: 2,
+            bestWinTime: 0,
+            currentStreak: 1,
+            currentStreakType: "win",
+            totalLosses: 1,
+            totalWins: 4,
+            totalTimedWins: 0,
+            totalGameTime: 0,
+        });
+
+        // Act
+        useStatisticsStore.getState().actions.recordWin(119);
+
+        // Assert
+        expect(useStatisticsStore.getState().bestWinStreak).toBe(2);
+        expect(useStatisticsStore.getState().bestWinTime).toBe(119);
+        expect(useStatisticsStore.getState().currentStreak).toBe(2);
+        expect(useStatisticsStore.getState().currentStreakType).toBe("win");
+        expect(useStatisticsStore.getState().totalLosses).toBe(1);
+        expect(useStatisticsStore.getState().totalWins).toBe(5);
+        expect(useStatisticsStore.getState().totalTimedWins).toBe(1);
+        expect(useStatisticsStore.getState().totalGameTime).toBe(119);
     });
 
     it('resetStatistics resets the store', () => {
