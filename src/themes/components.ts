@@ -1,5 +1,5 @@
 import type { Components } from '@mui/material/styles';
-import { ThemeColorProperties } from './palette';
+import { ThemeColorProperties } from '../types/theme';
 
 // Theme-specific component overrides for MUI.
 // These set CSS variables on `:root` and provide global baseline styles
@@ -31,6 +31,16 @@ export function makeComponents(colorProps: ThemeColorProperties): Components {
                 '.MuiPaper-root': {
                     backgroundImage: 'none'
                 }
+            }
+        },
+        MuiButtonBase: {
+            defaultProps: {
+                disableRipple: true
+            },
+        },
+        MuiSelect: {
+            defaultProps: {
+                displayEmpty: true
             }
         }
     } as Components;

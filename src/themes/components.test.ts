@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { ThemeColorProperties } from '../types/theme';
 import { makeComponents } from './components';
-import type { ThemeColorProperties } from './palette';
 
 describe('makeComponents', () => {
 	it('exposes CSS variables and global body styles from theme colors', () => {
@@ -8,7 +8,8 @@ describe('makeComponents', () => {
 		const props: ThemeColorProperties = {
 			primary: '#112233',
 			dark: '#001122',
-			light: '#445566'
+			light: '#445566',
+			label: 'test'
 		};
 
 		// Act

@@ -3,6 +3,7 @@ import './modal.css';
 import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
 import React from 'react';
 import useGameStore from '../stores/game-store';
+import usePreferencesStore from "../stores/preferences-store";
 import { getFormattedTimer } from '../utils/utils';
 
 /**
@@ -13,6 +14,7 @@ export default function Modal() {
 
     const gameTimer = useGameStore(state => state.gameTimer);
     const modalType = useGameStore(state => state.modalType);
+    const gameTimerEnabled = usePreferencesStore(state => state.gameTimerEnabled);
 
     /**
      * Handler for the New Game button inside the modal. Starts a new game.
@@ -50,13 +52,28 @@ export default function Modal() {
                 return (
                     <React.Fragment>
                         <span>Congratulations!</span>
-                        <span>Time: {getFormattedTimer(gameTimer)}</span>
+                        {renderGameTime()}
                         <button className="new-game" onClick={newGameHandler}><PlayArrowRoundedIcon fontSize='large' />New Game</button>
                     </React.Fragment>
                 )
             default:
                 return;
         }
+    }
+
+    /**
+     * Renders the final game time
+     * @returns JSX.Element | void
+     */
+    function renderGameTime() {
+
+        if (!gameTimerEnabled) {
+            return;
+        }
+
+        return (
+            <span>Time: {getFormattedTimer(gameTimer)}</span>
+        )
     }
 
     return (

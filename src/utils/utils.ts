@@ -5,6 +5,11 @@
  * @returns Formatted time string in `HH:MM:SS` (hours optional)
  */
 function getFormattedTimer(timeValue: number) {
+
+    if (timeValue === 0) {
+        return "--:--"
+    }
+
     const seconds = Math.floor(timeValue % 60);
     const minutes = Math.floor((timeValue / 60) % 60);
     const hours = Math.floor((timeValue / 60 / 60) % 24);
@@ -40,4 +45,4 @@ function throttle(func: (...args: unknown[]) => unknown, delay: number = 250) {
     }
 }
 
-export { throttle, getFormattedTimer };
+export { getFormattedTimer, throttle };

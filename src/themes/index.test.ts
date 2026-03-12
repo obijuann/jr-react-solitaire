@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest';
+import { ThemeColors } from '../types/theme';
 import { defaultThemeKey, getTheme, themeKeys } from './index';
 import { themeColors } from './palette';
 
 describe('themes index', () => {
   it('provides a theme for each key and default fallback', () => {
     // Arrange
-    const key = themeKeys[0] as string;
+    const key = themeKeys[0] as ThemeColors;
 
     // Act
     const theme = getTheme(key);

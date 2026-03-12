@@ -1,32 +1,40 @@
 import { beforeEach, describe, expect, it } from 'vitest';
+import usePreferencesStore from "./preferences-store";
 import useStatisticsStore from './statistics-store';
 
-beforeEach(() => {
-    useStatisticsStore.setState({
-        bestWinStreak: 0,
-        bestWinTime: 0,
-        currentStreak: 0,
-        totalLosses: 0,
-        totalWins: 0,
-        totalGameTime: 0,
-        worstLosingStreak: 0
-    });
-});
-
 describe('Statistics store actions', () => {
+
+    beforeEach(() => {
+        useStatisticsStore.setState({
+            bestWinStreak: 0,
+            bestWinTime: 0,
+            currentStreak: 0,
+            totalLosses: 0,
+            totalWins: 0,
+            totalTimedWins: 0,
+            totalGameTime: 0,
+            worstLosingStreak: 0
+        });
+
+        usePreferencesStore.setState({
+            gameTimerEnabled: true
+        });
+
+    });
+
     it('getAverageWinTime returns a correct average win time', () => {
         // Arrange + Act
-        useStatisticsStore.setState({ totalGameTime: 0, totalWins: 0 });
+        useStatisticsStore.setState({ totalGameTime: 0, totalTimedWins: 0 });
         // Assert
         expect(useStatisticsStore.getState().getAverageWinTime()).toBe(0);
 
         // Arrange + Act
-        useStatisticsStore.setState({ totalGameTime: 500, totalWins: 5 });
+        useStatisticsStore.setState({ totalGameTime: 500, totalTimedWins: 5 });
         // Assert
         expect(useStatisticsStore.getState().getAverageWinTime()).toBe(100);
 
         // Arrange + Act
-        useStatisticsStore.setState({ totalGameTime: 9999, totalWins: 5 });
+        useStatisticsStore.setState({ totalGameTime: 9999, totalTimedWins: 5 });
         // Assert
         expect(useStatisticsStore.getState().getAverageWinTime()).toBe(2000);
     });
@@ -131,6 +139,7 @@ describe('Statistics store actions', () => {
             currentStreakType: "win",
             totalLosses: 5,
             totalWins: 5,
+            totalTimedWins: 5,
             totalGameTime: 2500,
             worstLosingStreak: 0
         });
@@ -145,6 +154,7 @@ describe('Statistics store actions', () => {
         expect(useStatisticsStore.getState().currentStreakType).toBe("loss");
         expect(useStatisticsStore.getState().totalLosses).toBe(6);
         expect(useStatisticsStore.getState().totalWins).toBe(5);
+        expect(useStatisticsStore.getState().totalTimedWins).toBe(5);
         expect(useStatisticsStore.getState().totalGameTime).toBe(2500);
         expect(useStatisticsStore.getState().worstLosingStreak).toBe(1);
     });
@@ -158,6 +168,7 @@ describe('Statistics store actions', () => {
             currentStreakType: "win",
             totalLosses: 1,
             totalWins: 4,
+            totalTimedWins: 3,
             totalGameTime: 500,
         });
 
@@ -171,6 +182,7 @@ describe('Statistics store actions', () => {
         expect(useStatisticsStore.getState().currentStreakType).toBe("win");
         expect(useStatisticsStore.getState().totalLosses).toBe(1);
         expect(useStatisticsStore.getState().totalWins).toBe(5);
+        expect(useStatisticsStore.getState().totalTimedWins).toBe(4);
         expect(useStatisticsStore.getState().totalGameTime).toBe(740);
     });
 
@@ -183,6 +195,7 @@ describe('Statistics store actions', () => {
             currentStreakType: "loss",
             totalLosses: 5,
             totalWins: 0,
+            totalTimedWins: 0,
             totalGameTime: 0,
         });
 
@@ -196,6 +209,7 @@ describe('Statistics store actions', () => {
         expect(useStatisticsStore.getState().currentStreakType).toBe("win");
         expect(useStatisticsStore.getState().totalLosses).toBe(5);
         expect(useStatisticsStore.getState().totalWins).toBe(1);
+        expect(useStatisticsStore.getState().totalTimedWins).toBe(1);
         expect(useStatisticsStore.getState().totalGameTime).toBe(240);
     });
 
@@ -208,6 +222,7 @@ describe('Statistics store actions', () => {
             currentStreakType: "win",
             totalLosses: 5,
             totalWins: 10,
+            totalTimedWins: 10,
             totalGameTime: 1200,
         });
 
@@ -221,7 +236,66 @@ describe('Statistics store actions', () => {
         expect(useStatisticsStore.getState().currentStreakType).toBe("win");
         expect(useStatisticsStore.getState().totalLosses).toBe(5);
         expect(useStatisticsStore.getState().totalWins).toBe(11);
+        expect(useStatisticsStore.getState().totalTimedWins).toBe(11);
         expect(useStatisticsStore.getState().totalGameTime).toBe(1440);
+    });
+
+    it('recordWin adds does not add a timed win or increment total game time if the timer is disabled', () => {
+        // Arrange 
+        useStatisticsStore.setState({
+            bestWinStreak: 2,
+            bestWinTime: 120,
+            currentStreak: 1,
+            currentStreakType: "win",
+            totalLosses: 1,
+            totalWins: 4,
+            totalTimedWins: 3,
+            totalGameTime: 500,
+        });
+
+        usePreferencesStore.setState({
+            gameTimerEnabled: false
+        });
+
+        // Act
+        useStatisticsStore.getState().actions.recordWin(119);
+
+        // Assert
+        expect(useStatisticsStore.getState().bestWinStreak).toBe(2);
+        expect(useStatisticsStore.getState().bestWinTime).toBe(120);
+        expect(useStatisticsStore.getState().currentStreak).toBe(2);
+        expect(useStatisticsStore.getState().currentStreakType).toBe("win");
+        expect(useStatisticsStore.getState().totalLosses).toBe(1);
+        expect(useStatisticsStore.getState().totalWins).toBe(5);
+        expect(useStatisticsStore.getState().totalTimedWins).toBe(3);
+        expect(useStatisticsStore.getState().totalGameTime).toBe(500);
+    });
+
+    it('recordWin updates timed values for the first timed win', () => {
+        // Arrange 
+        useStatisticsStore.setState({
+            bestWinStreak: 2,
+            bestWinTime: 0,
+            currentStreak: 1,
+            currentStreakType: "win",
+            totalLosses: 1,
+            totalWins: 4,
+            totalTimedWins: 0,
+            totalGameTime: 0,
+        });
+
+        // Act
+        useStatisticsStore.getState().actions.recordWin(119);
+
+        // Assert
+        expect(useStatisticsStore.getState().bestWinStreak).toBe(2);
+        expect(useStatisticsStore.getState().bestWinTime).toBe(119);
+        expect(useStatisticsStore.getState().currentStreak).toBe(2);
+        expect(useStatisticsStore.getState().currentStreakType).toBe("win");
+        expect(useStatisticsStore.getState().totalLosses).toBe(1);
+        expect(useStatisticsStore.getState().totalWins).toBe(5);
+        expect(useStatisticsStore.getState().totalTimedWins).toBe(1);
+        expect(useStatisticsStore.getState().totalGameTime).toBe(119);
     });
 
     it('resetStatistics resets the store', () => {
@@ -233,6 +307,7 @@ describe('Statistics store actions', () => {
             currentStreakType: "win",
             totalLosses: 1,
             totalWins: 600,
+            totalTimedWins: 200,
             totalGameTime: 983749387,
             worstLosingStreak: 5
         });
@@ -247,6 +322,7 @@ describe('Statistics store actions', () => {
         expect(useStatisticsStore.getState().currentStreakType).toBeUndefined();
         expect(useStatisticsStore.getState().totalLosses).toBe(0);
         expect(useStatisticsStore.getState().totalWins).toBe(0);
+        expect(useStatisticsStore.getState().totalTimedWins).toBe(0);
         expect(useStatisticsStore.getState().totalGameTime).toBe(0);
         expect(useStatisticsStore.getState().worstLosingStreak).toBe(0);
     });
@@ -262,6 +338,7 @@ describe('Statistics store actions', () => {
         expect(useStatisticsStore.getState().currentStreak).toBe(1);
         expect(useStatisticsStore.getState().currentStreakType).toBe('win');
         expect(useStatisticsStore.getState().totalWins).toBe(1);
+        expect(useStatisticsStore.getState().totalTimedWins).toBe(1);
         expect(useStatisticsStore.getState().totalGameTime).toBe(120);
 
         // Act

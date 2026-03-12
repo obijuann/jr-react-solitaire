@@ -8,11 +8,22 @@ import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
 import RedoRoundedIcon from '@mui/icons-material/RedoRounded';
 import ReplayRoundedIcon from '@mui/icons-material/ReplayRounded';
 import RestoreRoundedIcon from '@mui/icons-material/RestoreRounded';
+import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import UndoRoundedIcon from '@mui/icons-material/UndoRounded';
-import { useEffect, useState } from 'react';
+import { Tooltip } from "@mui/material";
+import Checkbox from '@mui/material/Checkbox';
+import FormControl from '@mui/material/FormControl';
+import MenuItem from '@mui/material/MenuItem';
+import Select, { SelectChangeEvent } from '@mui/material/Select';
+import React, { ChangeEvent, useEffect, useState } from "react";
 import useGameStore from '../stores/game-store';
+import usePreferencesStore from '../stores/preferences-store';
 import useStatisticsStore from '../stores/statistics-store';
+import { themeColors } from '../themes/palette';
+import { CardBacks, CardFaces } from '../types/card-data';
+import { ThemeColors } from "../types/theme";
 import { getFormattedTimer, throttle } from '../utils/utils';
+import { cardBackArtwork, cardFaceArtwork } from "./card";
 
 const submenuArrowSize: number = 15;
 const submenuWidth: number = 300;
@@ -47,6 +58,12 @@ export default function Menu() {
     const totalWins = useStatisticsStore(state => state.totalWins);
     const bestWinStreak = useStatisticsStore(state => state.bestWinStreak);
     const worstLoseStreak = useStatisticsStore(state => state.worstLosingStreak);
+
+    // User preferences
+    const themeColor = usePreferencesStore(state => state.themeColor);
+    const cardBack = usePreferencesStore(state => state.cardBack);
+    const cardFace = usePreferencesStore(state => state.cardFace);
+    const gameTimerEnabled = usePreferencesStore(state => state.gameTimerEnabled);
 
     useEffect(() => {
         // Close the submenu on resize
@@ -92,6 +109,8 @@ export default function Menu() {
                 return renderStartSubmenu();
             case "stats":
                 return renderStatisticsSubmenu();
+            case "prefs":
+                return renderPreferencesSubmenu();
             default:
                 return;
         }
@@ -104,9 +123,9 @@ export default function Menu() {
     function renderStartSubmenu() {
         return (
             <div id="submenu" className="list" style={subMenuPosStyle}>
-                <button className="secondary" id="new-game" onClick={newGameHandler}><PlayArrowRoundedIcon fontSize='large'/>New game</button>
-                <button className="secondary" id="restart" onClick={restartGameHandler} disabled={!gameActive}><ReplayRoundedIcon fontSize='large'/>Restart this game</button>
-                <button className="secondary" id="quit" onClick={quitGameHandler} disabled={!gameActive}><ClearRoundedIcon fontSize='large'/>Quit this game</button>
+                <button className="secondary" id="new-game" onClick={newGameHandler}><PlayArrowRoundedIcon fontSize='large' />New game</button>
+                <button className="secondary" id="restart" onClick={restartGameHandler} disabled={!gameActive}><ReplayRoundedIcon fontSize='large' />Restart this game</button>
+                <button className="secondary" id="quit" onClick={quitGameHandler} disabled={!gameActive}><ClearRoundedIcon fontSize='large' />Quit this game</button>
             </div>
         );
     }
@@ -167,59 +186,230 @@ export default function Menu() {
     }
 
     /**
+     * Update the user preference for theme
+     * @param e Change event from the select element
+     */
+    function handleThemeChange(e: SelectChangeEvent<ThemeColors>): void {
+        usePreferencesStore.setState(() => ({ themeColor: e.target.value as ThemeColors }));
+    }
+
+    /**
+     * Update the user preference for card face artwork
+     * @param e Change event from the select element
+     */
+    function handleCardFaceChange(e: SelectChangeEvent<CardFaces>): void {
+        usePreferencesStore.setState(() => ({ cardFace: e.target.value as CardFaces }));
+    }
+
+    /**
+     * Update the user preference for card back artwork
+     * @param e Change event from the select element
+     */
+    function handleCardBackChange(e: SelectChangeEvent<CardBacks>): void {
+        usePreferencesStore.setState(() => ({ cardBack: e.target.value as CardBacks }));
+    }
+
+    /**
+     * Update the user preference for using the game timer
+     * @param e Change event from the input element
+     */
+    function handleTimerSwitchChange(e: ChangeEvent<HTMLInputElement>): void {
+        usePreferencesStore.setState(() => ({ gameTimerEnabled: e.target.checked }));
+    }
+
+    /**
+     * Render the "Preferences" submenu.
+     * @returns JSX.Element
+     */
+    function renderPreferencesSubmenu() {
+        return (
+            <div id="submenu" className="list" style={subMenuPosStyle}>
+                <div id="group-submenu">
+                    <div className="group-header">
+                        <span>Preferences</span>
+                    </div>
+                    <div className="group-section-header">General</div>
+                    <div className="group-section">
+                        <div>Timer</div>
+                        <div>
+                            <Tooltip
+                                arrow
+                                placement="top"
+                                title={gameActive ? "Timer cannot be enabled or disabled during an active game" : ""}
+                            >
+                                <div>
+                                    <Checkbox
+                                        checked={gameTimerEnabled}
+                                        disabled={gameActive}
+                                        size="medium"
+                                        onChange={handleTimerSwitchChange}
+                                        sx={{
+                                            color: "white",
+                                            padding: 0,
+                                            "& .MuiSvgIcon-root": { fontSize: 35 },
+                                            '&.Mui-checked': { color: gameActive ? "rgba(0, 0, 0, 0.26)" : "white" },
+                                        }}
+                                    />
+                                </div>
+                            </Tooltip>
+                        </div>
+                    </div>
+                    <div className="group-section-header">Appearance</div>
+                    <div className="group-section">
+                        <div>
+                            Theme
+                        </div>
+                        <div>
+                            <FormControl size="small" sx={{ m: 0, minWidth: 120 }}>
+                                <Select
+                                    id="theme-select"
+                                    inputProps={{ 'aria-label': 'Theme' }}
+                                    onChange={handleThemeChange}
+                                    value={themeColor}
+                                    sx={{
+                                        "& .MuiSvgIcon-root": { color: "unset" },
+                                        "& .MuiOutlinedInput-notchedOutline": { borderColor: "transparent" },
+                                    }}
+                                >
+                                    {
+                                        Object.entries(themeColors).map(([themeKey, themeProps]) => (
+                                            <MenuItem key={themeKey} value={themeKey}>
+                                                {themeProps.label}
+                                            </MenuItem>
+                                        ))
+                                    }
+                                </Select>
+                            </FormControl>
+                        </div>
+                    </div>
+                    <div className="group-section">
+                        <div>
+                            Card Face
+                        </div>
+                        <div>
+                            <FormControl size="small" sx={{ m: 0, minWidth: 120 }}>
+                                <Select
+                                    id="card-face-select"
+                                    inputProps={{ 'aria-label': 'Card face' }}
+                                    onChange={handleCardFaceChange}
+                                    value={cardFace}
+                                    sx={{
+                                        "& .MuiSvgIcon-root": { color: "unset" },
+                                        "& .MuiOutlinedInput-notchedOutline": { borderColor: "transparent" },
+                                    }}
+                                >
+                                    {
+                                        Object.entries(cardFaceArtwork).map(([cardFace, cardFaceArtwork]) => (
+                                            <MenuItem key={cardFace} value={cardFace}>
+                                                {cardFaceArtwork.label}
+                                            </MenuItem>
+                                        ))
+                                    }
+                                </Select>
+                            </FormControl>
+                        </div>
+                    </div>
+                    <div className="group-section">
+                        <div>
+                            Card Back
+                        </div>
+                        <div>
+                            <FormControl size="small" sx={{ m: 0, minWidth: 120 }}>
+                                <Select
+                                    id="card-back-select"
+                                    inputProps={{ 'aria-label': 'Card back' }}
+                                    onChange={handleCardBackChange}
+                                    value={cardBack}
+                                    sx={{
+                                        "& .MuiSvgIcon-root": { color: "unset" },
+                                        "& .MuiOutlinedInput-notchedOutline": { borderColor: "transparent" },
+                                    }}
+                                >
+                                    {
+                                        Object.entries(cardBackArtwork).map(([cardBack, cardBackArtwork]) => (
+                                            <MenuItem key={cardBack} value={cardBack}>
+                                                {cardBackArtwork.label}
+                                            </MenuItem>
+                                        ))
+                                    }
+                                </Select>
+                            </FormControl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    /**
      * Render the "Statistics" submenu.
      * @returns JSX.Element
      */
     function renderStatisticsSubmenu() {
         return (
             <div id="submenu" className="list" style={subMenuPosStyle}>
-                <div id="stats-submenu">
-                    <div className="stats-header">
-                        <button onClick={resetStatistics} className="secondary" id="reset-stats" title='Reset Statistics'><RestoreRoundedIcon fontSize='medium'/></button>
+                <div id="group-submenu">
+                    <div className="group-header">
+                        <button onClick={resetStatistics} className="secondary" id="reset-stats" title='Reset Statistics'><RestoreRoundedIcon fontSize='medium' /></button>
                         <span>Statistics</span>
                     </div>
-                    <div className="stats-section-header">Time</div>
-                    <div className="stats-section">
-                        <div>Current</div>
-                        <div>{getFormattedTimer(gameTimer)}</div>
-                    </div>
-                    <div className="stats-section">
-                        <div>Best</div>
-                        <div>{getFormattedTimer(bestWinTime)}</div>
-                    </div>
-                    <div className="stats-section">
-                        <div>Average</div>
-                        <div>{getFormattedTimer(averageWinTime())}</div>
-                    </div>
-                    <div className="stats-section-header">Totals</div>
-                    <div className="stats-section">
+                    {renderTimeStatistics()}
+                    <div className="group-section-header">Totals</div>
+                    <div className="group-section">
                         <div>Wins</div>
                         <div>{totalWins}</div>
                     </div>
-                    <div className="stats-section">
+                    <div className="group-section">
                         <div>Losses</div>
                         <div>{totalLosses}</div>
                     </div>
-                    <div className="stats-section">
+                    <div className="group-section">
                         <div>Rate</div>
                         <div>{winRate()}</div>
                     </div>
-                    <div className="stats-section-header">Streaks</div>
-                    <div className="stats-section">
+                    <div className="group-section-header">Streaks</div>
+                    <div className="group-section">
                         <div>Wins</div>
                         <div>{bestWinStreak}</div>
                     </div>
-                    <div className="stats-section">
+                    <div className="group-section">
                         <div>Losses</div>
                         <div>{worstLoseStreak}</div>
                     </div>
-                    <div className="stats-section">
+                    <div className="group-section">
                         <div>Current</div>
                         <div>{currentStreakText()}</div>
                     </div>
                 </div>
             </div>
         );
+    }
+
+
+    /**
+     * Render the statistics related to game time. Returns null if the the user has disabled the game timer.
+     * @returns JSX.Element
+     */
+    function renderTimeStatistics() {
+        if (gameTimerEnabled) {
+            return (
+                <React.Fragment>
+                    <div className="group-section-header">Time</div>
+                    <div className="group-section">
+                        <div>Current</div>
+                        <div>{getFormattedTimer(gameTimer)}</div>
+                    </div>
+                    <div className="group-section">
+                        <div>Best</div>
+                        <div>{getFormattedTimer(bestWinTime)}</div>
+                    </div>
+                    <div className="group-section">
+                        <div>Average</div>
+                        <div>{getFormattedTimer(averageWinTime())}</div>
+                    </div>
+                </React.Fragment>
+            );
+        }
     }
 
     /**
@@ -354,6 +544,7 @@ export default function Menu() {
                 <button className="primary" id="new-menu" onClick={handleSubmenuToggle}><PlayArrowRoundedIcon />Play</button>
                 <button className="primary" id="undo" disabled={!undoAvailable || !!modalType} onClick={undoMoveHandler}><UndoRoundedIcon />Undo</button>
                 <button className="primary" id="redo" disabled={!redoAvailable || !!modalType} onClick={redoMoveHandler}><RedoRoundedIcon />Redo</button>
+                <button className="primary" id="prefs" onClick={handleSubmenuToggle}><SettingsRoundedIcon /> Preferences</button>
                 <button className="primary" id="stats" onClick={handleSubmenuToggle}><LeaderboardRoundedIcon /> Statistics</button>
                 <button className="primary" id="help" onClick={handleSubmenuToggle}><HelpOutlineRoundedIcon />Help</button>
                 {renderSubmenu()}

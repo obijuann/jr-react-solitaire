@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { CardData } from '../types/card-data';
 import useGameStore from './game-store';
+import usePreferencesStore from "./preferences-store";
 import useStatisticsStore from './statistics-store';
 
 function makeDeck(): CardData[] {
@@ -16,6 +17,8 @@ function makeDeck(): CardData[] {
 }
 
 beforeEach(() => {
+  usePreferencesStore.setState({ gameTimerEnabled: true });
+
   useGameStore.setState({
     playfield: { draw: [], waste: [], foundation: [[], [], [], []], tableau: [[], [], [], [], [], [], []] },
     shuffledDeck: [],
@@ -81,6 +84,49 @@ describe('Game store actions', () => {
     expect(pf.waste.length).toBe(1);
     expect(pf.waste[0].rank).toEqual(b.rank);
     expect(pf.waste[0].face).toEqual('up');
+  });
+
+  it('drawCard recycles waste into draw when draw is empty', () => {
+    // Arrange
+    const a = { rank: 'ace', suit: 'hearts', face: 'up' } as CardData;
+    const b = { rank: '2', suit: 'hearts', face: 'up' } as CardData;
+    useGameStore.setState({ playfield: { draw: [], waste: [a, b], foundation: [[], [], [], []], tableau: [[], [], [], [], [], [], []] } });
+
+    // Act
+    useGameStore.getState().actions.drawCard();
+
+    // Assert
+    const pf = useGameStore.getState().playfield;
+    expect(pf.draw.length).toBe(2);
+    expect(pf.waste.length).toBe(0);
+    // After recycling, cards in draw should be face-down
+    expect(pf.draw[0].face).toBe('down');
+    expect(pf.draw[1].face).toBe('down');
+  });
+
+  it('drawCard with both draw and waste empty does nothing', () => {
+    // Arrange
+    useGameStore.setState({ playfield: { draw: [], waste: [], foundation: [[], [], [], []], tableau: [[], [], [], [], [], [], []] } });
+
+    // Act
+    useGameStore.getState().actions.drawCard();
+
+    // Assert
+    const pf = useGameStore.getState().playfield;
+    expect(pf.draw.length).toBe(0);
+    expect(pf.waste.length).toBe(0);
+  });
+
+  it('drawCard with no waste cards produces undo entry', () => {
+    // Arrange
+    const a = { rank: 'ace', suit: 'hearts', face: 'down' } as CardData;
+    useGameStore.setState({ playfield: { draw: [a], waste: [], foundation: [[], [], [], []], tableau: [[], [], [], [], [], [], []] }, undoQueue: [] });
+
+    // Act
+    useGameStore.getState().actions.drawCard();
+
+    // Assert
+    expect(useGameStore.getState().undoQueue.length).toBe(1);
   });
 
   it('moveCard and undo/redo work', () => {
@@ -206,6 +252,22 @@ describe('Game store actions', () => {
 
       // Assert
       expect(useGameStore.getState().gameTimer).toBeGreaterThanOrEqual(3);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('startTimer does not increment gameTimer when the user has disabled timers', () => {
+    // Arrange
+    vi.useFakeTimers();
+    usePreferencesStore.setState({ gameTimerEnabled: false });
+    try {
+      // Act
+      useGameStore.getState().actions.startTimer();
+      vi.advanceTimersByTime(3100);
+
+      // Assert
+      expect(useGameStore.getState().gameTimer).toEqual(0);
     } finally {
       vi.useRealTimers();
     }
@@ -513,23 +575,6 @@ describe('Game store actions', () => {
     spy.mockRestore();
   });
 
-  it('drawCard recycles waste into draw when draw is empty', () => {
-    // Arrange
-    const a = { rank: 'ace', suit: 'hearts', face: 'up' } as CardData;
-    const b = { rank: '2', suit: 'hearts', face: 'up' } as CardData;
-    useGameStore.setState({ playfield: { draw: [], waste: [a, b], foundation: [[], [], [], []], tableau: [[], [], [], [], [], [], []] } });
-
-    // Act
-    useGameStore.getState().actions.drawCard();
-
-    // Assert
-    const pf = useGameStore.getState().playfield;
-    expect(pf.draw.length).toBe(2);
-    expect(pf.waste.length).toBe(0);
-    // After recycling, cards in draw should be face-down
-    expect(pf.draw[0].face).toBe('down');
-    expect(pf.draw[1].face).toBe('down');
-  });
 
   it('checkGameState flips last card in tableau and waste when face-down', () => {
     // Arrange
@@ -653,6 +698,19 @@ describe('Game store actions', () => {
     stopSpy.mockRestore();
   });
 
+  it('pauseGame does nothing when timerId is null', () => {
+    // Arrange
+    useGameStore.setState({ timerId: null });
+    const stopSpy = vi.spyOn(useGameStore.getState().actions, 'stopTimer').mockImplementation(() => { });
+
+    // Act
+    useGameStore.getState().actions.pauseGame();
+
+    // Assert - stopTimer should not be called since no timer is running
+    expect(stopSpy).not.toHaveBeenCalled();
+    stopSpy.mockRestore();
+  });
+
   it('resumeGame starts timer when gameTimer > 0 and timerId null', () => {
     // Arrange
     useGameStore.setState({ gameTimer: 5, timerId: null });
@@ -677,6 +735,92 @@ describe('Game store actions', () => {
     // Assert
     expect(startSpy).toHaveBeenCalled();
     startSpy.mockRestore();
+  });
+
+  it('resumeGame does nothing when timerId is already set', () => {
+    // Arrange
+    useGameStore.setState({ gameTimer: 5, timerId: 123 });
+    const startSpy = vi.spyOn(useGameStore.getState().actions, 'startTimer').mockImplementation(() => { });
+
+    // Act
+    useGameStore.getState().actions.resumeGame();
+
+    // Assert - startTimer should not be called since timer already running
+    expect(startSpy).not.toHaveBeenCalled();
+    startSpy.mockRestore();
+  });
+
+  it('resumeGame does nothing when gameTimer < 0', () => {
+    // Arrange - gameTimer should never actually be < 0 but testing edge case
+    useGameStore.setState({ gameTimer: -1, timerId: null });
+    const startSpy = vi.spyOn(useGameStore.getState().actions, 'startTimer').mockImplementation(() => { });
+
+    // Act
+    useGameStore.getState().actions.resumeGame();
+
+    // Assert
+    expect(startSpy).not.toHaveBeenCalled();
+    startSpy.mockRestore();
+  });
+
+  it('checkGameState does not flip cards that are already face-up', () => {
+    // Arrange
+    const upCard = { rank: 'ace', suit: 'clubs', face: 'up' } as CardData;
+    useGameStore.setState({ playfield: { draw: [], waste: [], foundation: [[], [], [], []], tableau: [[upCard], [], [], [], [], [], []] } });
+
+    // Act
+    useGameStore.getState().actions.checkGameState();
+
+    // Assert
+    const pf = useGameStore.getState().playfield;
+    expect(pf.tableau[0][0].face).toBe('up');
+  });
+
+  it('checkGameState stops the timer when game is won', () => {
+    // Arrange - full foundation (52 cards)
+    const makeCard = (r: string, s: string) => ({ rank: r, suit: s, face: 'up' } as CardData);
+    const suits = ['clubs', 'diamonds', 'hearts', 'spades'];
+    const ranks = ['ace', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'jack', 'queen', 'king'];
+    const foundation = suits.map(s => ranks.map(r => makeCard(r, s)));
+    useGameStore.setState({ playfield: { draw: [], waste: [], foundation: foundation, tableau: [[], [], [], [], [], [], []] }, timerId: 123 });
+    const stopSpy = vi.spyOn(useGameStore.getState().actions, 'stopTimer').mockImplementation(() => { });
+
+    // Act
+    useGameStore.getState().actions.checkGameState();
+
+    // Assert
+    expect(stopSpy).toHaveBeenCalled();
+    stopSpy.mockRestore();
+  });
+
+  it('toggleSubmenu switching between different submenus works', () => {
+    // Arrange
+    useGameStore.setState({ submenuId: '' });
+
+    // Act: open first submenu
+    useGameStore.getState().actions.toggleSubmenu('stats');
+    expect(useGameStore.getState().submenuId).toBe('stats');
+
+    // Act: switch to different submenu (should close first then open second)
+    useGameStore.getState().actions.toggleSubmenu('settings');
+
+    // Assert
+    expect(useGameStore.getState().submenuId).toBe('settings');
+  });
+
+  it('moveCard clears redo queue after moving', () => {
+    // Arrange
+    const card = { rank: 'ace', suit: 'hearts', face: 'up' } as CardData;
+    useGameStore.setState({
+      playfield: { draw: [], waste: [], foundation: [[], [], [], []], tableau: [[card], [], [], [], [], [], []] },
+      redoQueue: [{ draw: [] }] // Has a redo item
+    });
+
+    // Act
+    useGameStore.getState().actions.moveCard({ ...card, pileType: 'tableau', pileIndex: 0, cardIndex: 0 }, 'foundation', 0, 'tableau', 0, 0);
+
+    // Assert
+    expect(useGameStore.getState().redoQueue.length).toBe(0);
   });
 });
 

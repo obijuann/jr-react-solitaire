@@ -6,6 +6,7 @@ import { PileTypes } from '../types/pile-types';
 import { PlayfieldState } from '../types/playfield-state';
 import { Ranks } from '../types/ranks';
 import { Suits } from '../types/suits';
+import usePreferencesStore from "./preferences-store";
 import useStatisticsStore from './statistics-store';
 
 /** Ordered ranks from lowest to highest used for game rules. */
@@ -481,6 +482,11 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
                 /** Start the game timer; increments `gameTimer` every second. */
                 startTimer: () => {
                     get().actions.stopTimer();
+
+                    if (!usePreferencesStore.getState().gameTimerEnabled) {
+                        return;
+                    }
+
                     const id = window.setInterval(() => {
                         set(state => ({ gameTimer: state.gameTimer + 1 }));
                     }, 1000);

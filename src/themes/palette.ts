@@ -1,21 +1,15 @@
 import type { PaletteOptions } from '@mui/material/styles';
-
-// Basic set of color properties describing a theme.
-export type ThemeColorProperties = {
-    primary: string;
-    dark: string;
-    light: string;
-};
+import { ThemeColorProperties, ThemeColors } from '../types/theme';
 
 // A small palette of named theme colors used by the app. Each entry
 // supplies the primary color and light/dark variants used across the UI.
-export const themeColors: Record<string, ThemeColorProperties> = {
-    'green': { primary: '#007800', dark: '#006000', light: '#01a301' },
-    'yellow': { primary: '#9d9d00', dark: '#787800', light: '#b9b900' },
-    'cyan': { primary: '#007878', dark: '#006060', light: '#009292' },
-    'blue': { primary: '#1414a0', dark: '#101080', light: '#3535b5' },
-    'violet': { primary: '#a000a0', dark: '#800080', light: '#b200b2' },
-    'red': { primary: '#a00000', dark: '#800000', light: '#b90606' },
+export const themeColors: Record<ThemeColors, ThemeColorProperties> = {
+    'green': { primary: '#007800', dark: '#006000', light: '#01a301', label: 'Green' },
+    'yellow': { primary: '#9d9d00', dark: '#787800', light: '#b9b900', label: 'Yellow' },
+    'cyan': { primary: '#007878', dark: '#006060', light: '#009292', label: 'Cyan' },
+    'blue': { primary: '#1414a0', dark: '#101080', light: '#3535b5', label: 'Blue' },
+    'violet': { primary: '#a000a0', dark: '#800080', light: '#b200b2', label: 'Violet' },
+    'red': { primary: '#a00000', dark: '#800000', light: '#b90606', label: 'Red' },
 };
 
 /**
