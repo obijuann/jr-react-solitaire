@@ -102,6 +102,7 @@ export const useStatisticsStore = create<StatisticsStoreState>()(
                     let totalTimedWins = get().totalTimedWins;
                     let bestWinTime = get().bestWinTime;
 
+                    // Update time-based stats if the game timer is enabled
                     if (usePreferencesStore.getState().gameTimerEnabled) {
                         // Add game time to the current total
                         totalGameTime += gameTime;
