@@ -15,7 +15,7 @@ export interface MovingCardAnimation {
   fromRect: DOMRect
   toRect: DOMRect
   startTime: number
-  targetFace?: 'up' | 'down'
+  targetFace?: "up" | "down"
 }
 
 /**

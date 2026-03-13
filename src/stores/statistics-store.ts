@@ -155,7 +155,7 @@ export const useStatisticsStore = create<StatisticsStoreState>()(
             },
         }),
         {
-            name: 'stats-store',
+            name: "stats-store",
             partialize: (state) => ({
                 bestWinStreak: state.bestWinStreak,
                 bestWinTime: state.bestWinTime,

@@ -1,20 +1,20 @@
 import "./solitaire.css";
 
-import Grid from '@mui/material/Grid';
-import { useEffect, useRef, useState } from 'react';
-import { shallow } from 'zustand/shallow';
+import Grid from "@mui/material/Grid";
+import { useEffect, useRef, useState } from "react";
+import { shallow } from "zustand/shallow";
 import Card from "../components/card";
 import Menu from "../components/menu";
 import Modal from "../components/modal";
 import Timer from "../components/timer";
-import useGameStore from '../stores/game-store';
-import usePreferencesStore from '../stores/preferences-store';
+import useGameStore from "../stores/game-store";
+import usePreferencesStore from "../stores/preferences-store";
 import { CardData } from "../types/card-data";
 import { PileTypes } from "../types/pile-types";
 import { PlayfieldState } from "../types/playfield-state";
 import { Ranks } from "../types/ranks";
 import { Suits } from "../types/suits";
-import { buildMovingTransforms, cardAnimationCleanupDelayMs, cardAnimationDurationMs, drawFlipDelayMs, getWasteOffsetPx, getWasteTargetRect, MovingCardAnimation } from '../utils/animation-utils';
+import { buildMovingTransforms, cardAnimationCleanupDelayMs, cardAnimationDurationMs, drawFlipDelayMs, getWasteOffsetPx, getWasteTargetRect, MovingCardAnimation } from "../utils/animation-utils";
 
 /** Mapping of suit name to display color used for game logic. */
 const suitsToColorsMap: Partial<Record<Suits, string>> = {
@@ -49,7 +49,7 @@ export default function Solitaire() {
   const cardAnimationEnabled = usePreferencesStore(state => state.cardAnimationEnabled);
   const [movingCards, setMovingCards] = useState<MovingCardAnimation[]>([]);
   const [movingTransforms, setMovingTransforms] = useState<{[key: number]: {x: number, y: number}}>({});
-  const [movingFaces, setMovingFaces] = useState<{[key: number]: 'up' | 'down'}>({});
+  const [movingFaces, setMovingFaces] = useState<{[key: number]: "up" | "down"}>({});
 
   const stockRef = useRef<HTMLDivElement>(null);
   const wasteRef = useRef<HTMLDivElement>(null);
@@ -63,10 +63,10 @@ export default function Solitaire() {
    * @returns Matching pile element, if mounted.
    */
   function getRefForPile(pileType: string, pileIndex: number): HTMLDivElement | null {
-    if (pileType === 'stock') return stockRef.current;
-    if (pileType === 'waste') return wasteRef.current;
-    if (pileType === 'foundation') return foundationRefs.current[pileIndex];
-    if (pileType === 'tableau') return tableauRefs.current[pileIndex];
+    if (pileType === "stock") return stockRef.current;
+    if (pileType === "waste") return wasteRef.current;
+    if (pileType === "foundation") return foundationRefs.current[pileIndex];
+    if (pileType === "tableau") return tableauRefs.current[pileIndex];
     return null;
   }
 
@@ -81,10 +81,10 @@ export default function Solitaire() {
    */
   function runOverlayAnimation(
     nextMovingCards: MovingCardAnimation[],
-    initialFaces: {[key: number]: 'up' | 'down'},
+    initialFaces: {[key: number]: "up" | "down"},
     onComplete: () => void,
     flipDelayMs?: number,
-    flippedFaces?: {[key: number]: 'up' | 'down'},
+    flippedFaces?: {[key: number]: "up" | "down"},
   ) {
     const initialTransforms = Object.fromEntries(nextMovingCards.map((_, index) => [index, { x: 0, y: 0 }])) as {[key: number]: {x: number, y: number}};
 
@@ -142,7 +142,7 @@ export default function Solitaire() {
     if (!cardToMove) return;
 
     // Use the draw pile position as the starting point
-    const drawElement = document.getElementById('draw');
+    const drawElement = document.getElementById("draw");
     if (!drawElement) {
       // Fallback to non-animated
       actions.drawCard();
@@ -150,7 +150,7 @@ export default function Solitaire() {
     }
 
     // Find the top card in the draw pile
-    const cardElements = drawElement.querySelectorAll('.card');
+    const cardElements = drawElement.querySelectorAll(".card");
     const topCardElement = cardElements[cardElements.length - 1] as HTMLElement;
     if (!topCardElement) {
       actions.drawCard();
@@ -177,7 +177,7 @@ export default function Solitaire() {
       offsetTwoPx,
     );
 
-    const movingCard = { card: cardToMove, fromRect, toRect, startTime: Date.now(), targetFace: 'up' as const };
+    const movingCard = { card: cardToMove, fromRect, toRect, startTime: Date.now(), targetFace: "up" as const };
     const initialFaces = { 0: cardToMove.face };
     runOverlayAnimation(
       [movingCard],
@@ -186,7 +186,7 @@ export default function Solitaire() {
         actions.drawCard();
       },
       drawFlipDelayMs,
-      { 0: 'up' },
+      { 0: "up" },
     );
   }
 
@@ -204,11 +204,11 @@ export default function Solitaire() {
     let cardsToMove: CardData[] = [];
 
     switch (sourcePileType) {
-      case 'foundation':
-      case 'tableau':
+      case "foundation":
+      case "tableau":
         cardsToMove = newPlayfield[sourcePileType][sourcePileIndex].slice(sourceCardIndex);
         break;
-      case 'waste':
+      case "waste":
         cardsToMove = newPlayfield.waste.slice(sourceCardIndex);
         break;
       default:
@@ -230,7 +230,7 @@ export default function Solitaire() {
       let toRect = baseToRect;
       
       // Adjust for card offset in tableau piles
-      if (targetPileType === 'tableau') {
+      if (targetPileType === "tableau") {
         const finalCardIndex = targetPileLength + moveIndex;
         const offsetVh = finalCardIndex * 3; // 3vh per card
         // Convert vh to pixels (1vh = 1% of viewport height)
@@ -243,9 +243,9 @@ export default function Solitaire() {
       if (!cardElement || moveIndex > 0) {
         // Construct the expected data object for the card
         const expectedData = {
-          cardIndex: sourcePileType === 'tableau' || sourcePileType === 'foundation' ? sourceCardIndex + moveIndex : moveIndex,
+          cardIndex: sourcePileType === "tableau" || sourcePileType === "foundation" ? sourceCardIndex + moveIndex : moveIndex,
           face: card.face,
-          pileIndex: sourcePileType === 'waste' ? undefined : sourcePileIndex,
+          pileIndex: sourcePileType === "waste" ? undefined : sourcePileIndex,
           pileType: sourcePileType,
           rank: card.rank,
           suit: card.suit
@@ -260,7 +260,7 @@ export default function Solitaire() {
 
     runOverlayAnimation(
       movingWithTo,
-      Object.fromEntries(movingWithTo.map((moving, index) => [index, moving.card.face])) as {[key: number]: 'up' | 'down'},
+      Object.fromEntries(movingWithTo.map((moving, index) => [index, moving.card.face])) as {[key: number]: "up" | "down"},
       () => {
         actions.moveCard(sourceCardData, targetPileType, targetPileIndex, sourcePileType, sourcePileIndex, sourceCardIndex);
       },
@@ -274,7 +274,7 @@ export default function Solitaire() {
 
       const store = useGameStore.getState();
 
-      if (e.key === 'Escape') {
+      if (e.key === "Escape") {
         if (store.submenuId) {
           store.actions.clearSubmenu();
           return;
@@ -283,8 +283,8 @@ export default function Solitaire() {
       }
     }
 
-    window.addEventListener('keydown', globalKeyHandler);
-    return () => window.removeEventListener('keydown', globalKeyHandler);
+    window.addEventListener("keydown", globalKeyHandler);
+    return () => window.removeEventListener("keydown", globalKeyHandler);
   }, []);
 
   /**
@@ -438,7 +438,7 @@ export default function Solitaire() {
 
     return (
       <Card
-        key={`${cardData.rank ?? 'x'}_${cardData.suit ?? 'x'}_${pileType}_${pileIndex ?? 0}_${cardIndex}`}
+        key={`${cardData.rank ?? "x"}_${cardData.suit ?? "x"}_${pileType}_${pileIndex ?? 0}_${cardIndex}`}
         rank={cardData.rank}
         suit={cardData.suit}
         face={cardData.face}
@@ -564,7 +564,7 @@ export default function Solitaire() {
 
     // If click originated inside the menu, do not clear the submenu here —
     // Let the menu's own handlers manage it.
-    const clickedInsideMenu = target?.closest && target.closest('#menu');
+    const clickedInsideMenu = target?.closest && target.closest("#menu");
 
     if (submenuId && !clickedInsideMenu) {
       useGameStore.getState().actions.clearSubmenu();
@@ -625,26 +625,26 @@ export default function Solitaire() {
       <Grid
         container
         id="play-area"
-        className={menuVisible ? 'menu-open' : ''}
+        className={menuVisible ? "menu-open" : ""}
         data-testid="play-area"
         onClick={hideMenu}
         sx={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(7, 1fr)',
-          gridTemplateRows: 'var(--card-height) 1fr',
-          rowGap: '30px'
+          display: "grid",
+          gridTemplateColumns: "repeat(7, 1fr)",
+          gridTemplateRows: "var(--card-height) 1fr",
+          rowGap: "30px"
         }}
       >
-        <Grid item sx={{ gridColumn: '1 / 2', gridRow: '1 / 2', display: 'flex', justifyContent: 'center' }}>
+        <Grid item sx={{ gridColumn: "1 / 2", gridRow: "1 / 2", display: "flex", justifyContent: "center" }}>
           {renderDrawPile()}
         </Grid>
-        <Grid item sx={{ gridColumn: '2 / 4', gridRow: '1 / 2' }}>
+        <Grid item sx={{ gridColumn: "2 / 4", gridRow: "1 / 2" }}>
           {renderWastePile()}
         </Grid>
-        <Grid item sx={{ gridColumn: '4 / 8', gridRow: '1 / 2' }}>
+        <Grid item sx={{ gridColumn: "4 / 8", gridRow: "1 / 2" }}>
           {renderFoundation()}
         </Grid>
-        <Grid item sx={{ gridColumn: '1 / 8', gridRow: '2 / 3' }}>
+        <Grid item sx={{ gridColumn: "1 / 8", gridRow: "2 / 3" }}>
           {renderTableau()}
         </Grid>
       </Grid>
@@ -656,15 +656,15 @@ export default function Solitaire() {
           <div
             key={`moving-${index}`}
             style={{
-              position: 'absolute',
+              position: "absolute",
               top: moving.fromRect.top,
               left: moving.fromRect.left,
               width: moving.fromRect.width,
               height: moving.fromRect.height,
               transform: `translate(${transform.x}px, ${transform.y}px)`,
-              transition: 'transform 0.25s ease-out',
+              transition: "transform 0.25s ease-out",
               zIndex: 1000,
-              pointerEvents: 'none'
+              pointerEvents: "none"
             }}
           >
             <Card

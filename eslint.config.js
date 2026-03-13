@@ -1,3 +1,4 @@
+import stylistic from '@stylistic/eslint-plugin';
 import { defineConfig } from 'eslint/config';
 import tseslint from 'typescript-eslint';
 
@@ -6,7 +7,12 @@ export default defineConfig(
   tseslint.configs.recommended,
   { ignores: ['**/*.{mjs,cjs,js,d.ts,d.mts}'] },
   {
-    rules: { },
+    plugins: {
+      '@stylistic': stylistic,
+    },
+    rules: {
+      '@stylistic/quotes': ['error', 'double', { avoidEscape: true, allowTemplateLiterals: 'avoidEscape' }],
+    },
   },
   {
     languageOptions: {

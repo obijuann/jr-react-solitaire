@@ -1,28 +1,28 @@
-import './menu.css';
+import "./menu.css";
 
-import ClearRoundedIcon from '@mui/icons-material/ClearRounded';
-import HelpOutlineRoundedIcon from '@mui/icons-material/HelpOutlineRounded';
-import KeyboardArrowUpOutlinedIcon from '@mui/icons-material/KeyboardArrowUpOutlined';
-import LeaderboardRoundedIcon from '@mui/icons-material/LeaderboardRounded';
-import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
-import RedoRoundedIcon from '@mui/icons-material/RedoRounded';
-import ReplayRoundedIcon from '@mui/icons-material/ReplayRounded';
-import RestoreRoundedIcon from '@mui/icons-material/RestoreRounded';
+import ClearRoundedIcon from "@mui/icons-material/ClearRounded";
+import HelpOutlineRoundedIcon from "@mui/icons-material/HelpOutlineRounded";
+import KeyboardArrowUpOutlinedIcon from "@mui/icons-material/KeyboardArrowUpOutlined";
+import LeaderboardRoundedIcon from "@mui/icons-material/LeaderboardRounded";
+import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
+import RedoRoundedIcon from "@mui/icons-material/RedoRounded";
+import ReplayRoundedIcon from "@mui/icons-material/ReplayRounded";
+import RestoreRoundedIcon from "@mui/icons-material/RestoreRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
-import UndoRoundedIcon from '@mui/icons-material/UndoRounded';
+import UndoRoundedIcon from "@mui/icons-material/UndoRounded";
 import { Tooltip } from "@mui/material";
-import Checkbox from '@mui/material/Checkbox';
-import FormControl from '@mui/material/FormControl';
-import MenuItem from '@mui/material/MenuItem';
-import Select, { SelectChangeEvent } from '@mui/material/Select';
+import Checkbox from "@mui/material/Checkbox";
+import FormControl from "@mui/material/FormControl";
+import MenuItem from "@mui/material/MenuItem";
+import Select, { SelectChangeEvent } from "@mui/material/Select";
 import React, { ChangeEvent, useEffect, useState } from "react";
-import useGameStore from '../stores/game-store';
-import usePreferencesStore from '../stores/preferences-store';
-import useStatisticsStore from '../stores/statistics-store';
-import { themeColors } from '../themes/palette';
-import { CardBacks, CardFaces } from '../types/card-data';
+import useGameStore from "../stores/game-store";
+import usePreferencesStore from "../stores/preferences-store";
+import useStatisticsStore from "../stores/statistics-store";
+import { themeColors } from "../themes/palette";
+import { CardBacks, CardFaces } from "../types/card-data";
 import { ThemeColors } from "../types/theme";
-import { getFormattedTimer, throttle } from '../utils/utils';
+import { getFormattedTimer, throttle } from "../utils/utils";
 import { cardBackArtwork, cardFaceArtwork } from "./card";
 
 const submenuArrowSize: number = 15;
@@ -98,9 +98,9 @@ export default function Menu() {
 
         // Adjust where the submenu arrow is pointing
         if (submenuArrowPos) {
-            document.documentElement.style.setProperty('--submenu-icon-pos', `${submenuArrowPos}px`);
-            document.documentElement.style.setProperty('--submenu-icon-size', `${submenuArrowSize}px`);
-            document.documentElement.style.setProperty('--submenu-width', `${submenuWidth}px`);
+            document.documentElement.style.setProperty("--submenu-icon-pos", `${submenuArrowPos}px`);
+            document.documentElement.style.setProperty("--submenu-icon-size", `${submenuArrowSize}px`);
+            document.documentElement.style.setProperty("--submenu-width", `${submenuWidth}px`);
         }
 
         switch (submenuId) {

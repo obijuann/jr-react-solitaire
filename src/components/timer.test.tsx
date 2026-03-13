@@ -1,11 +1,11 @@
-import '@testing-library/jest-dom/vitest';
+import "@testing-library/jest-dom/vitest";
 
-import { render, screen } from '@testing-library/react';
-import { beforeEach, expect, it } from 'vitest';
+import { render, screen } from "@testing-library/react";
+import { beforeEach, expect, it } from "vitest";
 
-import useGameStore from '../stores/game-store';
+import useGameStore from "../stores/game-store";
 import usePreferencesStore from "../stores/preferences-store";
-import Timer from './timer';
+import Timer from "./timer";
 
 beforeEach(() => {
     useGameStore.setState({ gameTimer: 0 });

@@ -1,9 +1,9 @@
-import type { Theme } from '@mui/material/styles';
-import { createTheme } from '@mui/material/styles';
-import { ThemeColorProperties } from '../types/theme';
-import { makeComponents } from './components';
-import { makePalette, themeColors } from './palette';
-import typography from './typography';
+import type { Theme } from "@mui/material/styles";
+import { createTheme } from "@mui/material/styles";
+import { ThemeColorProperties } from "../types/theme";
+import { makeComponents } from "./components";
+import { makePalette, themeColors } from "./palette";
+import typography from "./typography";
 
 // Container of compiled MUI `Theme` objects keyed by the theme name.
 const themes: Record<string, Theme> = {};
@@ -19,7 +19,7 @@ Object.entries(themeColors).forEach(([k, p]) => {
 });
 
 // Key used when a requested theme is missing.
-export const defaultThemeKey = 'green';
+export const defaultThemeKey = "green";
 
 // Available theme keys (useful for UI selection menus).
 export const themeKeys = Object.keys(themes) as Array<keyof typeof themes>;

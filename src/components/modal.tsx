@@ -1,10 +1,10 @@
-import './modal.css';
+import "./modal.css";
 
-import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
-import React from 'react';
-import useGameStore from '../stores/game-store';
+import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
+import React from "react";
+import useGameStore from "../stores/game-store";
 import usePreferencesStore from "../stores/preferences-store";
-import { getFormattedTimer } from '../utils/utils';
+import { getFormattedTimer } from "../utils/utils";
 
 /**
  * Modal component.

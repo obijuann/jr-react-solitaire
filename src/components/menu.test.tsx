@@ -1,8 +1,8 @@
-import '@testing-library/jest-dom/vitest';
+import "@testing-library/jest-dom/vitest";
 
-import { act, fireEvent, render, screen } from '@testing-library/react';
-import { beforeEach, expect, it, vi } from 'vitest';
-import useGameStore from '../stores/game-store';
+import { act, fireEvent, render, screen } from "@testing-library/react";
+import { beforeEach, expect, it, vi } from "vitest";
+import useGameStore from "../stores/game-store";
 
 beforeEach(() => {
     useGameStore.setState({ menuVisible: true, submenuId: "", shuffledDeck: [] });
@@ -10,32 +10,32 @@ beforeEach(() => {
 });
 
 import usePreferencesStore from "../stores/preferences-store";
-import useStatisticsStore from '../stores/statistics-store';
-import Menu from './menu';
+import useStatisticsStore from "../stores/statistics-store";
+import Menu from "./menu";
 
 it("renders the base menu component", () => {
     // Arrange + Act
     render(<Menu />);
 
     // Assert
-    const playButton = screen.getByRole('button', { name: 'Play' });
+    const playButton = screen.getByRole("button", { name: "Play" });
     expect(playButton).toBeInTheDocument();
     expect(playButton.hasAttribute("disabled")).toBeFalsy();
 
-    const undoButton = screen.getByRole('button', { name: 'Undo' });
+    const undoButton = screen.getByRole("button", { name: "Undo" });
     expect(undoButton).toBeInTheDocument();
     expect(undoButton.hasAttribute("disabled")).toBeTruthy();
 
-    const redoButton = screen.getByRole('button', { name: 'Redo' });
+    const redoButton = screen.getByRole("button", { name: "Redo" });
     expect(redoButton).toBeInTheDocument();
     expect(redoButton.hasAttribute("disabled")).toBeTruthy();
 
-    const helpButton = screen.getByRole('button', { name: 'Help' });
+    const helpButton = screen.getByRole("button", { name: "Help" });
     expect(helpButton).toBeInTheDocument();
     expect(helpButton.hasAttribute("disabled")).toBeFalsy();
 
     // Assert no submenus are present
-    expect(screen.queryByRole('button', { name: 'New game' })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "New game" })).not.toBeInTheDocument();
     expect(screen.queryByText(/object of the game/i)).not.toBeInTheDocument();
 });
 
@@ -44,7 +44,7 @@ it("menu control button toggles menu visibility", () => {
     render(<Menu />);
 
     // Assert the toggle control exists
-    const toggleControl = screen.getByTitle('Toggle Menu (Esc)');
+    const toggleControl = screen.getByTitle("Toggle Menu (Esc)");
     expect(toggleControl).toBeInTheDocument();
 
     // Act - click the toggle control to hide the menu
@@ -59,7 +59,7 @@ it("firing the 'toggleMenu' event hides the menu component", () => {
     render(<Menu />);
 
     // Assert
-    const playButton = screen.getByRole('button', { name: 'Play' });
+    const playButton = screen.getByRole("button", { name: "Play" });
     expect(playButton).toBeInTheDocument();
 
     // Act
@@ -77,19 +77,19 @@ it("firing the 'toggleMenu' event hides the submenu", () => {
     render(<Menu />);
 
     // Assert
-    const playButton = screen.getByRole('button', { name: 'Play' });
+    const playButton = screen.getByRole("button", { name: "Play" });
     expect(playButton).toBeInTheDocument();
 
     // Act
     fireEvent.click(playButton);
-    expect(screen.getByRole('button', { name: 'Restart this game' })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Restart this game" })).toBeInTheDocument();
     act(() => {
         // Wrapped in an act call since this is render-affecting
         useGameStore.getState().actions.toggleMenu();
     });
 
     // Assert
-    expect(screen.queryByRole('button', { name: 'Restart this game' })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Restart this game" })).not.toBeInTheDocument();
     expect(screen.getByTestId("menu").className).not.toEqual("visible");
 });
 
@@ -98,22 +98,22 @@ it("renders the new game submenu", () => {
     render(<Menu />);
 
     // Assert
-    const playButton = screen.getByRole('button', { name: 'Play' });
+    const playButton = screen.getByRole("button", { name: "Play" });
     expect(playButton).toBeInTheDocument();
 
     // Act
     fireEvent.click(playButton);
 
     // Assert
-    const newGameButton = screen.getByRole('button', { name: 'New game' });
+    const newGameButton = screen.getByRole("button", { name: "New game" });
     expect(newGameButton).toBeInTheDocument();
     expect(newGameButton.hasAttribute("disabled")).toBeFalsy();
 
-    const restartGameButton = screen.getByRole('button', { name: 'Restart this game' });
+    const restartGameButton = screen.getByRole("button", { name: "Restart this game" });
     expect(restartGameButton).toBeInTheDocument();
     expect(restartGameButton.hasAttribute("disabled")).toBeTruthy();
 
-    const quitGameButton = screen.getByRole('button', { name: 'Quit this game' });
+    const quitGameButton = screen.getByRole("button", { name: "Quit this game" });
     expect(quitGameButton).toBeInTheDocument();
     expect(quitGameButton.hasAttribute("disabled")).toBeTruthy();
 });
@@ -129,21 +129,21 @@ it("clicking the restart game button calls store.restartGame and closes all menu
     render(<Menu />);
 
     // Assert
-    const playButton = screen.getByRole('button', { name: 'Play' });
+    const playButton = screen.getByRole("button", { name: "Play" });
     expect(playButton).toBeInTheDocument();
 
     // Act
     fireEvent.click(playButton);
 
     // Assert
-    const restartGameButton = screen.getByRole('button', { name: 'Restart this game' });
+    const restartGameButton = screen.getByRole("button", { name: "Restart this game" });
 
     // Act
     fireEvent.click(restartGameButton);
 
     // Assert
     expect(restartSpy).toHaveBeenCalled();
-    expect(screen.queryByRole('button', { name: 'Restart this game' })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Restart this game" })).not.toBeInTheDocument();
     expect(screen.getByTestId("menu").className).not.toEqual("visible");
 
     useGameStore.setState(state => ({ actions: { ...state.actions, restartGame: original } }));
@@ -160,21 +160,21 @@ it("clicking the quit game button calls store.quitGame and closes all menus", ()
     render(<Menu />);
 
     // Assert
-    const playButton = screen.getByRole('button', { name: 'Play' });
+    const playButton = screen.getByRole("button", { name: "Play" });
     expect(playButton).toBeInTheDocument();
 
     // Act
     fireEvent.click(playButton);
 
     // Assert
-    const quitGameButton = screen.getByRole('button', { name: 'Quit this game' });
+    const quitGameButton = screen.getByRole("button", { name: "Quit this game" });
 
     // Act
     fireEvent.click(quitGameButton);
 
     // Assert
     expect(quitGameSpy).toHaveBeenCalled();
-    expect(screen.queryByRole('button', { name: 'Quit this game' })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Quit this game" })).not.toBeInTheDocument();
     expect(screen.getByTestId("menu").className).not.toEqual("visible");
 
     useGameStore.setState(state => ({ actions: { ...state.actions, quitGame: original } }));
@@ -194,14 +194,14 @@ it("clicking the new game button during an active game records a loss", () => {
     render(<Menu />);
 
     // Assert
-    const playButton = screen.getByRole('button', { name: 'Play' });
+    const playButton = screen.getByRole("button", { name: "Play" });
     expect(playButton).toBeInTheDocument();
 
     // Act
     fireEvent.click(playButton);
 
     // Assert
-    const newsGameButton = screen.getByRole('button', { name: 'New game' });
+    const newsGameButton = screen.getByRole("button", { name: "New game" });
 
     // Act
     fireEvent.click(newsGameButton);
@@ -220,7 +220,7 @@ it("renders the help submenu", () => {
     render(<Menu />);
 
     // Assert
-    const helpButton = screen.getByRole('button', { name: 'Help' });
+    const helpButton = screen.getByRole("button", { name: "Help" });
     expect(helpButton).toBeInTheDocument();
 
     // Act
@@ -235,7 +235,7 @@ it("renders the statistics submenu", () => {
     render(<Menu />);
 
     // Assert
-    const statsMenuButton = screen.getByRole('button', { name: 'Statistics' });
+    const statsMenuButton = screen.getByRole("button", { name: "Statistics" });
     expect(statsMenuButton).toBeInTheDocument();
 
     // Act
@@ -252,7 +252,7 @@ it("renders the statistics submenu without the game timer section", () => {
     render(<Menu />);
 
     // Assert
-    const statsMenuButton = screen.getByRole('button', { name: 'Statistics' });
+    const statsMenuButton = screen.getByRole("button", { name: "Statistics" });
     expect(statsMenuButton).toBeInTheDocument();
 
     // Act
@@ -269,7 +269,7 @@ it("renders the user preferences submenu", () => {
     render(<Menu />);
 
     // Assert
-    const prefsMenuButton = screen.getByRole('button', { name: 'Preferences' });
+    const prefsMenuButton = screen.getByRole("button", { name: "Preferences" });
     expect(prefsMenuButton).toBeInTheDocument();
 
     // Act
@@ -290,7 +290,7 @@ it("renders the user preferences submenu with the unchecked game timer", () => {
     render(<Menu />);
 
     // Assert
-    const prefsMenuButton = screen.getByRole('button', { name: 'Preferences' });
+    const prefsMenuButton = screen.getByRole("button", { name: "Preferences" });
     expect(prefsMenuButton).toBeInTheDocument();
 
     // Act

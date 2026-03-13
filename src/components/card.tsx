@@ -1,8 +1,8 @@
-import './card.css';
+import "./card.css";
 
-import { DragEventHandler, useEffect, useState } from 'react';
+import { DragEventHandler, useEffect, useState } from "react";
 import usePreferencesStore from "../stores/preferences-store";
-import { CardArtworkProperties, CardBacks, CardData, CardFaces } from '../types/card-data';
+import { CardArtworkProperties, CardBacks, CardData, CardFaces } from "../types/card-data";
 
 // Mapping of card face types to image paths and user-friendly labels
 export const cardFaceArtwork: Record<CardFaces, CardArtworkProperties> = {
@@ -54,7 +54,7 @@ export default function Card(props: CardComponentProps) {
   const cardBack = usePreferencesStore(state => state.cardBack);  
   const cardAnimationEnabled = usePreferencesStore(state => state.cardAnimationEnabled);
 
-  const [currentFace, setCurrentFace] = useState<'up' | 'down'>(props.face);
+  const [currentFace, setCurrentFace] = useState<"up" | "down">(props.face);
   const [isFlipping, setIsFlipping] = useState(false);
 
   useEffect(() => {
@@ -77,7 +77,7 @@ export default function Card(props: CardComponentProps) {
     styleOverride.top = `${props.offset}vh`;
   }
   if (props.isMoving) {
-    styleOverride.position = 'relative';
+    styleOverride.position = "relative";
   }
 
   let className = "card ";

@@ -1,8 +1,8 @@
-import './timer.css';
+import "./timer.css";
 
-import useGameStore from '../stores/game-store';
+import useGameStore from "../stores/game-store";
 import usePreferencesStore from "../stores/preferences-store";
-import { getFormattedTimer } from '../utils/utils';
+import { getFormattedTimer } from "../utils/utils";
 
 /**
  * Game timer component.

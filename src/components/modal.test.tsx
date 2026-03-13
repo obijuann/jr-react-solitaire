@@ -1,11 +1,11 @@
-import '@testing-library/jest-dom/vitest';
+import "@testing-library/jest-dom/vitest";
 
-import { fireEvent, render, screen } from '@testing-library/react';
-import { beforeEach, expect, it, vi } from 'vitest';
+import { fireEvent, render, screen } from "@testing-library/react";
+import { beforeEach, expect, it, vi } from "vitest";
 
-import useGameStore from '../stores/game-store';
+import useGameStore from "../stores/game-store";
 import usePreferencesStore from "../stores/preferences-store";
-import Modal from './modal';
+import Modal from "./modal";
 
 beforeEach(() => {
     useGameStore.setState({ gameTimer: 0, modalType: "gamewin" });
@@ -48,7 +48,7 @@ it("clicking the 'new game' button publishes a new game event", () => {
     render(<Modal />);
 
     // Act
-    const newGameButton = screen.getByRole('button', { name: 'New Game' })
+    const newGameButton = screen.getByRole("button", { name: "New Game" })
     fireEvent.click(newGameButton);
 
     // Assert

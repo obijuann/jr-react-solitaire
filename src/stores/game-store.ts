@@ -1,29 +1,29 @@
-import { persist } from 'zustand/middleware';
-import { createWithEqualityFn } from 'zustand/traditional';
-import { CardData } from '../types/card-data';
-import { ModalTypes } from '../types/modal-types';
-import { PileTypes } from '../types/pile-types';
-import { PlayfieldState } from '../types/playfield-state';
-import { Ranks } from '../types/ranks';
-import { Suits } from '../types/suits';
+import { persist } from "zustand/middleware";
+import { createWithEqualityFn } from "zustand/traditional";
+import { CardData } from "../types/card-data";
+import { ModalTypes } from "../types/modal-types";
+import { PileTypes } from "../types/pile-types";
+import { PlayfieldState } from "../types/playfield-state";
+import { Ranks } from "../types/ranks";
+import { Suits } from "../types/suits";
 import usePreferencesStore from "./preferences-store";
-import useStatisticsStore from './statistics-store';
+import useStatisticsStore from "./statistics-store";
 
 /** Ordered ranks from lowest to highest used for game rules. */
 const ranks: Ranks[] = [
-    'ace',
-    '2',
-    '3',
-    '4',
-    '5',
-    '6',
-    '7',
-    '8',
-    '9',
-    '10',
-    'jack',
-    'queen',
-    'king',
+    "ace",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10",
+    "jack",
+    "queen",
+    "king",
 ];
 
 /** Template for an empty playfield used to reset or initialize state. */
@@ -244,7 +244,7 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
 
                     for (let si = 0; si < suitsList.length; si++) {
                         for (let ri = 0; ri < ranks.length; ri++) {
-                            const card: CardData = { rank: ranks[ri], suit: suitsList[si], face: 'down' };
+                            const card: CardData = { rank: ranks[ri], suit: suitsList[si], face: "down" };
                             newDeck.push(card);
                         }
                     }
@@ -264,7 +264,7 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
                  */
                 dealDeck: () => {
                     const deck = (get().shuffledDeck || []).slice();
-                    deck.forEach(c => (c.face = 'down'));
+                    deck.forEach(c => (c.face = "down"));
 
                     let cardsToDeal = 1;
                     let cardIndex = 0;
@@ -350,7 +350,7 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
 
                     if (!playfield.draw.length && playfield.waste.length) {
                         playfield.draw = playfield.waste.reverse().map((c: CardData) => {
-                            c.face = 'down';
+                            c.face = "down";
                             return c;
                         });
                         playfield.waste = [];
@@ -381,12 +381,12 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
                     let cardsToMove: CardData[] = [];
 
                     switch (sourcePileType) {
-                        case 'foundation':
-                        case 'tableau':
+                        case "foundation":
+                        case "tableau":
                             cardsToMove = newPlayfield[sourcePileType][sourcePileIndex].slice(sourceCardIndex);
                             newPlayfield[sourcePileType][sourcePileIndex] = newPlayfield[sourcePileType][sourcePileIndex].slice(0, sourceCardIndex);
                             break;
-                        case 'waste':
+                        case "waste":
                             cardsToMove = newPlayfield.waste.slice(sourceCardIndex);
                             newPlayfield.waste = newPlayfield.waste.slice(0, sourceCardIndex);
                             break;
@@ -394,14 +394,14 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
                             return;
                     }
 
-                    cardsToMove.forEach(c => (c.face = 'up'));
+                    cardsToMove.forEach(c => (c.face = "up"));
 
                     switch (targetPileType) {
-                        case 'foundation':
-                        case 'tableau':
+                        case "foundation":
+                        case "tableau":
                             newPlayfield[targetPileType][targetPileIndex] = newPlayfield[targetPileType][targetPileIndex].concat(cardsToMove);
                             break;
-                        case 'waste':
+                        case "waste":
                             newPlayfield.waste = newPlayfield.waste.concat(cardsToMove);
                             break;
                         default:
@@ -519,7 +519,7 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
                         useStatisticsStore.getState().actions.recordWin(get().gameTimer);
 
                         // Set the modal type for a game win
-                        set(() => ({ modalType: 'gamewin' }));
+                        set(() => ({ modalType: "gamewin" }));
                         return;
                     }
 
@@ -528,9 +528,9 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
                     playfield.tableau = playfield.tableau.map(cardDataList => {
                         return cardDataList.map((cardData: CardData, cardIndex: number) => {
                             const lastCard = cardIndex + 1 === cardDataList.length;
-                            if (lastCard && cardData.face !== 'up') {
+                            if (lastCard && cardData.face !== "up") {
                                 updatePlayfield = true;
-                                cardData.face = 'up';
+                                cardData.face = "up";
                             }
                             return cardData;
                         });
@@ -538,9 +538,9 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
 
                     playfield.waste = playfield.waste.map((cardData, cardIndex) => {
                         const lastCard = cardIndex + 1 === get().playfield.waste.length;
-                        if (lastCard && cardData.face !== 'up') {
+                        if (lastCard && cardData.face !== "up") {
                             updatePlayfield = true;
-                            cardData.face = 'up';
+                            cardData.face = "up";
                         }
                         return cardData;
                     });
@@ -552,7 +552,7 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
             },
         }),
         {
-            name: 'sol-store',
+            name: "sol-store",
             partialize: (state) => ({
                 gameTimer: state.gameTimer,
                 modalType: state.modalType,

@@ -51,7 +51,7 @@ export const usePreferencesStore = create<PreferencesStoreState>()(
             },
         }),
         {
-            name: 'prefs-store',
+            name: "prefs-store",
             partialize: (state) => ({
                 themeColor: state.themeColor,
                 cardFace: state.cardFace,

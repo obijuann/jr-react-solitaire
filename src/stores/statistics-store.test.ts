@@ -1,8 +1,8 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from "vitest";
 import usePreferencesStore from "./preferences-store";
-import useStatisticsStore from './statistics-store';
+import useStatisticsStore from "./statistics-store";
 
-describe('Statistics store actions', () => {
+describe("Statistics store actions", () => {
 
     beforeEach(() => {
         useStatisticsStore.setState({
@@ -22,7 +22,7 @@ describe('Statistics store actions', () => {
 
     });
 
-    it('getAverageWinTime returns a correct average win time', () => {
+    it("getAverageWinTime returns a correct average win time", () => {
         // Arrange + Act
         useStatisticsStore.setState({ totalGameTime: 0, totalTimedWins: 0 });
         // Assert
@@ -39,7 +39,7 @@ describe('Statistics store actions', () => {
         expect(useStatisticsStore.getState().getAverageWinTime()).toBe(2000);
     });
 
-    it('getCurrentStreakText returns properly formatted string for the current streak', () => {
+    it("getCurrentStreakText returns properly formatted string for the current streak", () => {
         // Arrange + Act
         useStatisticsStore.setState({ currentStreak: 0, currentStreakType: undefined });
         // Assert
@@ -71,7 +71,7 @@ describe('Statistics store actions', () => {
         expect(useStatisticsStore.getState().getCurrentStreakText()).toBe("2 losses");
     });
 
-    it('getWinRate returns a properly formatted win rate', () => {
+    it("getWinRate returns a properly formatted win rate", () => {
         // Arrange + Act
         useStatisticsStore.setState({ totalLosses: 0, totalWins: 0 });
         // Assert
@@ -103,7 +103,7 @@ describe('Statistics store actions', () => {
         expect(useStatisticsStore.getState().getWinRate()).toBe("100%");
     });
 
-    it('recordLoss adds a loss to the store', () => {
+    it("recordLoss adds a loss to the store", () => {
         // Arrange 
         useStatisticsStore.setState({
             bestWinStreak: 2,
@@ -130,7 +130,7 @@ describe('Statistics store actions', () => {
         expect(useStatisticsStore.getState().worstLosingStreak).toBe(2);
     });
 
-    it('recordLoss breaks a winning streak', () => {
+    it("recordLoss breaks a winning streak", () => {
         // Arrange 
         useStatisticsStore.setState({
             bestWinStreak: 5,
@@ -159,7 +159,7 @@ describe('Statistics store actions', () => {
         expect(useStatisticsStore.getState().worstLosingStreak).toBe(1);
     });
 
-    it('recordWin adds a win to the store', () => {
+    it("recordWin adds a win to the store", () => {
         // Arrange 
         useStatisticsStore.setState({
             bestWinStreak: 2,
@@ -186,7 +186,7 @@ describe('Statistics store actions', () => {
         expect(useStatisticsStore.getState().totalGameTime).toBe(740);
     });
 
-    it('recordWin breaks a losing streak', () => {
+    it("recordWin breaks a losing streak", () => {
         // Arrange 
         useStatisticsStore.setState({
             bestWinStreak: 0,
@@ -213,7 +213,7 @@ describe('Statistics store actions', () => {
         expect(useStatisticsStore.getState().totalGameTime).toBe(240);
     });
 
-    it('recordWin updates current best streaks and times', () => {
+    it("recordWin updates current best streaks and times", () => {
         // Arrange 
         useStatisticsStore.setState({
             bestWinStreak: 10,
@@ -240,7 +240,7 @@ describe('Statistics store actions', () => {
         expect(useStatisticsStore.getState().totalGameTime).toBe(1440);
     });
 
-    it('recordWin adds does not add a timed win or increment total game time if the timer is disabled', () => {
+    it("recordWin adds does not add a timed win or increment total game time if the timer is disabled", () => {
         // Arrange 
         useStatisticsStore.setState({
             bestWinStreak: 2,
@@ -271,7 +271,7 @@ describe('Statistics store actions', () => {
         expect(useStatisticsStore.getState().totalGameTime).toBe(500);
     });
 
-    it('recordWin updates timed values for the first timed win', () => {
+    it("recordWin updates timed values for the first timed win", () => {
         // Arrange 
         useStatisticsStore.setState({
             bestWinStreak: 2,
@@ -298,7 +298,7 @@ describe('Statistics store actions', () => {
         expect(useStatisticsStore.getState().totalGameTime).toBe(119);
     });
 
-    it('resetStatistics resets the store', () => {
+    it("resetStatistics resets the store", () => {
         // Arrange 
         useStatisticsStore.setState({
             bestWinStreak: 500,
@@ -327,7 +327,7 @@ describe('Statistics store actions', () => {
         expect(useStatisticsStore.getState().worstLosingStreak).toBe(0);
     });
 
-    it('recordWin and recordLoss handle undefined currentStreakType correctly', () => {
+    it("recordWin and recordLoss handle undefined currentStreakType correctly", () => {
         // Arrange
         useStatisticsStore.setState({ currentStreak: 0, currentStreakType: undefined, totalWins: 0, totalLosses: 0, totalGameTime: 0 });
 
@@ -336,7 +336,7 @@ describe('Statistics store actions', () => {
 
         // Assert
         expect(useStatisticsStore.getState().currentStreak).toBe(1);
-        expect(useStatisticsStore.getState().currentStreakType).toBe('win');
+        expect(useStatisticsStore.getState().currentStreakType).toBe("win");
         expect(useStatisticsStore.getState().totalWins).toBe(1);
         expect(useStatisticsStore.getState().totalTimedWins).toBe(1);
         expect(useStatisticsStore.getState().totalGameTime).toBe(120);
@@ -347,7 +347,7 @@ describe('Statistics store actions', () => {
 
         // Assert
         expect(useStatisticsStore.getState().currentStreak).toBe(1);
-        expect(useStatisticsStore.getState().currentStreakType).toBe('loss');
+        expect(useStatisticsStore.getState().currentStreakType).toBe("loss");
         expect(useStatisticsStore.getState().totalLosses).toBe(1);
     });
 });
