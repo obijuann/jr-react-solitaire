@@ -14,6 +14,7 @@ import { PileTypes } from "../types/pile-types";
 import { PlayfieldState } from "../types/playfield-state";
 import { Ranks } from "../types/ranks";
 import { Suits } from "../types/suits";
+import { buildMovingTransforms, cardAnimationCleanupDelayMs, cardAnimationDurationMs, drawFlipDelayMs, getWasteOffsetPx, getWasteTargetRect, MovingCardAnimation } from '../utils/animation-utils';
 
 /** Mapping of suit name to display color used for game logic. */
 const suitsToColorsMap: Partial<Record<Suits, string>> = {
@@ -24,9 +25,6 @@ const suitsToColorsMap: Partial<Record<Suits, string>> = {
 };
 
 const ranks: Ranks[] = ["ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "jack", "queen", "king"];
-const cardAnimationDurationMs = 250;
-const cardAnimationCleanupDelayMs = 325;
-const drawFlipDelayMs = cardAnimationDurationMs / 2;
 
 /**
  * Main Solitaire component. Renders the play area, piles, menu and modal,
@@ -49,7 +47,7 @@ export default function Solitaire() {
   }), shallow);
 
   const cardAnimationEnabled = usePreferencesStore(state => state.cardAnimationEnabled);
-  const [movingCards, setMovingCards] = useState<{card: CardData, fromRect: DOMRect, toRect: DOMRect, startTime: number, targetFace?: 'up' | 'down'}[]>([]);
+  const [movingCards, setMovingCards] = useState<MovingCardAnimation[]>([]);
   const [movingTransforms, setMovingTransforms] = useState<{[key: number]: {x: number, y: number}}>({});
   const [movingFaces, setMovingFaces] = useState<{[key: number]: 'up' | 'down'}>({});
 
@@ -58,6 +56,12 @@ export default function Solitaire() {
   const foundationRefs = useRef<(HTMLDivElement | null)[]>([]);
   const tableauRefs = useRef<(HTMLDivElement | null)[]>([]);
 
+  /**
+   * Resolve a pile container reference used when calculating animation targets.
+   * @param pileType Destination pile type.
+   * @param pileIndex Destination pile index.
+   * @returns Matching pile element, if mounted.
+   */
   function getRefForPile(pileType: string, pileIndex: number): HTMLDivElement | null {
     if (pileType === 'stock') return stockRef.current;
     if (pileType === 'waste') return wasteRef.current;
@@ -66,35 +70,49 @@ export default function Solitaire() {
     return null;
   }
 
-  function getWasteOffsetPx(wasteElement: HTMLDivElement, offsetNumber: 1 | 2): number {
-    const styles = getComputedStyle(wasteElement);
-    const pxOffset = Number.parseFloat(styles.getPropertyValue(`--waste-card-offset-${offsetNumber}-px`)) || 0;
-    const vwOffset = Number.parseFloat(styles.getPropertyValue(`--waste-card-offset-${offsetNumber}-vw`)) || 0;
-    const vwOffsetPx = (vwOffset / 100) * window.innerWidth;
+  /**
+   * Schedule the overlay-based animation lifecycle, including initial render,
+   * transform update, optional mid-flight face change, state commit, and cleanup.
+   * @param nextMovingCards Cards to animate in the overlay layer.
+   * @param initialFaces Initial face values for the moving cards.
+   * @param onComplete Callback invoked after the animation duration completes.
+   * @param flipDelayMs Optional delay before flipping moving cards.
+   * @param flippedFaces Optional face overrides to apply at flip time.
+   */
+  function runOverlayAnimation(
+    nextMovingCards: MovingCardAnimation[],
+    initialFaces: {[key: number]: 'up' | 'down'},
+    onComplete: () => void,
+    flipDelayMs?: number,
+    flippedFaces?: {[key: number]: 'up' | 'down'},
+  ) {
+    const initialTransforms = Object.fromEntries(nextMovingCards.map((_, index) => [index, { x: 0, y: 0 }])) as {[key: number]: {x: number, y: number}};
 
-    if (pxOffset < 0 || vwOffsetPx < 0) {
-      return Math.max(pxOffset, vwOffsetPx);
+    setMovingCards(nextMovingCards);
+    setMovingTransforms(initialTransforms);
+    setMovingFaces(initialFaces);
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setMovingTransforms(buildMovingTransforms(nextMovingCards));
+      });
+    });
+
+    if (flipDelayMs !== undefined && flippedFaces) {
+      setTimeout(() => {
+        setMovingFaces(flippedFaces);
+      }, flipDelayMs);
     }
 
-    return Math.min(pxOffset, vwOffsetPx);
-  }
+    setTimeout(() => {
+      onComplete();
+    }, cardAnimationDurationMs);
 
-  function getWasteTargetRect(wasteElement: HTMLDivElement, futureWasteCount: number): DOMRect {
-    const wasteRect = wasteElement.getBoundingClientRect();
-    let translateX = 0;
-
-    if (futureWasteCount === 2) {
-      translateX = getWasteOffsetPx(wasteElement, 2);
-    } else if (futureWasteCount >= 3) {
-      translateX = getWasteOffsetPx(wasteElement, 1);
-    }
-
-    return new DOMRect(
-      wasteRect.left + translateX,
-      wasteRect.top,
-      wasteRect.width,
-      wasteRect.height,
-    );
+    setTimeout(() => {
+      setMovingCards([]);
+      setMovingTransforms({});
+      setMovingFaces({});
+    }, cardAnimationCleanupDelayMs);
   }
 
   function animatedDrawCard() {
@@ -149,39 +167,27 @@ export default function Solitaire() {
     }
 
     const futureWasteCount = playfield.waste.length + 1;
-    const toRect = getWasteTargetRect(wasteElement, futureWasteCount);
+    const wasteStyles = getComputedStyle(wasteElement);
+    const offsetOnePx = getWasteOffsetPx(wasteStyles, window.innerWidth, 1);
+    const offsetTwoPx = getWasteOffsetPx(wasteStyles, window.innerWidth, 2);
+    const toRect = getWasteTargetRect(
+      wasteElement.getBoundingClientRect(),
+      futureWasteCount,
+      offsetOnePx,
+      offsetTwoPx,
+    );
 
     const movingCard = { card: cardToMove, fromRect, toRect, startTime: Date.now(), targetFace: 'up' as const };
-    
-    // Initialize transform and face
-    const initialTransforms = { 0: { x: 0, y: 0 } };
     const initialFaces = { 0: cardToMove.face };
-    setMovingCards([movingCard]);
-    setMovingTransforms(initialTransforms);
-    setMovingFaces(initialFaces);
-
-    // Wait for the initial overlay render, then animate to the waste pile.
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        setMovingTransforms({ 0: { x: toRect.left - fromRect.left, y: toRect.top - fromRect.top } });
-      });
-    });
-
-    // Flip the moving overlay while it is traveling.
-    setTimeout(() => {
-      setMovingFaces({ 0: 'up' });
-    }, drawFlipDelayMs);
-
-    // Commit the actual draw after the overlay finishes moving.
-    setTimeout(() => {
-      actions.drawCard();
-    }, cardAnimationDurationMs);
-
-    setTimeout(() => {
-      setMovingCards([]);
-      setMovingTransforms({});
-      setMovingFaces({});
-    }, cardAnimationCleanupDelayMs);
+    runOverlayAnimation(
+      [movingCard],
+      initialFaces,
+      () => {
+        actions.drawCard();
+      },
+      drawFlipDelayMs,
+      { 0: 'up' },
+    );
   }
 
   function animatedMoveCard(sourceCardData: CardData, targetPileType: PileTypes, targetPileIndex: number, sourcePileType = sourceCardData.pileType as PileTypes, sourcePileIndex = sourceCardData.pileIndex || 0, sourceCardIndex = sourceCardData.cardIndex || 0, sourceElement?: HTMLElement) {
@@ -252,38 +258,13 @@ export default function Solitaire() {
       return { card, fromRect, toRect, startTime };
     }).filter(Boolean) as {card: CardData, fromRect: DOMRect, toRect: DOMRect, startTime: number}[];
 
-    // Now perform the state update AFTER setting up the animation
-    // Initialize transforms to 0 (starting position)
-    const initialTransforms: {[key: number]: {x: number, y: number}} = {};
-    movingWithTo.forEach((_, index) => {
-      initialTransforms[index] = { x: 0, y: 0 };
-    });
-    setMovingCards(movingWithTo);
-    setMovingTransforms(initialTransforms);
-
-    // Trigger animation to final position after the overlay has been painted.
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        const finalTransforms: {[key: number]: {x: number, y: number}} = {};
-        movingWithTo.forEach((moving, index) => {
-          finalTransforms[index] = {
-            x: moving.toRect.left - moving.fromRect.left,
-            y: moving.toRect.top - moving.fromRect.top
-          };
-        });
-        setMovingTransforms(finalTransforms);
-      });
-    });
-
-    // Update state only after the animation has completed.
-    setTimeout(() => {
-      actions.moveCard(sourceCardData, targetPileType, targetPileIndex, sourcePileType, sourcePileIndex, sourceCardIndex);
-    }, cardAnimationDurationMs);
-
-    setTimeout(() => {
-      setMovingCards([]);
-      setMovingTransforms({});
-    }, cardAnimationCleanupDelayMs);
+    runOverlayAnimation(
+      movingWithTo,
+      Object.fromEntries(movingWithTo.map((moving, index) => [index, moving.card.face])) as {[key: number]: 'up' | 'down'},
+      () => {
+        actions.moveCard(sourceCardData, targetPileType, targetPileIndex, sourcePileType, sourcePileIndex, sourceCardIndex);
+      },
+    );
   }
 
   useEffect(() => {
