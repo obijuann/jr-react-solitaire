@@ -231,12 +231,18 @@ export default function Menu() {
      * @returns JSX.Element
      */
     function renderPreferencesSubmenu() {
+
+        // Style overrides for MUI Checkbox component
         const checkboxSx = {
             color: "white",
             padding: 0,
             "& .MuiSvgIcon-root": { fontSize: 35 },
-            '&.Mui-checked': { color: gameActive ? "rgba(0, 0, 0, 0.26)" : "white" },
+            "&.Mui-checked": { color: "white" }
         };
+
+        const timerEnabledCheckboxSx = {...checkboxSx, "&.Mui-checked": { color: gameActive ? "rgba(0, 0, 0, 0.26)" : "white" }}
+
+        // Style overrides for MUI Select component
         const selectSx = {
             "& .MuiSvgIcon-root": { color: "unset" },
             "& .MuiOutlinedInput-notchedOutline": { borderColor: "transparent" },
@@ -263,7 +269,7 @@ export default function Menu() {
                                         disabled={gameActive}
                                         size="medium"
                                         onChange={handleTimerSwitchChange}
-                                        sx={checkboxSx}
+                                        sx={timerEnabledCheckboxSx}
                                     />
                                 </div>
                             </Tooltip>
@@ -289,7 +295,7 @@ export default function Menu() {
                             <FormControl size="small" sx={{ m: 0, minWidth: 120 }}>
                                 <Select
                                     id="theme-select"
-                                    inputProps={{ 'aria-label': 'Theme' }}
+                                    inputProps={{ "aria-label": "Theme" }}
                                     onChange={handleThemeChange}
                                     value={themeColor}
                                     sx={selectSx}
@@ -313,7 +319,7 @@ export default function Menu() {
                             <FormControl size="small" sx={{ m: 0, minWidth: 120 }}>
                                 <Select
                                     id="card-face-select"
-                                    inputProps={{ 'aria-label': 'Card face' }}
+                                    inputProps={{ "aria-label": "Card face" }}
                                     onChange={handleCardFaceChange}
                                     value={cardFace}
                                     sx={selectSx}
@@ -337,7 +343,7 @@ export default function Menu() {
                             <FormControl size="small" sx={{ m: 0, minWidth: 120 }}>
                                 <Select
                                     id="card-back-select"
-                                    inputProps={{ 'aria-label': 'Card back' }}
+                                    inputProps={{ "aria-label": "Card back" }}
                                     onChange={handleCardBackChange}
                                     value={cardBack}
                                     sx={selectSx}
@@ -367,7 +373,7 @@ export default function Menu() {
             <div id="submenu" className="list" style={subMenuPosStyle}>
                 <div id="group-submenu">
                     <div className="group-header">
-                        <button onClick={resetStatistics} className="secondary" id="reset-stats" title='Reset Statistics'><RestoreRoundedIcon fontSize='medium' /></button>
+                        <button onClick={resetStatistics} className="secondary" id="reset-stats" title="Reset Statistics"><RestoreRoundedIcon fontSize="medium" /></button>
                         <span>Statistics</span>
                     </div>
                     {renderTimeStatistics()}
@@ -555,7 +561,7 @@ export default function Menu() {
     return (
         <div id="menu" data-testid="menu" className={isMenuVisible ? "visible" : ""}>
             <div id="menu-control">
-                <button onClick={toggleMenu} title="Toggle Menu (Esc)"><KeyboardArrowUpOutlinedIcon fontSize='medium' /></button>
+                <button onClick={toggleMenu} title="Toggle Menu (Esc)"><KeyboardArrowUpOutlinedIcon fontSize="medium" /></button>
             </div>
             <div id="primary-menu">
                 <button className="primary" id="new-menu" onClick={handleSubmenuToggle}><PlayArrowRoundedIcon />Play</button>
