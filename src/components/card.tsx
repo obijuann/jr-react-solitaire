@@ -1,6 +1,6 @@
 import './card.css';
 
-import { DragEventHandler } from 'react';
+import { DragEventHandler, useEffect, useState } from 'react';
 import usePreferencesStore from "../stores/preferences-store";
 import { CardArtworkProperties, CardBacks, CardData, CardFaces } from '../types/card-data';
 
@@ -38,6 +38,8 @@ interface CardComponentProps extends CardData {
   onDragStart?: DragEventHandler
   /** Visual vertical offset (in vh) for stacked tableau rendering. */
   offset?: number
+  /** Whether the card is currently being animated in a move. */
+  isMoving?: boolean
 }
 
 /**
@@ -50,24 +52,57 @@ export default function Card(props: CardComponentProps) {
 
   const cardFace = usePreferencesStore(state => state.cardFace);  
   const cardBack = usePreferencesStore(state => state.cardBack);  
+  const cardAnimationEnabled = usePreferencesStore(state => state.cardAnimationEnabled);
 
-  let styleOverride;
-  if (props.offset) {
-    styleOverride = {
-      top: `${props.offset}vh`
+  const [currentFace, setCurrentFace] = useState<'up' | 'down'>(props.face);
+  const [isFlipping, setIsFlipping] = useState(false);
+
+  useEffect(() => {
+    if (!cardAnimationEnabled) {
+      setCurrentFace(props.face);
+      return;
     }
+
+    if (props.face !== currentFace) {
+      setIsFlipping(true);
+      setCurrentFace(props.face);
+      // Use shorter animation for moving cards to match move duration
+      const animationDuration = props.isMoving ? 250 : 500;
+      setTimeout(() => setIsFlipping(false), animationDuration);
+    }
+  }, [props.face, currentFace, cardAnimationEnabled, props.isMoving]);
+
+  const styleOverride: React.CSSProperties = {};
+  if (props.offset) {
+    styleOverride.top = `${props.offset}vh`;
+  }
+  if (props.isMoving) {
+    styleOverride.position = 'relative';
   }
 
   let className = "card ";
-  if (props.face === "up") {
+  if (props.isMoving) {
+    className += "moving ";
+  }
+  if (currentFace === "up") {
     className += `${props.suit} faceup`;
+  }
+  if (isFlipping) {
+    className += " anim";
   }
 
   return (
     <div
       className={className}
       draggable={props.draggable}
-      data-carddata={JSON.stringify(props)}
+      data-carddata={JSON.stringify({
+        cardIndex: props.cardIndex,
+        face: props.face,
+        pileIndex: props.pileIndex,
+        pileType: props.pileType,
+        rank: props.rank,
+        suit: props.suit
+      })}
       data-testid="card"
       onDragStart={props.onDragStart}
       style={styleOverride}

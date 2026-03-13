@@ -1,13 +1,14 @@
 import "./solitaire.css";
 
 import Grid from '@mui/material/Grid';
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { shallow } from 'zustand/shallow';
 import Card from "../components/card";
 import Menu from "../components/menu";
 import Modal from "../components/modal";
 import Timer from "../components/timer";
 import useGameStore from '../stores/game-store';
+import usePreferencesStore from '../stores/preferences-store';
 import { CardData } from "../types/card-data";
 import { PileTypes } from "../types/pile-types";
 import { PlayfieldState } from "../types/playfield-state";
@@ -23,6 +24,9 @@ const suitsToColorsMap: Partial<Record<Suits, string>> = {
 };
 
 const ranks: Ranks[] = ["ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "jack", "queen", "king"];
+const cardAnimationDurationMs = 250;
+const cardAnimationCleanupDelayMs = 325;
+const drawFlipDelayMs = cardAnimationDurationMs / 2;
 
 /**
  * Main Solitaire component. Renders the play area, piles, menu and modal,
@@ -44,8 +48,246 @@ export default function Solitaire() {
     checkGameState: state.actions.checkGameState
   }), shallow);
 
-  // Global keyboard handler to toggle menus with 'Esc'
+  const cardAnimationEnabled = usePreferencesStore(state => state.cardAnimationEnabled);
+  const [movingCards, setMovingCards] = useState<{card: CardData, fromRect: DOMRect, toRect: DOMRect, startTime: number, targetFace?: 'up' | 'down'}[]>([]);
+  const [movingTransforms, setMovingTransforms] = useState<{[key: number]: {x: number, y: number}}>({});
+  const [movingFaces, setMovingFaces] = useState<{[key: number]: 'up' | 'down'}>({});
+
+  const stockRef = useRef<HTMLDivElement>(null);
+  const wasteRef = useRef<HTMLDivElement>(null);
+  const foundationRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const tableauRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  function getRefForPile(pileType: string, pileIndex: number): HTMLDivElement | null {
+    if (pileType === 'stock') return stockRef.current;
+    if (pileType === 'waste') return wasteRef.current;
+    if (pileType === 'foundation') return foundationRefs.current[pileIndex];
+    if (pileType === 'tableau') return tableauRefs.current[pileIndex];
+    return null;
+  }
+
+  function getWasteOffsetPx(wasteElement: HTMLDivElement, offsetNumber: 1 | 2): number {
+    const styles = getComputedStyle(wasteElement);
+    const pxOffset = Number.parseFloat(styles.getPropertyValue(`--waste-card-offset-${offsetNumber}-px`)) || 0;
+    const vwOffset = Number.parseFloat(styles.getPropertyValue(`--waste-card-offset-${offsetNumber}-vw`)) || 0;
+    const vwOffsetPx = (vwOffset / 100) * window.innerWidth;
+
+    if (pxOffset < 0 || vwOffsetPx < 0) {
+      return Math.max(pxOffset, vwOffsetPx);
+    }
+
+    return Math.min(pxOffset, vwOffsetPx);
+  }
+
+  function getWasteTargetRect(wasteElement: HTMLDivElement, futureWasteCount: number): DOMRect {
+    const wasteRect = wasteElement.getBoundingClientRect();
+    let translateX = 0;
+
+    if (futureWasteCount === 2) {
+      translateX = getWasteOffsetPx(wasteElement, 2);
+    } else if (futureWasteCount >= 3) {
+      translateX = getWasteOffsetPx(wasteElement, 1);
+    }
+
+    return new DOMRect(
+      wasteRect.left + translateX,
+      wasteRect.top,
+      wasteRect.width,
+      wasteRect.height,
+    );
+  }
+
+  function animatedDrawCard() {
+    if (!cardAnimationEnabled) {
+      actions.drawCard();
+      return;
+    }
+
+    if (movingCards.length) {
+      return;
+    }
+
+    const playfield = playfieldState;
+    
+    // Check if we can draw a card
+    if (!playfield.draw.length && !playfield.waste.length) return;
+    
+    // For recycling case (draw empty, waste has cards)
+    if (!playfield.draw.length && playfield.waste.length) {
+      // For recycling, just do the action without animation for now
+      actions.drawCard();
+      return;
+    }
+
+    // Normal draw case - animate the card from draw to waste
+    const cardToMove = playfield.draw[playfield.draw.length - 1];
+    if (!cardToMove) return;
+
+    // Use the draw pile position as the starting point
+    const drawElement = document.getElementById('draw');
+    if (!drawElement) {
+      // Fallback to non-animated
+      actions.drawCard();
+      return;
+    }
+
+    // Find the top card in the draw pile
+    const cardElements = drawElement.querySelectorAll('.card');
+    const topCardElement = cardElements[cardElements.length - 1] as HTMLElement;
+    if (!topCardElement) {
+      actions.drawCard();
+      return;
+    }
+
+    const fromRect = topCardElement.getBoundingClientRect();
+    
+    // Calculate the incoming card's final waste position after stack offsets apply.
+    const wasteElement = wasteRef.current;
+    if (!wasteElement) {
+      actions.drawCard();
+      return;
+    }
+
+    const futureWasteCount = playfield.waste.length + 1;
+    const toRect = getWasteTargetRect(wasteElement, futureWasteCount);
+
+    const movingCard = { card: cardToMove, fromRect, toRect, startTime: Date.now(), targetFace: 'up' as const };
+    
+    // Initialize transform and face
+    const initialTransforms = { 0: { x: 0, y: 0 } };
+    const initialFaces = { 0: cardToMove.face };
+    setMovingCards([movingCard]);
+    setMovingTransforms(initialTransforms);
+    setMovingFaces(initialFaces);
+
+    // Wait for the initial overlay render, then animate to the waste pile.
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setMovingTransforms({ 0: { x: toRect.left - fromRect.left, y: toRect.top - fromRect.top } });
+      });
+    });
+
+    // Flip the moving overlay while it is traveling.
+    setTimeout(() => {
+      setMovingFaces({ 0: 'up' });
+    }, drawFlipDelayMs);
+
+    // Commit the actual draw after the overlay finishes moving.
+    setTimeout(() => {
+      actions.drawCard();
+    }, cardAnimationDurationMs);
+
+    setTimeout(() => {
+      setMovingCards([]);
+      setMovingTransforms({});
+      setMovingFaces({});
+    }, cardAnimationCleanupDelayMs);
+  }
+
+  function animatedMoveCard(sourceCardData: CardData, targetPileType: PileTypes, targetPileIndex: number, sourcePileType = sourceCardData.pileType as PileTypes, sourcePileIndex = sourceCardData.pileIndex || 0, sourceCardIndex = sourceCardData.cardIndex || 0, sourceElement?: HTMLElement) {
+    if (!cardAnimationEnabled) {
+      actions.moveCard(sourceCardData, targetPileType, targetPileIndex, sourcePileType, sourcePileIndex, sourceCardIndex);
+      return;
+    }
+
+    if (movingCards.length) {
+      return;
+    }
+
+    const newPlayfield = structuredClone(playfieldState);
+    let cardsToMove: CardData[] = [];
+
+    switch (sourcePileType) {
+      case 'foundation':
+      case 'tableau':
+        cardsToMove = newPlayfield[sourcePileType][sourcePileIndex].slice(sourceCardIndex);
+        break;
+      case 'waste':
+        cardsToMove = newPlayfield.waste.slice(sourceCardIndex);
+        break;
+      default:
+        return;
+    }
+
+    // Calculate target positions BEFORE the state update
+    const toElement = getRefForPile(targetPileType, targetPileIndex);
+    if (!toElement) {
+      setMovingCards([]);
+      return;
+    }
+    const baseToRect = toElement.getBoundingClientRect();
+    
+    // Calculate target position for each moving card
+    const targetPileLength = playfieldState[targetPileType as keyof PlayfieldState][targetPileIndex].length;
+    const startTime = Date.now();
+    const movingWithTo = cardsToMove.map((card, moveIndex) => {
+      let toRect = baseToRect;
+      
+      // Adjust for card offset in tableau piles
+      if (targetPileType === 'tableau') {
+        const finalCardIndex = targetPileLength + moveIndex;
+        const offsetVh = finalCardIndex * 3; // 3vh per card
+        // Convert vh to pixels (1vh = 1% of viewport height)
+        const offsetPx = (offsetVh / 100) * window.innerHeight;
+        toRect = new DOMRect(toRect.left, toRect.top + offsetPx, toRect.width, toRect.height);
+      }
+      
+      // Use the passed element if available, otherwise find it
+      let cardElement = sourceElement;
+      if (!cardElement || moveIndex > 0) {
+        // Construct the expected data object for the card
+        const expectedData = {
+          cardIndex: sourcePileType === 'tableau' || sourcePileType === 'foundation' ? sourceCardIndex + moveIndex : moveIndex,
+          face: card.face,
+          pileIndex: sourcePileType === 'waste' ? undefined : sourcePileIndex,
+          pileType: sourcePileType,
+          rank: card.rank,
+          suit: card.suit
+        };
+        cardElement = document.querySelector(`[data-carddata='${JSON.stringify(expectedData).replace(/'/g, "\\'")}']`) as HTMLElement;
+      }
+      if (!cardElement) return null;
+      const fromRect = cardElement.getBoundingClientRect();
+      
+      return { card, fromRect, toRect, startTime };
+    }).filter(Boolean) as {card: CardData, fromRect: DOMRect, toRect: DOMRect, startTime: number}[];
+
+    // Now perform the state update AFTER setting up the animation
+    // Initialize transforms to 0 (starting position)
+    const initialTransforms: {[key: number]: {x: number, y: number}} = {};
+    movingWithTo.forEach((_, index) => {
+      initialTransforms[index] = { x: 0, y: 0 };
+    });
+    setMovingCards(movingWithTo);
+    setMovingTransforms(initialTransforms);
+
+    // Trigger animation to final position after the overlay has been painted.
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const finalTransforms: {[key: number]: {x: number, y: number}} = {};
+        movingWithTo.forEach((moving, index) => {
+          finalTransforms[index] = {
+            x: moving.toRect.left - moving.fromRect.left,
+            y: moving.toRect.top - moving.fromRect.top
+          };
+        });
+        setMovingTransforms(finalTransforms);
+      });
+    });
+
+    // Update state only after the animation has completed.
+    setTimeout(() => {
+      actions.moveCard(sourceCardData, targetPileType, targetPileIndex, sourcePileType, sourcePileIndex, sourceCardIndex);
+    }, cardAnimationDurationMs);
+
+    setTimeout(() => {
+      setMovingCards([]);
+      setMovingTransforms({});
+    }, cardAnimationCleanupDelayMs);
+  }
+
   useEffect(() => {
+    // Global keyboard handler to toggle menus with 'Esc'
     function globalKeyHandler(e: KeyboardEvent) {
       if (!e || !e.key) return;
 
@@ -100,13 +342,12 @@ export default function Solitaire() {
   }
 
   /**
-   * Handle clicking the draw pile — prevents the default action and calls
-   * the store action to draw a card.
+   * Handle clicking the draw pile — triggers animated card draw.
    * @param e Mouse event from the click
    */
   function drawCardHandler(e: React.MouseEvent) {
     e.preventDefault();
-    actions.drawCard();
+    animatedDrawCard();
   }
 
   /**
@@ -129,7 +370,7 @@ export default function Solitaire() {
     })
 
     if (targetPileIndex !== -1) {
-      actions.moveCard(tapppedCardData, "foundation", targetPileIndex);
+      animatedMoveCard(tapppedCardData, "foundation", targetPileIndex, undefined, undefined, undefined, tappedCardElement as HTMLElement);
       return;
     }
 
@@ -150,7 +391,7 @@ export default function Solitaire() {
 
       if (targetPileIndex >= 0 && sourceCardIndex >= 0) {
         const cardToMove: CardData = playfieldState["tableau"][tapppedCardData.pileIndex][sourceCardIndex];
-        actions.moveCard(cardToMove, "tableau", targetPileIndex, tapppedCardData.pileType, tapppedCardData.pileIndex, sourceCardIndex);
+        animatedMoveCard(cardToMove, "tableau", targetPileIndex, tapppedCardData.pileType, tapppedCardData.pileIndex, sourceCardIndex);
       }
     } else {
       targetPileIndex = playfieldState.tableau.findIndex((tableauCardPileData) => {
@@ -158,7 +399,7 @@ export default function Solitaire() {
       })
 
       if (targetPileIndex !== -1) {
-        actions.moveCard(tapppedCardData, "tableau", targetPileIndex);
+        animatedMoveCard(tapppedCardData, "tableau", targetPileIndex, undefined, undefined, undefined, tappedCardElement as HTMLElement);
       }
     }
   }
@@ -204,6 +445,10 @@ export default function Solitaire() {
    * @returns JSX.Element for the card
    */
   function renderCard(cardData: CardData, cardIndex: number, pileType: PileTypes, pileIndex?: number) {
+    if (movingCards.some((m: {card: CardData, fromRect: DOMRect, toRect: DOMRect}) => m.card.rank === cardData.rank && m.card.suit === cardData.suit)) {
+      return null;
+    }
+
     let draggable = !!(cardData.face === "up");
 
     if (pileType == "waste") {
@@ -229,7 +474,7 @@ export default function Solitaire() {
   /** Render the draw pile container */
   function renderDrawPile() {
     return (
-      <div id="stock">
+      <div id="stock" ref={stockRef}>
         <div id="draw" className="card-pile" onClick={drawCardHandler}>
           {playfieldState.draw.map((cardData, cardIndex) => {
             return renderCard(cardData, cardIndex, "draw");
@@ -251,8 +496,12 @@ export default function Solitaire() {
       className = "offset-one";
     }
 
+    if (cardAnimationEnabled) {
+      className += " anim";
+    }
+
     return (
-      <div id="waste" onClick={pileClickHandler} className={className}>
+      <div id="waste" ref={wasteRef} onClick={pileClickHandler} className={className}>
         {playfieldState.waste.map((cardData, cardIndex) => {
           return renderCard(cardData, cardIndex, "waste");
         })
@@ -271,6 +520,7 @@ export default function Solitaire() {
               className="card-pile"
               id={`fpile${pileIndex}`}
               key={`fpile${pileIndex}`}
+              ref={(el) => { foundationRefs.current[pileIndex] = el; }}
               onClick={pileClickHandler}
               onDragEnter={dragEnterHandler}
               onDragOver={dragOverHander}
@@ -297,6 +547,7 @@ export default function Solitaire() {
               className="card-pile"
               id={`tabpile${pileIndex}`}
               key={`pile${pileIndex}`}
+              ref={(el) => { tableauRefs.current[pileIndex] = el; }}
               onClick={pileClickHandler}
               onDragEnter={dragEnterHandler}
               onDragOver={dragOverHander}
@@ -416,6 +667,37 @@ export default function Solitaire() {
           {renderTableau()}
         </Grid>
       </Grid>
+      {movingCards.map((moving: {card: CardData, fromRect: DOMRect, toRect: DOMRect, startTime: number}, index: number) => {
+        const transform = movingTransforms[index] || { x: 0, y: 0 };
+        const face = movingFaces[index] !== undefined ? movingFaces[index] : moving.card.face;
+        
+        return (
+          <div
+            key={`moving-${index}`}
+            style={{
+              position: 'absolute',
+              top: moving.fromRect.top,
+              left: moving.fromRect.left,
+              width: moving.fromRect.width,
+              height: moving.fromRect.height,
+              transform: `translate(${transform.x}px, ${transform.y}px)`,
+              transition: 'transform 0.25s ease-out',
+              zIndex: 1000,
+              pointerEvents: 'none'
+            }}
+          >
+            <Card
+              rank={moving.card.rank}
+              suit={moving.card.suit}
+              face={face}
+              pileType={moving.card.pileType}
+              pileIndex={moving.card.pileIndex}
+              cardIndex={moving.card.cardIndex}
+              isMoving={true}
+            />
+          </div>
+        );
+      })}
       <div id="menu-area" data-testid="menu-area" >
         <Timer />
         <Menu />

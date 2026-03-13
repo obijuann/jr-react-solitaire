@@ -1,9 +1,18 @@
 import '@testing-library/jest-dom/vitest';
 
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import useGameStore from '../stores/game-store';
+import usePreferencesStore from '../stores/preferences-store';
 import Solitaire from './solitaire';
+
+beforeEach(() => {
+  usePreferencesStore.setState({ cardAnimationEnabled: false });
+});
+
+afterEach(() => {
+  cleanup();
+});
 
 it('renders the play area', () => {
   // Arrange + Act
@@ -143,6 +152,49 @@ describe('Solitaire additional behavior', () => {
       // Wrapping this in act() call to avoid console warnings
       useGameStore.setState(state => ({ actions: { ...state.actions, drawCard: original } }));
     });
+  });
+
+  it('animated draw delays the waste update until the animation completes', () => {
+    vi.useFakeTimers();
+
+    usePreferencesStore.setState({ cardAnimationEnabled: true });
+    useGameStore.setState({
+      playfield: {
+        draw: [{ rank: 'ace', suit: 'hearts', face: 'down' }],
+        waste: [],
+        foundation: [[], [], [], []],
+        tableau: [[], [], [], [], [], [], []],
+      }
+    });
+
+    render(<Solitaire />);
+
+    const playArea = screen.getByTestId('play-area');
+    const drawElem = playArea.querySelector('#draw') as HTMLElement;
+    const wasteElem = playArea.querySelector('#waste') as HTMLElement;
+
+    expect(drawElem.childNodes.length).toBe(1);
+    expect(wasteElem.childNodes.length).toBe(0);
+
+    act(() => {
+      fireEvent.click(drawElem);
+    });
+
+    expect(wasteElem.childNodes.length).toBe(0);
+
+    act(() => {
+      vi.advanceTimersByTime(250);
+    });
+
+    expect(wasteElem.childNodes.length).toBe(0);
+
+    act(() => {
+      vi.advanceTimersByTime(75);
+    });
+
+    expect(wasteElem.childNodes.length).toBe(1);
+
+    vi.useRealTimers();
   });
 
   it('dragStart sets cardData on dataTransfer', () => {

@@ -6,7 +6,7 @@ import useGameStore from '../stores/game-store';
 
 beforeEach(() => {
     useGameStore.setState({ menuVisible: true, submenuId: "", shuffledDeck: [] });
-    usePreferencesStore.setState({ themeColor: "green", cardFace: "english", cardBack: "blue", gameTimerEnabled: true });
+    usePreferencesStore.setState({ themeColor: "green", cardFace: "english", cardBack: "blue", gameTimerEnabled: true, cardAnimationEnabled: true });
 });
 
 import usePreferencesStore from "../stores/preferences-store";
@@ -277,7 +277,8 @@ it("renders the user preferences submenu", () => {
 
     // Assert
     expect(screen.getByText(/appearance/i)).toBeInTheDocument();
-    expect(screen.getByRole("checkbox", { checked: true })).toBeInTheDocument();
+    const checkedCheckboxes = screen.getAllByRole("checkbox", { checked: true });
+    expect(checkedCheckboxes).toHaveLength(2);
     expect(screen.getByText(/cyan/i)).toBeInTheDocument();
     expect(screen.getByText(/simple/i)).toBeInTheDocument();
     expect(screen.getByText(/abstract/i)).toBeInTheDocument();
@@ -297,7 +298,10 @@ it("renders the user preferences submenu with the unchecked game timer", () => {
 
     // Assert
     expect(screen.getByText(/appearance/i)).toBeInTheDocument();
-    expect(screen.getByRole("checkbox", { checked: false })).toBeInTheDocument();
+    const checkedCheckboxes = screen.getAllByRole("checkbox", { checked: true });
+    expect(checkedCheckboxes).toHaveLength(1);
+    const uncheckedCheckboxes = screen.getAllByRole("checkbox", { checked: false });
+    expect(uncheckedCheckboxes).toHaveLength(1);
     expect(screen.getByText(/green/i)).toBeInTheDocument();
     expect(screen.getByText(/english/i)).toBeInTheDocument();
     expect(screen.getByText(/blue/i)).toBeInTheDocument();

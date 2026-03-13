@@ -21,6 +21,10 @@
     transition: transform .5s;
 }
 
+.card.moving.anim.faceup .card-inner {
+    transition: transform .25s;
+}
+
 .card.faceup .card-inner {
     transform: rotateY(180deg);
     transform-style: preserve-3d;

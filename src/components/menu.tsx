@@ -64,6 +64,7 @@ export default function Menu() {
     const cardBack = usePreferencesStore(state => state.cardBack);
     const cardFace = usePreferencesStore(state => state.cardFace);
     const gameTimerEnabled = usePreferencesStore(state => state.gameTimerEnabled);
+    const cardAnimationEnabled = usePreferencesStore(state => state.cardAnimationEnabled);
 
     useEffect(() => {
         // Close the submenu on resize
@@ -218,10 +219,29 @@ export default function Menu() {
     }
 
     /**
+     * Update the user preference for card animations
+     * @param e Change event from the input element
+     */
+    function handleCardAnimationSwitchChange(e: ChangeEvent<HTMLInputElement>): void {
+        usePreferencesStore.setState(() => ({ cardAnimationEnabled: e.target.checked }));
+    }
+
+    /**
      * Render the "Preferences" submenu.
      * @returns JSX.Element
      */
     function renderPreferencesSubmenu() {
+        const checkboxSx = {
+            color: "white",
+            padding: 0,
+            "& .MuiSvgIcon-root": { fontSize: 35 },
+            '&.Mui-checked': { color: gameActive ? "rgba(0, 0, 0, 0.26)" : "white" },
+        };
+        const selectSx = {
+            "& .MuiSvgIcon-root": { color: "unset" },
+            "& .MuiOutlinedInput-notchedOutline": { borderColor: "transparent" },
+        };
+
         return (
             <div id="submenu" className="list" style={subMenuPosStyle}>
                 <div id="group-submenu">
@@ -243,15 +263,21 @@ export default function Menu() {
                                         disabled={gameActive}
                                         size="medium"
                                         onChange={handleTimerSwitchChange}
-                                        sx={{
-                                            color: "white",
-                                            padding: 0,
-                                            "& .MuiSvgIcon-root": { fontSize: 35 },
-                                            '&.Mui-checked': { color: gameActive ? "rgba(0, 0, 0, 0.26)" : "white" },
-                                        }}
+                                        sx={checkboxSx}
                                     />
                                 </div>
                             </Tooltip>
+                        </div>
+                    </div>
+                    <div className="group-section">
+                        <div>Card Animations</div>
+                        <div>
+                            <Checkbox
+                                checked={cardAnimationEnabled}
+                                size="medium"
+                                onChange={handleCardAnimationSwitchChange}
+                                sx={checkboxSx}
+                            />
                         </div>
                     </div>
                     <div className="group-section-header">Appearance</div>
@@ -266,10 +292,7 @@ export default function Menu() {
                                     inputProps={{ 'aria-label': 'Theme' }}
                                     onChange={handleThemeChange}
                                     value={themeColor}
-                                    sx={{
-                                        "& .MuiSvgIcon-root": { color: "unset" },
-                                        "& .MuiOutlinedInput-notchedOutline": { borderColor: "transparent" },
-                                    }}
+                                    sx={selectSx}
                                 >
                                     {
                                         Object.entries(themeColors).map(([themeKey, themeProps]) => (
@@ -293,10 +316,7 @@ export default function Menu() {
                                     inputProps={{ 'aria-label': 'Card face' }}
                                     onChange={handleCardFaceChange}
                                     value={cardFace}
-                                    sx={{
-                                        "& .MuiSvgIcon-root": { color: "unset" },
-                                        "& .MuiOutlinedInput-notchedOutline": { borderColor: "transparent" },
-                                    }}
+                                    sx={selectSx}
                                 >
                                     {
                                         Object.entries(cardFaceArtwork).map(([cardFace, cardFaceArtwork]) => (
@@ -320,10 +340,7 @@ export default function Menu() {
                                     inputProps={{ 'aria-label': 'Card back' }}
                                     onChange={handleCardBackChange}
                                     value={cardBack}
-                                    sx={{
-                                        "& .MuiSvgIcon-root": { color: "unset" },
-                                        "& .MuiOutlinedInput-notchedOutline": { borderColor: "transparent" },
-                                    }}
+                                    sx={selectSx}
                                 >
                                     {
                                         Object.entries(cardBackArtwork).map(([cardBack, cardBackArtwork]) => (

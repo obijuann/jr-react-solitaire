@@ -1,9 +1,14 @@
 import '@testing-library/jest-dom/vitest';
 
-import { expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import { beforeEach, expect, it } from 'vitest';
+import usePreferencesStore from '../stores/preferences-store';
 
 import Card from './card';
+
+beforeEach(() => {
+  usePreferencesStore.setState({ cardAnimationEnabled: false });
+});
 
 it("renders facedown card", () => {
     // Arrange + Act
@@ -27,7 +32,7 @@ it("renders face up card", () => {
     expect(cardElement).toBeInTheDocument();
     expect(cardElement.className).toEqual("card hearts faceup");
     const cardData = cardElement.getAttribute("data-carddata") || "";
-    expect(JSON.parse(cardData)).toEqual({ rank: "10", suit: "hearts", face: "up", draggable: true });
+    expect(JSON.parse(cardData)).toEqual({ rank: "10", suit: "hearts", face: "up" });
     expect(cardElement.getAttribute("draggable")).toBeTruthy();
 });
 

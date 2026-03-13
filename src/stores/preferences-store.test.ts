@@ -8,6 +8,7 @@ describe('Preferences store', () => {
       cardFace: 'english',
       cardBack: 'blue',
       gameTimerEnabled: true,
+      cardAnimationEnabled: true,
     });
   });
 
@@ -20,6 +21,7 @@ describe('Preferences store', () => {
     expect(state.cardFace).toBe('english');
     expect(state.cardBack).toBe('blue');
     expect(state.gameTimerEnabled).toBe(true);
+    expect(state.cardAnimationEnabled).toBe(true);
   });
 
   it('resetPreferences resets all values to defaults', () => {
@@ -29,6 +31,7 @@ describe('Preferences store', () => {
       cardFace: 'french',
       cardBack: 'red',
       gameTimerEnabled: false,
+      cardAnimationEnabled: false,
     });
 
     // Act
@@ -40,6 +43,7 @@ describe('Preferences store', () => {
     expect(state.cardFace).toBe('english');
     expect(state.cardBack).toBe('blue');
     expect(state.gameTimerEnabled).toBe(true);
+    expect(state.cardAnimationEnabled).toBe(true);
   });
 
   it('allows updating individual theme color', () => {
