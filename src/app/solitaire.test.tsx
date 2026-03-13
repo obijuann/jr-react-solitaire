@@ -12,109 +12,102 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup();
-});
 
-it("renders the play area", () => {
-  // Arrange + Act
-  render(<Solitaire />);
-
-  // Assert
-  const playArea = screen.getByTestId("play-area");
-  expect(playArea).toBeInTheDocument();
-  expect(playArea.querySelector("#stock")).toBeInTheDocument();
-  expect(playArea.querySelector("#draw")).toBeInTheDocument();
-  expect(playArea.querySelector("#draw")?.childNodes.length).toEqual(0);
-  expect(playArea.querySelector("#waste")).toBeInTheDocument();
-  expect(playArea.querySelector("#waste")?.childNodes.length).toEqual(0);
-  expect(playArea.querySelector("#foundation")).toBeInTheDocument();
-  expect(playArea.querySelector("#foundation")?.childNodes.length).toEqual(4);
-  expect(playArea.querySelector("#tableau")).toBeInTheDocument();
-  expect(playArea.querySelector("#tableau")?.childNodes.length).toEqual(7);
-
-  const menuArea = screen.getByTestId("menu-area");
-  expect(menuArea.querySelector("#menu")).toBeInTheDocument();
-});
-
-it("Deals the cards when a new game event is published", () => {
-  // Arrange
-  render(<Solitaire />);
-
-  // Act
-  act(() => {
-    // Use the store action directly
-    useGameStore.getState().actions.newGame();
-  });
-
-  // Assert
-  const playArea = screen.getByTestId("play-area");
-  expect(playArea).toBeInTheDocument();
-  expect(playArea.querySelector("#draw")).toBeInTheDocument();
-  expect(playArea.querySelector("#draw")?.childNodes.length).toEqual(24);
-  expect(playArea.querySelector("#waste")).toBeInTheDocument();
-  expect(playArea.querySelector("#waste")?.childNodes.length).toEqual(0);
-  expect(playArea.querySelector("#foundation")).toBeInTheDocument();
-  playArea.querySelector("#foundation")?.childNodes.forEach(foundationPile => {
-    expect(foundationPile.childNodes.length).toEqual(0);
-  });
-  expect(playArea.querySelector("#tableau")).toBeInTheDocument();
-  playArea.querySelector("#tableau")?.childNodes.forEach((tableauPile, pileIndex) => {
-    expect(tableauPile.childNodes.length).toEqual(pileIndex + 1);
-  });
-
-  const menuArea = screen.getByTestId("menu-area");
-  expect(menuArea.querySelector("#menu")).toBeInTheDocument();
-});
-
-it("Removes cards from the playfield when the game is quit", () => {
-  // Arrange
-  render(<Solitaire />);
-
-  // Act
-  act(() => {
-    // Use the store action directly
-    useGameStore.getState().actions.newGame();
-  });
-
-  // Assert
-  const playArea = screen.getByTestId("play-area");
-  expect(playArea).toBeInTheDocument();
-  expect(playArea.querySelector("#draw")).toBeInTheDocument();
-  expect(playArea.querySelector("#draw")?.childNodes.length).toEqual(24);
-
-  // Act
-  act(() => {
-    // Use the store action directly
-    useGameStore.getState().actions.quitGame();
-  });
-
-  // Assert
-  expect(playArea.querySelector("#draw")?.childNodes.length).toEqual(0);
-  expect(playArea.querySelector("#waste")?.childNodes.length).toEqual(0);
-  playArea.querySelector("#foundation")?.childNodes.forEach(foundationPile => {
-    expect(foundationPile.childNodes.length).toEqual(0);
-  });
-  playArea.querySelector("#tableau")?.childNodes.forEach(tableauPile => {
-    expect(tableauPile.childNodes.length).toEqual(0);
+  // Reset store to avoid cross-test leakage
+  useGameStore.setState({
+    playfield: { draw: [], waste: [], foundation: [[], [], [], []], tableau: [[], [], [], [], [], [], []] },
+    shuffledDeck: [],
+    undoQueue: [],
+    redoQueue: [],
+    modalType: undefined,
+    menuVisible: true,
+    gameTimer: 0,
+    timerId: null,
   });
 });
 
+describe("Solitaire app behavior", () => {
+  it("renders the play area", () => {
+    // Arrange + Act
+    render(<Solitaire />);
 
-/**
- * Additional integration-style tests moved from Solitaire.extra.test.tsx
- */
-describe("Solitaire additional behavior", () => {
-  afterEach(() => {
-    cleanup();
-    // Reset store to avoid cross-test leakage
-    useGameStore.setState({
-      playfield: { draw: [], waste: [], foundation: [[], [], [], []], tableau: [[], [], [], [], [], [], []] },
-      shuffledDeck: [],
-      undoQueue: [],
-      redoQueue: [],
-      modalType: undefined,
-      menuVisible: true,
-      gameTimer: 0,
-      timerId: null,
+    // Assert
+    const playArea = screen.getByTestId("play-area");
+    expect(playArea).toBeInTheDocument();
+    expect(playArea.querySelector("#stock")).toBeInTheDocument();
+    expect(playArea.querySelector("#draw")).toBeInTheDocument();
+    expect(playArea.querySelector("#draw")?.childNodes.length).toEqual(0);
+    expect(playArea.querySelector("#waste")).toBeInTheDocument();
+    expect(playArea.querySelector("#waste")?.childNodes.length).toEqual(0);
+    expect(playArea.querySelector("#foundation")).toBeInTheDocument();
+    expect(playArea.querySelector("#foundation")?.childNodes.length).toEqual(4);
+    expect(playArea.querySelector("#tableau")).toBeInTheDocument();
+    expect(playArea.querySelector("#tableau")?.childNodes.length).toEqual(7);
+
+    const menuArea = screen.getByTestId("menu-area");
+    expect(menuArea.querySelector("#menu")).toBeInTheDocument();
+  });
+
+  it("Deals the cards when a new game event is published", () => {
+    // Arrange
+    render(<Solitaire />);
+
+    // Act
+    act(() => {
+      // Use the store action directly
+      useGameStore.getState().actions.newGame();
+    });
+
+    // Assert
+    const playArea = screen.getByTestId("play-area");
+    expect(playArea).toBeInTheDocument();
+    expect(playArea.querySelector("#draw")).toBeInTheDocument();
+    expect(playArea.querySelector("#draw")?.childNodes.length).toEqual(24);
+    expect(playArea.querySelector("#waste")).toBeInTheDocument();
+    expect(playArea.querySelector("#waste")?.childNodes.length).toEqual(0);
+    expect(playArea.querySelector("#foundation")).toBeInTheDocument();
+    playArea.querySelector("#foundation")?.childNodes.forEach(foundationPile => {
+      expect(foundationPile.childNodes.length).toEqual(0);
+    });
+    expect(playArea.querySelector("#tableau")).toBeInTheDocument();
+    playArea.querySelector("#tableau")?.childNodes.forEach((tableauPile, pileIndex) => {
+      expect(tableauPile.childNodes.length).toEqual(pileIndex + 1);
+    });
+
+    const menuArea = screen.getByTestId("menu-area");
+    expect(menuArea.querySelector("#menu")).toBeInTheDocument();
+  });
+
+  it("Removes cards from the playfield when the game is quit", () => {
+    // Arrange
+    render(<Solitaire />);
+
+    // Act
+    act(() => {
+      // Use the store action directly
+      useGameStore.getState().actions.newGame();
+    });
+
+    // Assert
+    const playArea = screen.getByTestId("play-area");
+    expect(playArea).toBeInTheDocument();
+    expect(playArea.querySelector("#draw")).toBeInTheDocument();
+    expect(playArea.querySelector("#draw")?.childNodes.length).toEqual(24);
+
+    // Act
+    act(() => {
+      // Use the store action directly
+      useGameStore.getState().actions.quitGame();
+    });
+
+    // Assert
+    expect(playArea.querySelector("#draw")?.childNodes.length).toEqual(0);
+    expect(playArea.querySelector("#waste")?.childNodes.length).toEqual(0);
+    playArea.querySelector("#foundation")?.childNodes.forEach(foundationPile => {
+      expect(foundationPile.childNodes.length).toEqual(0);
+    });
+    playArea.querySelector("#tableau")?.childNodes.forEach(tableauPile => {
+      expect(tableauPile.childNodes.length).toEqual(0);
     });
   });
 
