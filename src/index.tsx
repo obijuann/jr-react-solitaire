@@ -9,6 +9,10 @@ import Solitaire from "./app/solitaire";
 import usePreferencesStore from "./stores/preferences-store";
 import { getTheme } from "./themes";
 
+/**
+ * App root wrapper that binds user preferences to theme and card asset preload.
+ * @returns JSX.Element
+ */
 function AppWrapper() {
   const themeColor = usePreferencesStore(state => state.themeColor);
   const cardFace = usePreferencesStore(state => state.cardFace);

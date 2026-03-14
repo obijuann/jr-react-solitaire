@@ -75,8 +75,8 @@ export function getWasteTargetRect(
  * @param movingCards Cards currently being animated.
  * @returns Map of moving-card index to translation deltas.
  */
-export function buildMovingTransforms(movingCards: MovingCardAnimation[]): {[key: number]: {x: number, y: number}} {
-  const transforms: {[key: number]: {x: number, y: number}} = {};
+export function buildMovingTransforms(movingCards: MovingCardAnimation[]): { [key: number]: { x: number, y: number } } {
+  const transforms: { [key: number]: { x: number, y: number } } = {};
 
   movingCards.forEach((moving, index) => {
     transforms[index] = {

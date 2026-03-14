@@ -115,6 +115,10 @@ export default function Solitaire() {
     }, cardAnimationCleanupDelayMs);
   }
 
+  /**
+   * Animate drawing the top stock card into waste, including a mid-flight flip.
+   * Falls back to a direct draw when animation prerequisites are unavailable.
+   */
   function animatedDrawCard() {
     if (!cardAnimationEnabled) {
       actions.drawCard();
@@ -190,6 +194,17 @@ export default function Solitaire() {
     );
   }
 
+  /**
+   * Animate moving card(s) from a source pile to a destination pile by rendering
+   * overlay cards, then committing the move once the transition completes.
+   * @param sourceCardData Metadata for the primary card being moved.
+   * @param targetPileType Destination pile type.
+   * @param targetPileIndex Destination pile index.
+   * @param sourcePileType Optional source pile type override.
+   * @param sourcePileIndex Optional source pile index override.
+   * @param sourceCardIndex Optional source-card index override.
+   * @param sourceElement Optional source card element to reuse for bounds.
+   */
   function animatedMoveCard(sourceCardData: CardData, targetPileType: PileTypes, targetPileIndex: number, sourcePileType = sourceCardData.pileType as PileTypes, sourcePileIndex = sourceCardData.pileIndex || 0, sourceCardIndex = sourceCardData.cardIndex || 0, sourceElement?: HTMLElement) {
     if (!cardAnimationEnabled) {
       actions.moveCard(sourceCardData, targetPileType, targetPileIndex, sourcePileType, sourcePileIndex, sourceCardIndex);
@@ -268,7 +283,10 @@ export default function Solitaire() {
   }
 
   useEffect(() => {
-    // Global keyboard handler to toggle menus with 'Esc'
+    /**
+     * Handle global keyboard shortcuts for menu/submenu visibility.
+     * @param e Keyboard event from the window listener.
+     */
     function globalKeyHandler(e: KeyboardEvent) {
       if (!e || !e.key) return;
 

@@ -1,9 +1,11 @@
 import type { Components } from "@mui/material/styles";
 import { ThemeColorProperties } from "../types/theme";
 
-// Theme-specific component overrides for MUI.
-// These set CSS variables on `:root` and provide global baseline styles
-// used by the app's UI (background, paper, text color, etc.).
+/**
+ * Build MUI component overrides for a given theme color set.
+ * @param colorProps Theme color properties used to derive CSS variables/styles.
+ * @returns MUI components override map.
+ */
 export function makeComponents(colorProps: ThemeColorProperties): Components {
     return {
         MuiCssBaseline: {
