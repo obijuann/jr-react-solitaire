@@ -122,11 +122,12 @@ export default function Menu() {
      * @returns JSX.Element
      */
     function renderStartSubmenu() {
+        const disableRestart = !gameActive || modalType === "gamewin";
         return (
             <div id="submenu" className="list" style={subMenuPosStyle}>
                 <button className="secondary" id="new-game" onClick={newGameHandler}><PlayArrowRoundedIcon fontSize='large' />New game</button>
-                <button className="secondary" id="restart" onClick={restartGameHandler} disabled={!gameActive}><ReplayRoundedIcon fontSize='large' />Restart this game</button>
-                <button className="secondary" id="quit" onClick={quitGameHandler} disabled={!gameActive}><ClearRoundedIcon fontSize='large' />Quit this game</button>
+                <button className="secondary" id="restart" onClick={restartGameHandler} disabled={disableRestart}><ReplayRoundedIcon fontSize='large' />Restart this game</button>
+                <button className="secondary" id="quit" onClick={quitGameHandler} disabled={disableRestart}><ClearRoundedIcon fontSize='large' />Quit this game</button>
             </div>
         );
     }
@@ -240,7 +241,7 @@ export default function Menu() {
             "&.Mui-checked": { color: "white" }
         };
 
-        const timerEnabledCheckboxSx = {...checkboxSx, "&.Mui-checked": { color: gameActive ? "rgba(0, 0, 0, 0.26)" : "white" }}
+        const timerEnabledCheckboxSx = { ...checkboxSx, "&.Mui-checked": { color: gameActive ? "rgba(0, 0, 0, 0.26)" : "white" } }
 
         // Style overrides for MUI Select component
         const selectSx = {

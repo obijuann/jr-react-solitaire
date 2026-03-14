@@ -5,7 +5,7 @@ import { beforeEach, expect, it, vi } from "vitest";
 import useGameStore from "../stores/game-store";
 
 beforeEach(() => {
-    useGameStore.setState({ menuVisible: true, submenuId: "", shuffledDeck: [] });
+    useGameStore.setState({ menuVisible: true, submenuId: "", shuffledDeck: [], modalType: undefined });
     usePreferencesStore.setState({ themeColor: "green", cardFace: "english", cardBack: "blue", gameTimerEnabled: true, cardAnimationEnabled: true });
 });
 
@@ -93,7 +93,7 @@ it("firing the 'toggleMenu' event hides the submenu", () => {
     expect(screen.getByTestId("menu").className).not.toEqual("visible");
 });
 
-it("renders the new game submenu", () => {
+it("renders the new game submenu with disabled restart and quit buttons when the game is not active", () => {
     // Arrange + Act
     render(<Menu />);
 
@@ -116,6 +116,58 @@ it("renders the new game submenu", () => {
     const quitGameButton = screen.getByRole("button", { name: "Quit this game" });
     expect(quitGameButton).toBeInTheDocument();
     expect(quitGameButton.hasAttribute("disabled")).toBeTruthy();
+});
+
+it("renders the new game submenu with disabled restart and quit buttons when the user has won the game", () => {
+    // Arrange + Act
+    useGameStore.setState({ menuVisible: true, submenuId: "", modalType: "gamewin", shuffledDeck: [{ face: "down", rank: "ace", suit: "clubs" }] });
+    render(<Menu />);
+
+    // Assert
+    const playButton = screen.getByRole("button", { name: "Play" });
+    expect(playButton).toBeInTheDocument();
+
+    // Act
+    fireEvent.click(playButton);
+
+    // Assert
+    const newGameButton = screen.getByRole("button", { name: "New game" });
+    expect(newGameButton).toBeInTheDocument();
+    expect(newGameButton.hasAttribute("disabled")).toBeFalsy();
+
+    const restartGameButton = screen.getByRole("button", { name: "Restart this game" });
+    expect(restartGameButton).toBeInTheDocument();
+    expect(restartGameButton.hasAttribute("disabled")).toBeTruthy();
+
+    const quitGameButton = screen.getByRole("button", { name: "Quit this game" });
+    expect(quitGameButton).toBeInTheDocument();
+    expect(quitGameButton.hasAttribute("disabled")).toBeTruthy();
+});
+
+it("renders the new game submenu during an active game", () => {
+    // Arrange + Act
+    useGameStore.setState({ menuVisible: true, submenuId: "", shuffledDeck: [{ face: "down", rank: "ace", suit: "clubs" }] });
+    render(<Menu />);
+
+    // Assert
+    const playButton = screen.getByRole("button", { name: "Play" });
+    expect(playButton).toBeInTheDocument();
+
+    // Act
+    fireEvent.click(playButton);
+
+    // Assert
+    const newGameButton = screen.getByRole("button", { name: "New game" });
+    expect(newGameButton).toBeInTheDocument();
+    expect(newGameButton.hasAttribute("disabled")).toBeFalsy();
+
+    const restartGameButton = screen.getByRole("button", { name: "Restart this game" });
+    expect(restartGameButton).toBeInTheDocument();
+    expect(restartGameButton.hasAttribute("disabled")).toBeFalsy();
+
+    const quitGameButton = screen.getByRole("button", { name: "Quit this game" });
+    expect(quitGameButton).toBeInTheDocument();
+    expect(quitGameButton.hasAttribute("disabled")).toBeFalsy();
 });
 
 it("clicking the restart game button calls store.restartGame and closes all menus", () => {
