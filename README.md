@@ -12,7 +12,6 @@ These are some of the features that are coming in the future:
 
 - User Preferences
   - Enable autocomplete via preferences
-  - Enable card animation
 
 ## Available Scripts
 
