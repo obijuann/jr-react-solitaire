@@ -400,6 +400,47 @@ describe("Game store actions", () => {
     }
   });
 
+  it("resumeGame does not start the timer when no game is in progress", () => {
+    vi.useFakeTimers();
+    try {
+      // Arrange
+      const spy = vi.spyOn(window, "setInterval");
+      useGameStore.setState({ gameTimer: 0, timerId: null, shuffledDeck: [] });
+
+      // Act
+      useGameStore.getState().actions.resumeGame();
+
+      // Assert
+      expect(spy).not.toHaveBeenCalled();
+      spy.mockRestore();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("restartGame resets the timer to 0 before the new deal starts", () => {
+    vi.useFakeTimers();
+    try {
+      // Arrange: seed a deck and simulate a game in progress with elapsed time
+      const deck = makeDeck();
+      useGameStore.setState({ shuffledDeck: deck, gameTimer: 50 });
+      useGameStore.getState().actions.startTimer();
+      vi.advanceTimersByTime(1100);
+      expect(useGameStore.getState().gameTimer).toBeGreaterThanOrEqual(51);
+
+      // Act
+      useGameStore.getState().actions.restartGame();
+
+      // Assert: timer should have been reset to 0 and then started fresh
+      expect(useGameStore.getState().gameTimer).toBe(0);
+
+      vi.advanceTimersByTime(1100);
+      expect(useGameStore.getState().gameTimer).toBe(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("setPlayfield merges partial playfield updates", () => {
     // Arrange
     const a = { rank: "ace", suit: "hearts", face: "down" } as CardData;
@@ -724,9 +765,10 @@ describe("Game store actions", () => {
     startSpy.mockRestore();
   });
 
-  it("resumeGame starts timer when gameTimer === 0 and timerId null", () => {
-    // Arrange
-    useGameStore.setState({ gameTimer: 0, timerId: null });
+  it("resumeGame starts timer when gameTimer === 0 and an active deck exists", () => {
+    // Arrange: game has a deck in progress but timer hasn't started yet (e.g. just reset)
+    const card = { rank: "ace", suit: "hearts", face: "down" } as CardData;
+    useGameStore.setState({ gameTimer: 0, timerId: null, shuffledDeck: [card] });
     const startSpy = vi.spyOn(useGameStore.getState().actions, "startTimer").mockImplementation(() => { });
 
     // Act
@@ -746,19 +788,6 @@ describe("Game store actions", () => {
     useGameStore.getState().actions.resumeGame();
 
     // Assert - startTimer should not be called since timer already running
-    expect(startSpy).not.toHaveBeenCalled();
-    startSpy.mockRestore();
-  });
-
-  it("resumeGame does nothing when gameTimer < 0", () => {
-    // Arrange - gameTimer should never actually be < 0 but testing edge case
-    useGameStore.setState({ gameTimer: -1, timerId: null });
-    const startSpy = vi.spyOn(useGameStore.getState().actions, "startTimer").mockImplementation(() => { });
-
-    // Act
-    useGameStore.getState().actions.resumeGame();
-
-    // Assert
     expect(startSpy).not.toHaveBeenCalled();
     startSpy.mockRestore();
   });

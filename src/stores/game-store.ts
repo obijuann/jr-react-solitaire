@@ -250,7 +250,7 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
                     }
 
                     for (let i = newDeck.length - 1; i > 0; i--) {
-                        const j = Math.floor(Math.random() * i);
+                        const j = Math.floor(Math.random() * (i + 1));
                         const temp = newDeck[i];
                         newDeck[i] = newDeck[j];
                         newDeck[j] = temp;
@@ -312,9 +312,10 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
 
                 /**
                  * Resume a previously paused game timer.
+                 * Only resumes if a game is actually in progress (timer has advanced or a deck exists).
                  */
                 resumeGame: () => {
-                    if (get().gameTimer >= 0 && !get().timerId) {
+                    if ((get().gameTimer > 0 || get().shuffledDeck.length > 0) && !get().timerId) {
                         get().actions.startTimer();
                     }
                 },
@@ -322,9 +323,9 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
                 /** Restart the current game state by re-dealing and resetting the timer. */
                 restartGame: () => {
                     set(() => ({ modalType: undefined }));
-                    get().actions.dealDeck();
                     get().actions.stopTimer();
                     get().actions.resetTimer();
+                    get().actions.dealDeck();
                     get().actions.startTimer();
                 },
 
@@ -537,7 +538,7 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
                     });
 
                     playfield.waste = playfield.waste.map((cardData, cardIndex) => {
-                        const lastCard = cardIndex + 1 === get().playfield.waste.length;
+                        const lastCard = cardIndex + 1 === playfield.waste.length;
                         if (lastCard && cardData.face !== "up") {
                             updatePlayfield = true;
                             cardData.face = "up";
