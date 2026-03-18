@@ -16,6 +16,9 @@ type PreferencesStoreState = {
     /** Flag indicating whether the game will use a timer. */
     gameTimerEnabled: boolean;
 
+    /** Flag indicating whether card animations are enabled. */
+    cardAnimationEnabled: boolean;
+
     /** Grouped store actions */
     actions: {
         /** Resets all user preferences */
@@ -30,6 +33,7 @@ export const usePreferencesStore = create<PreferencesStoreState>()(
             cardFace: "english",
             cardBack: "blue",
             gameTimerEnabled: true,
+            cardAnimationEnabled: true,
 
             actions: {
                 /**
@@ -40,18 +44,20 @@ export const usePreferencesStore = create<PreferencesStoreState>()(
                         themeColor: "green",
                         cardFace: "english",
                         cardBack: "blue",
-                        gameTimerEnabled: true
+                        gameTimerEnabled: true,
+                        cardAnimationEnabled: true
                     }))
                 }
             },
         }),
         {
-            name: 'prefs-store',
+            name: "prefs-store",
             partialize: (state) => ({
                 themeColor: state.themeColor,
                 cardFace: state.cardFace,
                 cardBack: state.cardBack,
-                gameTimerEnabled: state.gameTimerEnabled
+                gameTimerEnabled: state.gameTimerEnabled,
+                cardAnimationEnabled: state.cardAnimationEnabled
             }),
             onRehydrateStorage: () => (state, error) => {
                 if (error) {
@@ -59,7 +65,7 @@ export const usePreferencesStore = create<PreferencesStoreState>()(
                     state?.actions?.resetPreferences?.();
                 }
             },
-            version: 1
+            version: 2
         },
     ),
 )

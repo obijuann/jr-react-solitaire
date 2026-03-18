@@ -27,13 +27,13 @@
 
 /* Slight opacity shift to all direct children when the menu is visible.
    Also disable pointer events on the content so any clicks first close the menus. */
-#play-area.menu-open > div {
+#play-area.menu-open>div {
   filter: opacity(90%);
   pointer-events: none;
 }
 
 #waste.anim>div {
-  transition: transform .5s;
+  transition: transform .25s;
 }
 
 #waste.offset-two>div:nth-last-child(1) {
@@ -57,19 +57,25 @@
 
 @media (min-width: 890px) {
   #play-area {
-    --card-height: 150px;
-    --card-width: 100px;
     max-width: 900px;
     width: 80%;
+  }
+
+  #solitaire {
+    --card-height: 150px;
+    --card-width: 100px;
   }
 }
 
 @media (max-width: 889px) {
   #play-area {
+    max-width: 500px;
+    width: 95%;
+  }
+
+  #solitaire {
     --card-height: 75px;
     --card-width: 50px;
     --border-radius: 6px;
-    max-width: 500px;
-    width: 95%;
   }
 }

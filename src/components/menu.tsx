@@ -1,28 +1,28 @@
-import './menu.css';
+import "./menu.css";
 
-import ClearRoundedIcon from '@mui/icons-material/ClearRounded';
-import HelpOutlineRoundedIcon from '@mui/icons-material/HelpOutlineRounded';
-import KeyboardArrowUpOutlinedIcon from '@mui/icons-material/KeyboardArrowUpOutlined';
-import LeaderboardRoundedIcon from '@mui/icons-material/LeaderboardRounded';
-import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
-import RedoRoundedIcon from '@mui/icons-material/RedoRounded';
-import ReplayRoundedIcon from '@mui/icons-material/ReplayRounded';
-import RestoreRoundedIcon from '@mui/icons-material/RestoreRounded';
+import ClearRoundedIcon from "@mui/icons-material/ClearRounded";
+import HelpOutlineRoundedIcon from "@mui/icons-material/HelpOutlineRounded";
+import KeyboardArrowUpOutlinedIcon from "@mui/icons-material/KeyboardArrowUpOutlined";
+import LeaderboardRoundedIcon from "@mui/icons-material/LeaderboardRounded";
+import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
+import RedoRoundedIcon from "@mui/icons-material/RedoRounded";
+import ReplayRoundedIcon from "@mui/icons-material/ReplayRounded";
+import RestoreRoundedIcon from "@mui/icons-material/RestoreRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
-import UndoRoundedIcon from '@mui/icons-material/UndoRounded';
+import UndoRoundedIcon from "@mui/icons-material/UndoRounded";
 import { Tooltip } from "@mui/material";
-import Checkbox from '@mui/material/Checkbox';
-import FormControl from '@mui/material/FormControl';
-import MenuItem from '@mui/material/MenuItem';
-import Select, { SelectChangeEvent } from '@mui/material/Select';
+import Checkbox from "@mui/material/Checkbox";
+import FormControl from "@mui/material/FormControl";
+import MenuItem from "@mui/material/MenuItem";
+import Select, { SelectChangeEvent } from "@mui/material/Select";
 import React, { ChangeEvent, useEffect, useState } from "react";
-import useGameStore from '../stores/game-store';
-import usePreferencesStore from '../stores/preferences-store';
-import useStatisticsStore from '../stores/statistics-store';
-import { themeColors } from '../themes/palette';
-import { CardBacks, CardFaces } from '../types/card-data';
+import useGameStore from "../stores/game-store";
+import usePreferencesStore from "../stores/preferences-store";
+import useStatisticsStore from "../stores/statistics-store";
+import { themeColors } from "../themes/palette";
+import { CardBacks, CardFaces } from "../types/card-data";
 import { ThemeColors } from "../types/theme";
-import { getFormattedTimer, throttle } from '../utils/utils';
+import { getFormattedTimer, throttle } from "../utils/utils";
 import { cardBackArtwork, cardFaceArtwork } from "./card";
 
 const submenuArrowSize: number = 15;
@@ -64,6 +64,7 @@ export default function Menu() {
     const cardBack = usePreferencesStore(state => state.cardBack);
     const cardFace = usePreferencesStore(state => state.cardFace);
     const gameTimerEnabled = usePreferencesStore(state => state.gameTimerEnabled);
+    const cardAnimationEnabled = usePreferencesStore(state => state.cardAnimationEnabled);
 
     useEffect(() => {
         // Close the submenu on resize
@@ -97,9 +98,9 @@ export default function Menu() {
 
         // Adjust where the submenu arrow is pointing
         if (submenuArrowPos) {
-            document.documentElement.style.setProperty('--submenu-icon-pos', `${submenuArrowPos}px`);
-            document.documentElement.style.setProperty('--submenu-icon-size', `${submenuArrowSize}px`);
-            document.documentElement.style.setProperty('--submenu-width', `${submenuWidth}px`);
+            document.documentElement.style.setProperty("--submenu-icon-pos", `${submenuArrowPos}px`);
+            document.documentElement.style.setProperty("--submenu-icon-size", `${submenuArrowSize}px`);
+            document.documentElement.style.setProperty("--submenu-width", `${submenuWidth}px`);
         }
 
         switch (submenuId) {
@@ -121,11 +122,12 @@ export default function Menu() {
      * @returns JSX.Element
      */
     function renderStartSubmenu() {
+        const disableRestart = !gameActive || modalType === "gamewin";
         return (
             <div id="submenu" className="list" style={subMenuPosStyle}>
                 <button className="secondary" id="new-game" onClick={newGameHandler}><PlayArrowRoundedIcon fontSize='large' />New game</button>
-                <button className="secondary" id="restart" onClick={restartGameHandler} disabled={!gameActive}><ReplayRoundedIcon fontSize='large' />Restart this game</button>
-                <button className="secondary" id="quit" onClick={quitGameHandler} disabled={!gameActive}><ClearRoundedIcon fontSize='large' />Quit this game</button>
+                <button className="secondary" id="restart" onClick={restartGameHandler} disabled={disableRestart}><ReplayRoundedIcon fontSize='large' />Restart this game</button>
+                <button className="secondary" id="quit" onClick={quitGameHandler} disabled={disableRestart}><ClearRoundedIcon fontSize='large' />Quit this game</button>
             </div>
         );
     }
@@ -218,10 +220,35 @@ export default function Menu() {
     }
 
     /**
+     * Update the user preference for card animations
+     * @param e Change event from the input element
+     */
+    function handleCardAnimationSwitchChange(e: ChangeEvent<HTMLInputElement>): void {
+        usePreferencesStore.setState(() => ({ cardAnimationEnabled: e.target.checked }));
+    }
+
+    /**
      * Render the "Preferences" submenu.
      * @returns JSX.Element
      */
     function renderPreferencesSubmenu() {
+
+        // Style overrides for MUI Checkbox component
+        const checkboxSx = {
+            color: "white",
+            padding: 0,
+            "& .MuiSvgIcon-root": { fontSize: 35 },
+            "&.Mui-checked": { color: "white" }
+        };
+
+        const timerEnabledCheckboxSx = { ...checkboxSx, "&.Mui-checked": { color: gameActive ? "rgba(0, 0, 0, 0.26)" : "white" } }
+
+        // Style overrides for MUI Select component
+        const selectSx = {
+            "& .MuiSvgIcon-root": { color: "unset" },
+            "& .MuiOutlinedInput-notchedOutline": { borderColor: "transparent" },
+        };
+
         return (
             <div id="submenu" className="list" style={subMenuPosStyle}>
                 <div id="group-submenu">
@@ -243,15 +270,21 @@ export default function Menu() {
                                         disabled={gameActive}
                                         size="medium"
                                         onChange={handleTimerSwitchChange}
-                                        sx={{
-                                            color: "white",
-                                            padding: 0,
-                                            "& .MuiSvgIcon-root": { fontSize: 35 },
-                                            '&.Mui-checked': { color: gameActive ? "rgba(0, 0, 0, 0.26)" : "white" },
-                                        }}
+                                        sx={timerEnabledCheckboxSx}
                                     />
                                 </div>
                             </Tooltip>
+                        </div>
+                    </div>
+                    <div className="group-section">
+                        <div>Card Animations</div>
+                        <div>
+                            <Checkbox
+                                checked={cardAnimationEnabled}
+                                size="medium"
+                                onChange={handleCardAnimationSwitchChange}
+                                sx={checkboxSx}
+                            />
                         </div>
                     </div>
                     <div className="group-section-header">Appearance</div>
@@ -263,13 +296,10 @@ export default function Menu() {
                             <FormControl size="small" sx={{ m: 0, minWidth: 120 }}>
                                 <Select
                                     id="theme-select"
-                                    inputProps={{ 'aria-label': 'Theme' }}
+                                    inputProps={{ "aria-label": "Theme" }}
                                     onChange={handleThemeChange}
                                     value={themeColor}
-                                    sx={{
-                                        "& .MuiSvgIcon-root": { color: "unset" },
-                                        "& .MuiOutlinedInput-notchedOutline": { borderColor: "transparent" },
-                                    }}
+                                    sx={selectSx}
                                 >
                                     {
                                         Object.entries(themeColors).map(([themeKey, themeProps]) => (
@@ -290,13 +320,10 @@ export default function Menu() {
                             <FormControl size="small" sx={{ m: 0, minWidth: 120 }}>
                                 <Select
                                     id="card-face-select"
-                                    inputProps={{ 'aria-label': 'Card face' }}
+                                    inputProps={{ "aria-label": "Card face" }}
                                     onChange={handleCardFaceChange}
                                     value={cardFace}
-                                    sx={{
-                                        "& .MuiSvgIcon-root": { color: "unset" },
-                                        "& .MuiOutlinedInput-notchedOutline": { borderColor: "transparent" },
-                                    }}
+                                    sx={selectSx}
                                 >
                                     {
                                         Object.entries(cardFaceArtwork).map(([cardFace, cardFaceArtwork]) => (
@@ -317,13 +344,10 @@ export default function Menu() {
                             <FormControl size="small" sx={{ m: 0, minWidth: 120 }}>
                                 <Select
                                     id="card-back-select"
-                                    inputProps={{ 'aria-label': 'Card back' }}
+                                    inputProps={{ "aria-label": "Card back" }}
                                     onChange={handleCardBackChange}
                                     value={cardBack}
-                                    sx={{
-                                        "& .MuiSvgIcon-root": { color: "unset" },
-                                        "& .MuiOutlinedInput-notchedOutline": { borderColor: "transparent" },
-                                    }}
+                                    sx={selectSx}
                                 >
                                     {
                                         Object.entries(cardBackArtwork).map(([cardBack, cardBackArtwork]) => (
@@ -350,7 +374,7 @@ export default function Menu() {
             <div id="submenu" className="list" style={subMenuPosStyle}>
                 <div id="group-submenu">
                     <div className="group-header">
-                        <button onClick={resetStatistics} className="secondary" id="reset-stats" title='Reset Statistics'><RestoreRoundedIcon fontSize='medium' /></button>
+                        <button onClick={resetStatistics} className="secondary" id="reset-stats" title="Reset Statistics"><RestoreRoundedIcon fontSize="medium" /></button>
                         <span>Statistics</span>
                     </div>
                     {renderTimeStatistics()}
@@ -538,7 +562,7 @@ export default function Menu() {
     return (
         <div id="menu" data-testid="menu" className={isMenuVisible ? "visible" : ""}>
             <div id="menu-control">
-                <button onClick={toggleMenu} title="Toggle Menu (Esc)"><KeyboardArrowUpOutlinedIcon fontSize='medium' /></button>
+                <button onClick={toggleMenu} title="Toggle Menu (Esc)"><KeyboardArrowUpOutlinedIcon fontSize="medium" /></button>
             </div>
             <div id="primary-menu">
                 <button className="primary" id="new-menu" onClick={handleSubmenuToggle}><PlayArrowRoundedIcon />Play</button>

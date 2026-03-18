@@ -1,14 +1,18 @@
-import './index.css';
+import "./index.css";
 
-import CssBaseline from '@mui/material/CssBaseline';
-import { ThemeProvider } from '@mui/material/styles';
-import React from 'react';
+import CssBaseline from "@mui/material/CssBaseline";
+import { ThemeProvider } from "@mui/material/styles";
+import React from "react";
 import { preload } from "react-dom";
-import ReactDOM from 'react-dom/client';
-import Solitaire from './app/solitaire';
-import usePreferencesStore from './stores/preferences-store';
-import { getTheme } from './themes';
+import ReactDOM from "react-dom/client";
+import Solitaire from "./app/solitaire";
+import usePreferencesStore from "./stores/preferences-store";
+import { getTheme } from "./themes";
 
+/**
+ * App root wrapper that binds user preferences to theme and card asset preload.
+ * @returns JSX.Element
+ */
 function AppWrapper() {
   const themeColor = usePreferencesStore(state => state.themeColor);
   const cardFace = usePreferencesStore(state => state.cardFace);
@@ -26,7 +30,7 @@ function AppWrapper() {
   );
 }
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
+ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <AppWrapper />
   </React.StrictMode>
