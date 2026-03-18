@@ -2,6 +2,8 @@
     color: black;
     filter: drop-shadow(1px 1px 1px var(--card-shadow, black));
     height: var(--card-height);
+    perspective: 600px;
+    perspective-origin: 25% 50%;
     position: absolute;
     width: var(--card-width);
 }
@@ -9,6 +11,7 @@
 .card-inner {
     height: 100%;
     position: relative;
+    transform-style: preserve-3d;
     width: 100%;
 }
 
@@ -16,18 +19,23 @@
     cursor: grab;
 }
 
-/* Card flipping animation when turned face up */
+/* Card flipping animation styles */
+@keyframes card-flip-up {
+    0%   { transform: rotateY(0deg); }
+    50%  { transform: rotateY(90deg) }
+    100% { transform: rotateY(180deg); }
+}
+
 .card.anim.faceup .card-inner {
-    transition: transform .5s;
+    animation: card-flip-up 0.5s ease-in-out forwards;
 }
 
 .card.moving.anim.faceup .card-inner {
-    transition: transform .25s;
+    animation: card-flip-up 0.25s ease-in-out forwards;
 }
 
 .card.faceup .card-inner {
     transform: rotateY(180deg);
-    transform-style: preserve-3d;
 }
 
 .card.faceup .back {
@@ -102,8 +110,8 @@
 }
 
 .face {
-    background-repeat: no-repeat;
     background-color: white;
+    background-repeat: no-repeat;
     display: flex;
     transform: rotateY(180deg);
 }
