@@ -4,8 +4,6 @@ import { CardData } from "../types/card-data";
 export const cardAnimationDurationMs = 250;
 /** Additional time before removing overlay cards after the move completes. */
 export const cardAnimationCleanupDelayMs = 325;
-/** Time to wait before flipping a drawn card mid-flight. */
-export const drawFlipDelayMs = cardAnimationDurationMs / 2;
 
 /**
  * Minimal moving-card representation used to compute overlay transforms.

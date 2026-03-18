@@ -14,7 +14,7 @@ import { PileTypes } from "../types/pile-types";
 import { PlayfieldState } from "../types/playfield-state";
 import { Ranks } from "../types/ranks";
 import { Suits } from "../types/suits";
-import { buildMovingTransforms, cardAnimationCleanupDelayMs, cardAnimationDurationMs, drawFlipDelayMs, getWasteOffsetPx, getWasteTargetRect, MovingCardAnimation } from "../utils/animation-utils";
+import { buildMovingTransforms, cardAnimationCleanupDelayMs, cardAnimationDurationMs, getWasteOffsetPx, getWasteTargetRect, MovingCardAnimation } from "../utils/animation-utils";
 
 /** Mapping of suit name to display color used for game logic. */
 const suitsToColorsMap: Partial<Record<Suits, string>> = {
@@ -76,14 +76,12 @@ export default function Solitaire() {
    * @param nextMovingCards Cards to animate in the overlay layer.
    * @param initialFaces Initial face values for the moving cards.
    * @param onComplete Callback invoked after the animation duration completes.
-   * @param flipDelayMs Optional delay before flipping moving cards.
    * @param flippedFaces Optional face overrides to apply at flip time.
    */
   function runOverlayAnimation(
     nextMovingCards: MovingCardAnimation[],
     initialFaces: {[key: number]: "up" | "down"},
     onComplete: () => void,
-    flipDelayMs?: number,
     flippedFaces?: {[key: number]: "up" | "down"},
   ) {
     const initialTransforms = Object.fromEntries(nextMovingCards.map((_, index) => [index, { x: 0, y: 0 }])) as {[key: number]: {x: number, y: number}};
@@ -98,10 +96,10 @@ export default function Solitaire() {
       });
     });
 
-    if (flipDelayMs !== undefined && flippedFaces) {
+    if (flippedFaces) {
       setTimeout(() => {
         setMovingFaces(flippedFaces);
-      }, flipDelayMs);
+      }, 0);
     }
 
     setTimeout(() => {
@@ -120,40 +118,43 @@ export default function Solitaire() {
    * Falls back to a direct draw when animation prerequisites are unavailable.
    */
   function animatedDrawCard() {
+    // Skip animation entirely when the user has disabled card animations.
     if (!cardAnimationEnabled) {
       actions.drawCard();
       return;
     }
 
+    // Prevent overlapping animations — only one move overlay can run at a time.
     if (movingCards.length) {
       return;
     }
 
     const playfield = playfieldState;
     
-    // Check if we can draw a card
+    // Both piles empty means there is nothing to draw or recycle.
     if (!playfield.draw.length && !playfield.waste.length) return;
     
-    // For recycling case (draw empty, waste has cards)
+    // Recycling: draw pile is exhausted but waste cards remain. Flip the waste
+    // back into the draw pile. No animation is played for this case.
     if (!playfield.draw.length && playfield.waste.length) {
-      // For recycling, just do the action without animation for now
       actions.drawCard();
       return;
     }
 
-    // Normal draw case - animate the card from draw to waste
+    // Identify the top card of the draw pile — the one that will be animated.
     const cardToMove = playfield.draw[playfield.draw.length - 1];
     if (!cardToMove) return;
 
-    // Use the draw pile position as the starting point
+    // Resolve the draw pile DOM element so we can measure the card's position.
     const drawElement = document.getElementById("draw");
     if (!drawElement) {
-      // Fallback to non-animated
+      // DOM element missing; fall back to an instant (non-animated) draw.
       actions.drawCard();
       return;
     }
 
-    // Find the top card in the draw pile
+    // The topmost rendered card inside the draw pile is the one being animated.
+    // querySelectorAll returns elements in DOM order, so the last item is on top.
     const cardElements = drawElement.querySelectorAll(".card");
     const topCardElement = cardElements[cardElements.length - 1] as HTMLElement;
     if (!topCardElement) {
@@ -161,15 +162,19 @@ export default function Solitaire() {
       return;
     }
 
+    // Capture the card's current screen position as the animation start rect.
     const fromRect = topCardElement.getBoundingClientRect();
     
-    // Calculate the incoming card's final waste position after stack offsets apply.
+    // Resolve the waste pile DOM element needed to compute the landing position.
     const wasteElement = wasteRef.current;
     if (!wasteElement) {
       actions.drawCard();
       return;
     }
 
+    // The card will land at the position it would occupy after the draw commits.
+    // The waste pile staggers up to three visible cards via CSS custom-property
+    // offsets, so we must account for those offsets to land in the right spot.
     const futureWasteCount = playfield.waste.length + 1;
     const wasteStyles = getComputedStyle(wasteElement);
     const offsetOnePx = getWasteOffsetPx(wasteStyles, window.innerWidth, 1);
@@ -181,15 +186,20 @@ export default function Solitaire() {
       offsetTwoPx,
     );
 
+    // Build the overlay animation descriptor. The card starts face-down and
+    // flips to face-up mid-flight via the flippedFaces argument below.
     const movingCard = { card: cardToMove, fromRect, toRect, startTime: Date.now(), targetFace: "up" as const };
     const initialFaces = { 0: cardToMove.face };
     runOverlayAnimation(
       [movingCard],
       initialFaces,
+      // Commit the game-state draw only after the animation duration elapses,
+      // so the real card appears in the waste pile exactly as the overlay lands.
       () => {
         actions.drawCard();
       },
-      drawFlipDelayMs,
+      // Flip the overlay card to face-up immediately (before the translate move
+      // begins) so the flip and slide animations play simultaneously.
       { 0: "up" },
     );
   }
