@@ -293,6 +293,7 @@ export default function Solitaire() {
       const store = useGameStore.getState();
 
       if (e.key === "Escape") {
+        // Escape closes submenu first; if none is open, it toggles the main menu.
         if (store.submenuId) {
           store.actions.clearSubmenu();
           return;
@@ -310,6 +311,7 @@ export default function Solitaire() {
    * @param {Event} e Drag enter event
    */
   function dragEnterHandler(e: React.DragEvent) {
+    // Allow drop targets to accept dragged cards.
     e.preventDefault();
   }
 
@@ -318,6 +320,7 @@ export default function Solitaire() {
    * @param {Event} e Drag over event
    */
   function dragOverHander(e: React.DragEvent) {
+    // Keep default browser drag-over behavior from blocking drops.
     e.preventDefault();
   }
 
@@ -328,6 +331,7 @@ export default function Solitaire() {
    * @param dragEvent The drag event from the DOM
    */
   function dragStartHandler(dragEvent: React.DragEvent<HTMLDivElement>): void {
+    // Restrict drag intent to move operations and clear stale payload.
     dragEvent.dataTransfer.effectAllowed = "move";
     dragEvent.dataTransfer.clearData();
 
@@ -335,6 +339,7 @@ export default function Solitaire() {
       const cardElement = dragEvent.target as HTMLDivElement;
       const cardData = cardElement.getAttribute("data-carddata");
       if (cardData) {
+        // Persist serialized card metadata so drop targets can validate/move it.
         dragEvent.dataTransfer.setData("cardData", cardData);
       }
     }
@@ -345,6 +350,7 @@ export default function Solitaire() {
    * @param e Mouse event from the click
    */
   function drawCardHandler(e: React.MouseEvent) {
+    // Prevent click bubbling/default behavior and route through draw animation flow.
     e.preventDefault();
     animatedDrawCard();
   }
@@ -358,23 +364,31 @@ export default function Solitaire() {
     const target = e.target as HTMLDivElement;
     if (!target) return;
 
+    // Resolve the nearest card from wherever inside the pile the user clicked.
     const tappedCardElement = target.closest(".card");
+    // Ignore clicks that are not on a playable card.
     if (!tappedCardElement || tappedCardElement.getAttribute("draggable") === "false" || !tappedCardElement.hasAttribute("data-carddata")) return;
 
+    // Card metadata is stored on the element and drives all rule checks below.
     const tapppedCardData = JSON.parse(tappedCardElement.getAttribute("data-carddata") || "");
     if (!tapppedCardData) return;
 
+    // First priority: try to auto-move the tapped card to a valid foundation pile.
     let targetPileIndex = playfieldState.foundation.findIndex((foundationCardPileData: CardData[]) => {
       return isValidMove(tapppedCardData, foundationCardPileData.length ? foundationCardPileData.slice(-1)[0] : undefined, "foundation");
     })
 
     if (targetPileIndex !== -1) {
+      // Found a legal foundation destination, so perform that move immediately.
       animatedMoveCard(tapppedCardData, "foundation", targetPileIndex, undefined, undefined, undefined, tappedCardElement as HTMLElement);
       return;
     }
 
     let sourceCardIndex = -1;
     if (tapppedCardData.pileType === "tableau") {
+      // Tableau tap behavior:
+      // Find any tableau pile where a face-up card from the source stack can land.
+      // We skip the source pile itself and compute the deepest valid source card index.
       targetPileIndex = playfieldState.tableau.findIndex((tableauCardPileDataList, tableauCardPileIndex) => {
         if (tapppedCardData.pileIndex === tableauCardPileIndex) return;
 
@@ -389,15 +403,19 @@ export default function Solitaire() {
       })
 
       if (targetPileIndex >= 0 && sourceCardIndex >= 0) {
+        // Move the full face-up run starting at sourceCardIndex onto the new tableau pile.
         const cardToMove: CardData = playfieldState["tableau"][tapppedCardData.pileIndex][sourceCardIndex];
         animatedMoveCard(cardToMove, "tableau", targetPileIndex, tapppedCardData.pileType, tapppedCardData.pileIndex, sourceCardIndex);
       }
     } else {
+      // Non-tableau tap behavior (usually waste/foundation):
+      // only the tapped card is considered, and we search for a legal tableau destination.
       targetPileIndex = playfieldState.tableau.findIndex((tableauCardPileData) => {
         return isValidMove(tapppedCardData, tableauCardPileData.length ? tableauCardPileData.slice(-1)[0] : null, "tableau");
       })
 
       if (targetPileIndex !== -1) {
+        // Move the selected card to the first valid tableau target found.
         animatedMoveCard(tapppedCardData, "tableau", targetPileIndex, undefined, undefined, undefined, tappedCardElement as HTMLElement);
       }
     }
@@ -414,6 +432,7 @@ export default function Solitaire() {
   function dropHandler(e: React.DragEvent, targetPileType: string, targetPileIndex: number) {
     if (!e || !e.dataTransfer || !e.target || !targetPileType) return;
 
+    // Recover the dragged card payload placed by dragStartHandler.
     const droppedCardDataString = e.dataTransfer.getData("cardData");
     const droppedCardData = droppedCardDataString ? JSON.parse(droppedCardDataString) as CardData : null;
     if (!droppedCardData || !droppedCardData.suit || !droppedCardData.rank) return;
@@ -421,18 +440,22 @@ export default function Solitaire() {
     let targetCardData: CardData | undefined = undefined;
     const cardDataList = playfieldState[targetPileType as keyof PlayfieldState][targetPileIndex];
 
+    // For non-empty piles, validate against the current top card only.
     if (cardDataList && cardDataList.length) targetCardData = cardDataList.slice(-1)[0];
 
     if (targetPileType == "tableau" && droppedCardData.pileType === "tableau" && !!droppedCardData.pileIndex) {
+      // Tableau-to-tableau drops can move a run, so find the deepest valid source card.
       const validMoveCardIndex = playfieldState["tableau"][droppedCardData.pileIndex].findLastIndex((cardData: CardData) => {
         return cardData.face === "up" && isValidMove(cardData, targetCardData, targetPileType)
       });
 
       if (validMoveCardIndex >= 0) {
+        // Move the selected run from source tableau to target tableau.
         const cardToMove: CardData = playfieldState["tableau"][droppedCardData.pileIndex][validMoveCardIndex];
         actions.moveCard(cardToMove, targetPileType as PileTypes, targetPileIndex, droppedCardData.pileType, droppedCardData.pileIndex, validMoveCardIndex);
       }
     } else {
+      // All other drops are single-card moves gated by isValidMove.
       if (isValidMove(droppedCardData, targetCardData, targetPileType)) {
         actions.moveCard(droppedCardData, targetPileType as PileTypes, targetPileIndex);
       }
@@ -575,6 +598,7 @@ export default function Solitaire() {
    * Hide menu visibility when clicking on the play area or menu.
    */
   function hideMenu(e: React.MouseEvent) {
+    // Prevent the click from triggering default browser behavior.
     e.preventDefault();
 
     const target = e.target as HTMLElement;
@@ -585,12 +609,14 @@ export default function Solitaire() {
     const clickedInsideMenu = target?.closest && target.closest("#menu");
 
     if (submenuId && !clickedInsideMenu) {
+      // Clicking outside menu while submenu is open only closes the submenu layer.
       useGameStore.getState().actions.clearSubmenu();
       return;
     }
 
     // Clicking the play area should only hide menus
     if (target && target.id === "play-area") {
+      // `toggleMenu(true)` forces menu/submenu hide without toggling based on current state.
       useGameStore.getState().actions.toggleMenu(true);
     }
   }
