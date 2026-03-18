@@ -290,4 +290,198 @@ describe("Solitaire app behavior", () => {
     expect(spy).toHaveBeenCalled();
     useGameStore.setState(state => ({ actions: { ...state.actions, toggleMenu: toggleOriginal } }));
   });
+
+  it("tableau tap prefers moving the tapped run when legal", () => {
+    const moveOriginal = useGameStore.getState().actions.moveCard;
+    const moveSpy = vi.fn();
+    act(() => {
+      useGameStore.setState(state => ({ actions: { ...state.actions, moveCard: moveSpy } }));
+      useGameStore.setState({
+        playfield: {
+          draw: [],
+          waste: [],
+          foundation: [[], [], [], []],
+          tableau: [
+            [
+              { rank: "8", suit: "clubs", face: "up" },
+              { rank: "7", suit: "hearts", face: "up" },
+            ],
+            [{ rank: "8", suit: "spades", face: "up" }],
+            [{ rank: "9", suit: "diamonds", face: "up" }],
+            [],
+            [],
+            [],
+            [],
+          ],
+        }
+      });
+    });
+
+    render(<Solitaire />);
+
+    const tappedCard = screen.getByTestId("play-area").querySelector("#tabpile0 .card") as HTMLElement;
+    expect(tappedCard).toBeTruthy();
+
+    act(() => {
+      fireEvent.click(tappedCard);
+    });
+
+    expect(moveSpy).toHaveBeenCalledTimes(1);
+    expect(moveSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ rank: "8", suit: "clubs", face: "up" }),
+      "tableau",
+      2,
+      "tableau",
+      0,
+      0,
+    );
+
+    act(() => {
+      useGameStore.setState(state => ({ actions: { ...state.actions, moveCard: moveOriginal } }));
+    });
+  });
+
+  it("tableau tap falls back to progressively shorter runs", () => {
+    const moveOriginal = useGameStore.getState().actions.moveCard;
+    const moveSpy = vi.fn();
+    act(() => {
+      useGameStore.setState(state => ({ actions: { ...state.actions, moveCard: moveSpy } }));
+      useGameStore.setState({
+        playfield: {
+          draw: [],
+          waste: [],
+          foundation: [[], [], [], []],
+          tableau: [
+            [
+              { rank: "9", suit: "clubs", face: "up" },
+              { rank: "8", suit: "hearts", face: "up" },
+              { rank: "7", suit: "clubs", face: "up" },
+            ],
+            [{ rank: "8", suit: "diamonds", face: "up" }],
+            [{ rank: "9", suit: "spades", face: "up" }],
+            [],
+            [],
+            [],
+            [],
+          ],
+        }
+      });
+    });
+
+    render(<Solitaire />);
+
+    const tappedCard = screen.getByTestId("play-area").querySelector("#tabpile0 .card") as HTMLElement;
+    expect(tappedCard).toBeTruthy();
+
+    act(() => {
+      fireEvent.click(tappedCard);
+    });
+
+    expect(moveSpy).toHaveBeenCalledTimes(1);
+    expect(moveSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ rank: "8", suit: "hearts", face: "up" }),
+      "tableau",
+      2,
+      "tableau",
+      0,
+      1,
+    );
+
+    act(() => {
+      useGameStore.setState(state => ({ actions: { ...state.actions, moveCard: moveOriginal } }));
+    });
+  });
+
+  it("tableau tap does not move when no run from tap point has a legal destination", () => {
+    const moveOriginal = useGameStore.getState().actions.moveCard;
+    const moveSpy = vi.fn();
+    act(() => {
+      useGameStore.setState(state => ({ actions: { ...state.actions, moveCard: moveSpy } }));
+      useGameStore.setState({
+        playfield: {
+          draw: [],
+          waste: [],
+          foundation: [[], [], [], []],
+          tableau: [
+            [
+              { rank: "9", suit: "clubs", face: "up" },
+              { rank: "8", suit: "hearts", face: "up" },
+            ],
+            [{ rank: "queen", suit: "spades", face: "up" }],
+            [{ rank: "4", suit: "diamonds", face: "up" }],
+            [],
+            [],
+            [],
+            [],
+          ],
+        }
+      });
+    });
+
+    render(<Solitaire />);
+
+    const tappedCard = screen.getByTestId("play-area").querySelector("#tabpile0 .card") as HTMLElement;
+    expect(tappedCard).toBeTruthy();
+
+    act(() => {
+      fireEvent.click(tappedCard);
+    });
+
+    expect(moveSpy).not.toHaveBeenCalled();
+
+    act(() => {
+      useGameStore.setState(state => ({ actions: { ...state.actions, moveCard: moveOriginal } }));
+    });
+  });
+
+  it("tableau tap on top card can fall back to a longer run below it", () => {
+    const moveOriginal = useGameStore.getState().actions.moveCard;
+    const moveSpy = vi.fn();
+    act(() => {
+      useGameStore.setState(state => ({ actions: { ...state.actions, moveCard: moveSpy } }));
+      useGameStore.setState({
+        playfield: {
+          draw: [],
+          waste: [],
+          foundation: [[], [], [], []],
+          tableau: [
+            [{ rank: "7", suit: "clubs", face: "up" }],
+            [
+              { rank: "6", suit: "diamonds", face: "up" },
+              { rank: "5", suit: "spades", face: "up" },
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+          ],
+        }
+      });
+    });
+
+    render(<Solitaire />);
+
+    const sourceCards = screen.getByTestId("play-area").querySelectorAll("#tabpile1 .card");
+    const tappedTopCard = sourceCards[sourceCards.length - 1] as HTMLElement;
+    expect(tappedTopCard).toBeTruthy();
+
+    act(() => {
+      fireEvent.click(tappedTopCard);
+    });
+
+    expect(moveSpy).toHaveBeenCalledTimes(1);
+    expect(moveSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ rank: "6", suit: "diamonds", face: "up" }),
+      "tableau",
+      0,
+      "tableau",
+      1,
+      0,
+    );
+
+    act(() => {
+      useGameStore.setState(state => ({ actions: { ...state.actions, moveCard: moveOriginal } }));
+    });
+  });
 });
