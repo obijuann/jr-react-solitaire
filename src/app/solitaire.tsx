@@ -397,25 +397,55 @@ export default function Solitaire() {
     let sourceCardIndex = -1;
     if (tapppedCardData.pileType === "tableau") {
       // Tableau tap behavior:
-      // Find any tableau pile where a face-up card from the source stack can land.
-      // We skip the source pile itself and compute the deepest valid source card index.
-      targetPileIndex = playfieldState.tableau.findIndex((tableauCardPileDataList, tableauCardPileIndex) => {
-        if (tapppedCardData.pileIndex === tableauCardPileIndex) return;
+      // Try moving the tapped run first (tapped card through top). If that run
+      // is blocked, try longer runs by including cards below the tap point,
+      // then try shorter runs from cards above the tap point.
+      const sourcePileIndex = tapppedCardData.pileIndex;
+      const tappedIndex = tapppedCardData.cardIndex;
+      const sourcePile = playfieldState.tableau[sourcePileIndex];
+      const candidateSourceIndices: number[] = [tappedIndex];
 
-        let potentialTargetCardData: CardData | undefined = undefined;
-        if (tableauCardPileDataList && tableauCardPileDataList.length) potentialTargetCardData = tableauCardPileDataList.slice(-1)[0];
+      for (let lowerIndex = tappedIndex - 1; lowerIndex >= 0; lowerIndex--) {
+        candidateSourceIndices.push(lowerIndex);
+      }
 
-        sourceCardIndex = playfieldState["tableau"][tapppedCardData.pileIndex].findLastIndex((cardData: CardData) => {
-          return cardData.face === "up" && isValidMove(cardData, potentialTargetCardData, "tableau")
+      for (let higherIndex = tappedIndex + 1; higherIndex < sourcePile.length; higherIndex++) {
+        candidateSourceIndices.push(higherIndex);
+      }
+
+      for (const candidateSourceIndex of candidateSourceIndices) {
+        const candidateCard = sourcePile[candidateSourceIndex];
+        if (!candidateCard || candidateCard.face !== "up") {
+          continue;
+        }
+
+        const runIsFaceUp = sourcePile.slice(candidateSourceIndex).every((cardData: CardData) => cardData.face === "up");
+        if (!runIsFaceUp) {
+          continue;
+        }
+
+        targetPileIndex = playfieldState.tableau.findIndex((tableauCardPileDataList, tableauCardPileIndex) => {
+          if (sourcePileIndex === tableauCardPileIndex) {
+            return false;
+          }
+
+          const potentialTargetCardData = tableauCardPileDataList.length
+            ? tableauCardPileDataList[tableauCardPileDataList.length - 1]
+            : undefined;
+
+          return isValidMove(candidateCard, potentialTargetCardData, "tableau");
         });
 
-        if (sourceCardIndex >= 0) return true;
-      })
+        if (targetPileIndex >= 0) {
+          sourceCardIndex = candidateSourceIndex;
+          break;
+        }
+      }
 
       if (targetPileIndex >= 0 && sourceCardIndex >= 0) {
-        // Move the full face-up run starting at sourceCardIndex onto the new tableau pile.
-        const cardToMove: CardData = playfieldState["tableau"][tapppedCardData.pileIndex][sourceCardIndex];
-        animatedMoveCard(cardToMove, "tableau", targetPileIndex, tapppedCardData.pileType, tapppedCardData.pileIndex, sourceCardIndex);
+        // Move the selected run using the first successful candidate source index.
+        const cardToMove: CardData = playfieldState["tableau"][sourcePileIndex][sourceCardIndex];
+        animatedMoveCard(cardToMove, "tableau", targetPileIndex, tapppedCardData.pileType, sourcePileIndex, sourceCardIndex);
       }
     } else {
       // Non-tableau tap behavior (usually waste/foundation):
