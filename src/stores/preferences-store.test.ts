@@ -9,6 +9,7 @@ describe("Preferences store", () => {
       cardBack: "blue",
       gameTimerEnabled: true,
       cardAnimationEnabled: true,
+      autoCollectEnabled: true,
     });
   });
 
@@ -22,6 +23,7 @@ describe("Preferences store", () => {
     expect(state.cardBack).toBe("blue");
     expect(state.gameTimerEnabled).toBe(true);
     expect(state.cardAnimationEnabled).toBe(true);
+    expect(state.autoCollectEnabled).toBe(true);
   });
 
   it("resetPreferences resets all values to defaults", () => {
@@ -32,6 +34,7 @@ describe("Preferences store", () => {
       cardBack: "red",
       gameTimerEnabled: false,
       cardAnimationEnabled: false,
+      autoCollectEnabled: false,
     });
 
     // Act
@@ -44,6 +47,7 @@ describe("Preferences store", () => {
     expect(state.cardBack).toBe("blue");
     expect(state.gameTimerEnabled).toBe(true);
     expect(state.cardAnimationEnabled).toBe(true);
+    expect(state.autoCollectEnabled).toBe(true);
   });
 
   it("allows updating individual theme color", () => {
@@ -87,6 +91,23 @@ describe("Preferences store", () => {
     expect(usePreferencesStore.getState().gameTimerEnabled).toBe(true);
   });
 
+  it("allows toggling autoCollectEnabled", () => {
+    // Arrange
+    expect(usePreferencesStore.getState().autoCollectEnabled).toBe(true);
+
+    // Act
+    usePreferencesStore.setState({ autoCollectEnabled: false });
+
+    // Assert
+    expect(usePreferencesStore.getState().autoCollectEnabled).toBe(false);
+
+    // Act
+    usePreferencesStore.setState({ autoCollectEnabled: true });
+
+    // Assert
+    expect(usePreferencesStore.getState().autoCollectEnabled).toBe(true);
+  });
+
   it("resetPreferences can be called multiple times", () => {
     // Arrange
     usePreferencesStore.setState({
@@ -112,5 +133,6 @@ describe("Preferences store", () => {
     expect(usePreferencesStore.getState().cardFace).toBe("english");
     expect(usePreferencesStore.getState().cardBack).toBe("blue");
     expect(usePreferencesStore.getState().gameTimerEnabled).toBe(true);
+    expect(usePreferencesStore.getState().autoCollectEnabled).toBe(true);
   });
 });
