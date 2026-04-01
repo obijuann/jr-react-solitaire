@@ -47,14 +47,46 @@ export default function Solitaire() {
   }), shallow);
 
   const cardAnimationEnabled = usePreferencesStore(state => state.cardAnimationEnabled);
+  const autoCollectEnabled = usePreferencesStore(state => state.autoCollectEnabled);
   const [movingCards, setMovingCards] = useState<MovingCardAnimation[]>([]);
-  const [movingTransforms, setMovingTransforms] = useState<{[key: number]: {x: number, y: number}}>({});
-  const [movingFaces, setMovingFaces] = useState<{[key: number]: "up" | "down"}>({});
+  const [movingTransforms, setMovingTransforms] = useState<{ [key: number]: { x: number, y: number } }>({});
+  const [movingFaces, setMovingFaces] = useState<{ [key: number]: "up" | "down" }>({});
 
   const stockRef = useRef<HTMLDivElement>(null);
   const wasteRef = useRef<HTMLDivElement>(null);
   const foundationRefs = useRef<(HTMLDivElement | null)[]>([]);
   const tableauRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  useEffect(() => {
+    /**
+     * Handle global keyboard shortcuts for menu/submenu visibility.
+     * @param e Keyboard event from the window listener.
+     */
+    function globalKeyHandler(e: KeyboardEvent) {
+      if (!e || !e.key) return;
+
+      const store = useGameStore.getState();
+
+      if (e.key === "Escape") {
+        // Escape closes submenu first; if none is open, it toggles the main menu.
+        if (store.submenuId) {
+          store.actions.clearSubmenu();
+          return;
+        }
+        useGameStore.getState().actions.toggleMenu();
+      }
+    }
+
+    window.addEventListener("keydown", globalKeyHandler);
+    return () => window.removeEventListener("keydown", globalKeyHandler);
+  }, []);
+
+  useEffect(() => {
+    if (autoCollectEnabled) {
+      const rand = Math.random();
+      console.log(`running useEffect when playfieldState changes...${rand}`);
+    }
+  }, [playfieldState]);
 
   /**
    * Resolve a pile container reference used when calculating animation targets.
@@ -80,11 +112,11 @@ export default function Solitaire() {
    */
   function runOverlayAnimation(
     nextMovingCards: MovingCardAnimation[],
-    initialFaces: {[key: number]: "up" | "down"},
+    initialFaces: { [key: number]: "up" | "down" },
     onComplete: () => void,
-    flippedFaces?: {[key: number]: "up" | "down"},
+    flippedFaces?: { [key: number]: "up" | "down" },
   ) {
-    const initialTransforms = Object.fromEntries(nextMovingCards.map((_, index) => [index, { x: 0, y: 0 }])) as {[key: number]: {x: number, y: number}};
+    const initialTransforms = Object.fromEntries(nextMovingCards.map((_, index) => [index, { x: 0, y: 0 }])) as { [key: number]: { x: number, y: number } };
 
     setMovingCards(nextMovingCards);
     setMovingTransforms(initialTransforms);
@@ -130,10 +162,10 @@ export default function Solitaire() {
     }
 
     const playfield = playfieldState;
-    
+
     // Both piles empty means there is nothing to draw or recycle.
     if (!playfield.draw.length && !playfield.waste.length) return;
-    
+
     // Recycling: draw pile is exhausted but waste cards remain. Flip the waste
     // back into the draw pile. No animation is played for this case.
     if (!playfield.draw.length && playfield.waste.length) {
@@ -164,7 +196,7 @@ export default function Solitaire() {
 
     // Capture the card's current screen position as the animation start rect.
     const fromRect = topCardElement.getBoundingClientRect();
-    
+
     // Resolve the waste pile DOM element needed to compute the landing position.
     const wasteElement = wasteRef.current;
     if (!wasteElement) {
@@ -247,13 +279,13 @@ export default function Solitaire() {
       return;
     }
     const baseToRect = toElement.getBoundingClientRect();
-    
+
     // Calculate target position for each moving card
     const targetPileLength = playfieldState[targetPileType as keyof PlayfieldState][targetPileIndex].length;
     const startTime = Date.now();
     const movingWithTo = cardsToMove.map((card, moveIndex) => {
       let toRect = baseToRect;
-      
+
       // Adjust for card offset in tableau piles
       if (targetPileType === "tableau") {
         const finalCardIndex = targetPileLength + moveIndex;
@@ -262,7 +294,7 @@ export default function Solitaire() {
         const offsetPx = (offsetVh / 100) * window.innerHeight;
         toRect = new DOMRect(toRect.left, toRect.top + offsetPx, toRect.width, toRect.height);
       }
-      
+
       // Use the passed element if available, otherwise find it
       let cardElement = sourceElement;
       if (!cardElement || moveIndex > 0) {
@@ -279,42 +311,18 @@ export default function Solitaire() {
       }
       if (!cardElement) return null;
       const fromRect = cardElement.getBoundingClientRect();
-      
+
       return { card, fromRect, toRect, startTime };
-    }).filter(Boolean) as {card: CardData, fromRect: DOMRect, toRect: DOMRect, startTime: number}[];
+    }).filter(Boolean) as { card: CardData, fromRect: DOMRect, toRect: DOMRect, startTime: number }[];
 
     runOverlayAnimation(
       movingWithTo,
-      Object.fromEntries(movingWithTo.map((moving, index) => [index, moving.card.face])) as {[key: number]: "up" | "down"},
+      Object.fromEntries(movingWithTo.map((moving, index) => [index, moving.card.face])) as { [key: number]: "up" | "down" },
       () => {
         actions.moveCard(sourceCardData, targetPileType, targetPileIndex, sourcePileType, sourcePileIndex, sourceCardIndex);
       },
     );
   }
-
-  useEffect(() => {
-    /**
-     * Handle global keyboard shortcuts for menu/submenu visibility.
-     * @param e Keyboard event from the window listener.
-     */
-    function globalKeyHandler(e: KeyboardEvent) {
-      if (!e || !e.key) return;
-
-      const store = useGameStore.getState();
-
-      if (e.key === "Escape") {
-        // Escape closes submenu first; if none is open, it toggles the main menu.
-        if (store.submenuId) {
-          store.actions.clearSubmenu();
-          return;
-        }
-        useGameStore.getState().actions.toggleMenu();
-      }
-    }
-
-    window.addEventListener("keydown", globalKeyHandler);
-    return () => window.removeEventListener("keydown", globalKeyHandler);
-  }, []);
 
   /**
    * Prevents default actions on drag enter
@@ -507,7 +515,7 @@ export default function Solitaire() {
    * @returns JSX.Element for the card
    */
   function renderCard(cardData: CardData, cardIndex: number, pileType: PileTypes, pileIndex?: number) {
-    if (movingCards.some((m: {card: CardData, fromRect: DOMRect, toRect: DOMRect}) => m.card.rank === cardData.rank && m.card.suit === cardData.suit)) {
+    if (movingCards.some((m: { card: CardData, fromRect: DOMRect, toRect: DOMRect }) => m.card.rank === cardData.rank && m.card.suit === cardData.suit)) {
       return null;
     }
 
@@ -732,10 +740,10 @@ export default function Solitaire() {
           {renderTableau()}
         </Grid>
       </Grid>
-      {movingCards.map((moving: {card: CardData, fromRect: DOMRect, toRect: DOMRect, startTime: number}, index: number) => {
+      {movingCards.map((moving: { card: CardData, fromRect: DOMRect, toRect: DOMRect, startTime: number }, index: number) => {
         const transform = movingTransforms[index] || { x: 0, y: 0 };
         const face = movingFaces[index] !== undefined ? movingFaces[index] : moving.card.face;
-        
+
         return (
           <div
             key={`moving-${index}`}
