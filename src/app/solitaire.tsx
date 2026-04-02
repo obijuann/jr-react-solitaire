@@ -82,10 +82,7 @@ export default function Solitaire() {
   }, []);
 
   useEffect(() => {
-    if (autoCollectEnabled) {
-      const rand = Math.random();
-      console.log(`running useEffect when playfieldState changes...${rand}`);
-    }
+    runAutoCollect();
   }, [playfieldState]);
 
   /**
@@ -322,6 +319,83 @@ export default function Solitaire() {
         actions.moveCard(sourceCardData, targetPileType, targetPileIndex, sourcePileType, sourcePileIndex, sourceCardIndex);
       },
     );
+  }
+
+  /**
+   * Hide menu visibility when clicking on the play area or menu.
+   */
+  function hideMenu(e: React.MouseEvent) {
+    // Prevent the click from triggering default browser behavior.
+    e.preventDefault();
+
+    const target = e.target as HTMLElement;
+    const submenuId = useGameStore.getState().submenuId;
+
+    // If click originated inside the menu, do not clear the submenu here —
+    // Let the menu's own handlers manage it.
+    const clickedInsideMenu = target?.closest && target.closest("#menu");
+
+    if (submenuId && !clickedInsideMenu) {
+      // Clicking outside menu while submenu is open only closes the submenu layer.
+      useGameStore.getState().actions.clearSubmenu();
+      return;
+    }
+
+    // Clicking the play area should only hide menus
+    if (target && target.id === "play-area") {
+      // `toggleMenu(true)` forces menu/submenu hide without toggling based on current state.
+      useGameStore.getState().actions.toggleMenu(true);
+    }
+  }
+
+  /**
+   * Validate whether the dropped card can be placed onto the target pile
+   * according to simple Solitaire rules for tableau and foundation.
+   */
+  function isValidMove(droppedCardData: CardData, targetPileCardData: CardData | undefined, targetPileType: string) {
+    if (!targetPileCardData && !droppedCardData) {
+      return false;
+    }
+
+    const pileCardDataRankIndex = targetPileCardData ? ranks.indexOf(targetPileCardData.rank) : - 1;
+    const droppedCardDataRankIndex = ranks.indexOf(droppedCardData.rank);
+
+    if (targetPileType === "tableau") {
+      if (!targetPileCardData && droppedCardData.rank === "king") {
+        return true;
+      }
+
+      if (targetPileCardData && suitsToColorsMap[targetPileCardData.suit] !== suitsToColorsMap[droppedCardData.suit] && droppedCardDataRankIndex + 1 === pileCardDataRankIndex) {
+        return true;
+      }
+
+    } else if (targetPileType === "foundation") {
+
+      const cardIndex = droppedCardData.cardIndex as number;
+      const pileIndex = droppedCardData.pileIndex as number;
+      const pileType = droppedCardData.pileType as keyof PlayfieldState;
+      const pileLength = pileIndex >= 0 ? playfieldState[pileType][pileIndex].length : playfieldState[pileType].length;
+      if (pileLength - 1 !== cardIndex) {
+        return false;
+      }
+
+      if (!targetPileCardData && droppedCardData.rank === "ace") {
+        return true;
+      }
+
+      if (targetPileCardData && targetPileCardData.suit === droppedCardData.suit && droppedCardDataRankIndex - 1 === pileCardDataRankIndex) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  function runAutoCollect() {
+    if (!autoCollectEnabled) return;
+
+    const rand = Math.random();
+    console.log(`running useEffect when playfieldState changes...${rand}`);
   }
 
   /**
@@ -640,76 +714,6 @@ export default function Solitaire() {
     return (
       <Modal />
     );
-  }
-
-  /**
-   * Hide menu visibility when clicking on the play area or menu.
-   */
-  function hideMenu(e: React.MouseEvent) {
-    // Prevent the click from triggering default browser behavior.
-    e.preventDefault();
-
-    const target = e.target as HTMLElement;
-    const submenuId = useGameStore.getState().submenuId;
-
-    // If click originated inside the menu, do not clear the submenu here —
-    // Let the menu's own handlers manage it.
-    const clickedInsideMenu = target?.closest && target.closest("#menu");
-
-    if (submenuId && !clickedInsideMenu) {
-      // Clicking outside menu while submenu is open only closes the submenu layer.
-      useGameStore.getState().actions.clearSubmenu();
-      return;
-    }
-
-    // Clicking the play area should only hide menus
-    if (target && target.id === "play-area") {
-      // `toggleMenu(true)` forces menu/submenu hide without toggling based on current state.
-      useGameStore.getState().actions.toggleMenu(true);
-    }
-  }
-
-  /**
-   * Validate whether the dropped card can be placed onto the target pile
-   * according to simple Solitaire rules for tableau and foundation.
-   */
-  function isValidMove(droppedCardData: CardData, targetPileCardData: CardData | undefined, targetPileType: string) {
-    if (!targetPileCardData && !droppedCardData) {
-      return false;
-    }
-
-    const pileCardDataRankIndex = targetPileCardData ? ranks.indexOf(targetPileCardData.rank) : - 1;
-    const droppedCardDataRankIndex = ranks.indexOf(droppedCardData.rank);
-
-    if (targetPileType === "tableau") {
-      if (!targetPileCardData && droppedCardData.rank === "king") {
-        return true;
-      }
-
-      if (targetPileCardData && suitsToColorsMap[targetPileCardData.suit] !== suitsToColorsMap[droppedCardData.suit] && droppedCardDataRankIndex + 1 === pileCardDataRankIndex) {
-        return true;
-      }
-
-    } else if (targetPileType === "foundation") {
-
-      const cardIndex = droppedCardData.cardIndex as number;
-      const pileIndex = droppedCardData.pileIndex as number;
-      const pileType = droppedCardData.pileType as keyof PlayfieldState;
-      const pileLength = pileIndex >= 0 ? playfieldState[pileType][pileIndex].length : playfieldState[pileType].length;
-      if (pileLength - 1 !== cardIndex) {
-        return false;
-      }
-
-      if (!targetPileCardData && droppedCardData.rank === "ace") {
-        return true;
-      }
-
-      if (targetPileCardData && targetPileCardData.suit === droppedCardData.suit && droppedCardDataRankIndex - 1 === pileCardDataRankIndex) {
-        return true;
-      }
-    }
-
-    return false;
   }
 
   return (
