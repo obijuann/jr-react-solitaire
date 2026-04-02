@@ -370,7 +370,7 @@ it("auto-collect checkbox toggles autoCollectEnabled preference", () => {
     fireEvent.click(prefsMenuButton);
 
     // Assert: auto-collect option label is visible
-    expect(screen.getByText(/auto-collect/i)).toBeInTheDocument();
+    expect(screen.getByText(/auto collect/i)).toBeInTheDocument();
 
     // Locate the Auto-collect checkbox (third checkbox in the general section)
     const checkboxes = screen.getAllByRole("checkbox");
