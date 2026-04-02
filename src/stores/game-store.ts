@@ -10,21 +10,7 @@ import usePreferencesStore from "./preferences-store";
 import useStatisticsStore from "./statistics-store";
 
 /** Ordered ranks from lowest to highest used for game rules. */
-const ranks: Ranks[] = [
-    "ace",
-    "2",
-    "3",
-    "4",
-    "5",
-    "6",
-    "7",
-    "8",
-    "9",
-    "10",
-    "jack",
-    "queen",
-    "king",
-];
+const ranks: Ranks[] = ["ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "jack", "queen", "king"];
 
 /** Template for an empty playfield used to reset or initialize state. */
 const emptyPlayArea: PlayfieldState = {

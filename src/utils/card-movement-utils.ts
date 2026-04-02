@@ -48,7 +48,7 @@ export function isValidMove(
     targetPileType: string,
     playfieldState: PlayfieldState,
     ranks: Ranks[],
-    suitsToColorsMap: Partial<Record<Suits, string>>,
+    suitsToColorsMap: Partial<Record<Suits, string>>
 ): boolean {
     if (!targetTopCard && !card) {
         return false;
@@ -119,11 +119,7 @@ export function isValidMove(
  * @param ranks Ordered rank list from lowest ("ace") to highest ("king").
  * @returns True when the placement is legal.
  */
-export function isFoundationLegal(
-    card: CardData,
-    foundationPile: CardData[],
-    ranks: Ranks[],
-): boolean {
+export function isFoundationLegal(card: CardData, foundationPile: CardData[], ranks: Ranks[]): boolean {
     if (foundationPile.length === 0) {
         return card.rank === "ace";
     }
@@ -146,11 +142,7 @@ export function isFoundationLegal(
  * @param ranks Ordered rank list from lowest to highest.
  * @returns Foundation pile index, or -1 if no legal destination exists.
  */
-export function findFoundationTarget(
-    card: CardData,
-    foundationPiles: CardData[][],
-    ranks: Ranks[],
-): number {
+export function findFoundationTarget(card: CardData, foundationPiles: CardData[][], ranks: Ranks[]): number {
     return foundationPiles.findIndex(pile => isFoundationLegal(card, pile, ranks));
 }
 
@@ -173,12 +165,7 @@ export function findFoundationTarget(
  * @param suitsToColorsMap Maps each suit name to "black" or "red".
  * @returns True when the card is safe to auto-collect.
  */
-export function isAutoCollectSafe(
-    card: CardData,
-    foundationPiles: CardData[][],
-    ranks: Ranks[],
-    suitsToColorsMap: Partial<Record<Suits, string>>,
-): boolean {
+export function isAutoCollectSafe(card: CardData, foundationPiles: CardData[][], ranks: Ranks[], suitsToColorsMap: Partial<Record<Suits, string>>): boolean {
     // Aces always bypass the safety rule — they are required to start foundations.
     if (card.rank === "ace") return true;
 
@@ -249,11 +236,7 @@ export function isAutoCollectSafe(
  * @param suitsToColorsMap Maps each suit name to "black" or "red".
  * @returns The first valid auto-collect candidate, or null if none is found.
  */
-export function findAutoCollectCandidate(
-    playfield: PlayfieldState,
-    ranks: Ranks[],
-    suitsToColorsMap: Partial<Record<Suits, string>>,
-): AutoCollectCandidate | null {
+export function findAutoCollectCandidate(playfield: PlayfieldState, ranks: Ranks[], suitsToColorsMap: Partial<Record<Suits, string>>): AutoCollectCandidate | null {
     const foundationPiles = playfield.foundation as CardData[][];
 
     // 1. Scan tableau columns from left to right.
