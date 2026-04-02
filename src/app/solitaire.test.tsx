@@ -7,7 +7,7 @@ import usePreferencesStore from "../stores/preferences-store";
 import Solitaire from "./solitaire";
 
 beforeEach(() => {
-  usePreferencesStore.setState({ cardAnimationEnabled: false });
+  usePreferencesStore.setState({ cardAnimationEnabled: false, autoCollectEnabled: false });
 });
 
 afterEach(() => {
@@ -482,6 +482,406 @@ describe("Solitaire app behavior", () => {
 
     act(() => {
       useGameStore.setState(state => ({ actions: { ...state.actions, moveCard: moveOriginal } }));
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // Auto-collect feature tests
+  // ---------------------------------------------------------------------------
+
+  describe("auto-collect", () => {
+    it("moves a safe card to foundation when auto-collect is enabled", () => {
+      // Arrange: ace on waste, auto-collect on, animations off.
+      const moveSpy = vi.fn();
+      useGameStore.setState(state => ({ actions: { ...state.actions, moveCard: moveSpy } }));
+      usePreferencesStore.setState({ autoCollectEnabled: true });
+      useGameStore.setState({
+        playfield: {
+          draw: [],
+          waste: [{ rank: "ace", suit: "hearts", face: "up" }],
+          foundation: [[], [], [], []],
+          tableau: [[], [], [], [], [], [], []],
+        },
+      });
+
+      // Act: render triggers the playfieldState useEffect → runAutoCollect.
+      render(<Solitaire />);
+
+      // Assert: auto-collect should have dispatched moveCard for the ace.
+      expect(moveSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ rank: "ace", suit: "hearts" }),
+        "foundation",
+        0,
+        "waste",
+        0,
+        0,
+      );
+    });
+
+    it("does not move any card when auto-collect is disabled", () => {
+      // Arrange: same playfield as above, but auto-collect disabled.
+      const moveSpy = vi.fn();
+      useGameStore.setState(state => ({ actions: { ...state.actions, moveCard: moveSpy } }));
+      usePreferencesStore.setState({ autoCollectEnabled: false });
+      useGameStore.setState({
+        playfield: {
+          draw: [],
+          waste: [{ rank: "ace", suit: "hearts", face: "up" }],
+          foundation: [[], [], [], []],
+          tableau: [[], [], [], [], [], [], []],
+        },
+      });
+
+      render(<Solitaire />);
+
+      expect(moveSpy).not.toHaveBeenCalled();
+    });
+
+    it("does not move a card that is unsafe (rank too far ahead)", () => {
+      // Arrange: foundation at "2"; "5" on waste — legal but not safe.
+      const moveSpy = vi.fn();
+      useGameStore.setState(state => ({ actions: { ...state.actions, moveCard: moveSpy } }));
+      usePreferencesStore.setState({ autoCollectEnabled: true });
+      useGameStore.setState({
+        playfield: {
+          draw: [],
+          waste: [{ rank: "5", suit: "hearts", face: "up" }],
+          foundation: [
+            [{ rank: "ace", suit: "hearts", face: "up" }, { rank: "2", suit: "hearts", face: "up" }],
+            [], [], [],
+          ],
+          tableau: [[], [], [], [], [], [], []],
+        },
+      });
+
+      render(<Solitaire />);
+
+      expect(moveSpy).not.toHaveBeenCalled();
+    });
+
+    it("picks up a tableau top card before a waste candidate (left-to-right scan)", () => {
+      // Arrange: ace on both tableau col 0 and waste; ace should come from tableau first.
+      const moveSpy = vi.fn();
+      useGameStore.setState(state => ({ actions: { ...state.actions, moveCard: moveSpy } }));
+      usePreferencesStore.setState({ autoCollectEnabled: true });
+      useGameStore.setState({
+        playfield: {
+          draw: [],
+          waste: [{ rank: "ace", suit: "diamonds", face: "up" }],
+          foundation: [[], [], [], []],
+          tableau: [
+            [{ rank: "ace", suit: "clubs", face: "up" }],
+            [], [], [], [], [], [],
+          ],
+        },
+      });
+
+      render(<Solitaire />);
+
+      // The tableau ace (clubs) should be chosen before the waste ace (diamonds).
+      expect(moveSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ rank: "ace", suit: "clubs" }),
+        "foundation",
+        expect.any(Number),
+        "tableau",
+        0,
+        0,
+      );
+    });
+
+    it("does not run auto-collect after undo", () => {
+      // Arrange: ace of hearts on foundation after one move was made.
+      // undoQueue has that move recorded.
+      const moveSpy = vi.fn();
+      usePreferencesStore.setState({ autoCollectEnabled: true });
+      useGameStore.setState(state => ({
+        actions: { ...state.actions, moveCard: moveSpy },
+        playfield: {
+          draw: [],
+          waste: [],
+          foundation: [[{ rank: "ace", suit: "hearts", face: "up" }], [], [], []],
+          tableau: [[], [], [], [], [], [], []],
+        },
+        // Record an undo entry so the undo action can restore the ace to waste.
+        undoQueue: [{
+          waste: [{ rank: "ace", suit: "hearts", face: "up" }],
+          foundation: [[], [], [], []],
+        }],
+        redoQueue: [],
+      }));
+
+      render(<Solitaire />);
+
+      // No candidates on initial render (waste empty, no tableau cards).
+      expect(moveSpy).not.toHaveBeenCalled();
+
+      // Act: undo restores the ace to waste — a prime auto-collect target.
+      act(() => {
+        useGameStore.getState().actions.undo();
+      });
+
+      // Assert: auto-collect must NOT have fired after the undo.
+      expect(moveSpy).not.toHaveBeenCalled();
+    });
+
+    it("does not run auto-collect after redo", () => {
+      // Arrange: empty state suitable to set up a redo scenario.
+      const moveSpy = vi.fn();
+      usePreferencesStore.setState({ autoCollectEnabled: true });
+      // Place ace on waste; set redoQueue so redo can be exercised.
+      useGameStore.setState(state => ({
+        actions: { ...state.actions, moveCard: moveSpy },
+        playfield: {
+          draw: [],
+          waste: [],
+          foundation: [[{ rank: "ace", suit: "hearts", face: "up" }], [], [], []],
+          tableau: [[], [], [], [], [], [], []],
+        },
+        undoQueue: [],
+        redoQueue: [{
+          waste: [{ rank: "ace", suit: "hearts", face: "up" }],
+          foundation: [[], [], [], []],
+        }],
+      }));
+
+      render(<Solitaire />);
+      expect(moveSpy).not.toHaveBeenCalled();
+
+      // Act: redo applies the forward move and changes playfieldState.
+      // The resulting state still has a candidate (the ace moves back to waste on undo/redo
+      // book-keeping), but auto-collect must not fire.
+      act(() => {
+        useGameStore.getState().actions.redo();
+      });
+
+      expect(moveSpy).not.toHaveBeenCalled();
+    });
+
+    it("skips one auto-collect turn after a manual foundation-to-tableau move", () => {
+      const realMoveCard = useGameStore.getState().actions.moveCard;
+      const moveSpy = vi.fn((...args: Parameters<typeof realMoveCard>) => realMoveCard(...args));
+
+      useGameStore.setState(state => ({ actions: { ...state.actions, moveCard: moveSpy } }));
+      usePreferencesStore.setState({ autoCollectEnabled: true, cardAnimationEnabled: false });
+      useGameStore.setState({
+        playfield: {
+          draw: [],
+          waste: [],
+          foundation: [[
+            { rank: "ace", suit: "hearts", face: "up" },
+            { rank: "2", suit: "hearts", face: "up" },
+          ], [], [], []],
+          tableau: [
+            [{ rank: "3", suit: "clubs", face: "up" }],
+            [], [], [], [], [], [],
+          ],
+        },
+      });
+
+      render(<Solitaire />);
+
+      // Click the top foundation card (2 of hearts), which is a legal move to tableau.
+      const foundationTopCard = screen.getByTestId("play-area").querySelector("#fpile0 .card:last-child") as HTMLElement;
+      act(() => {
+        fireEvent.click(foundationTopCard);
+      });
+
+      // The manual foundation -> tableau move should happen.
+      expect(moveSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ rank: "2", suit: "hearts" }),
+        "tableau",
+        0,
+        "foundation",
+        0,
+        1,
+      );
+
+      // Auto-collect must not immediately reverse that move back to foundation.
+      expect(moveSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it("does not immediately reverse an animated foundation-to-tableau move", () => {
+      vi.useFakeTimers();
+
+      const realMoveCard = useGameStore.getState().actions.moveCard;
+      const moveSpy = vi.fn((...args: Parameters<typeof realMoveCard>) => realMoveCard(...args));
+
+      useGameStore.setState(state => ({ actions: { ...state.actions, moveCard: moveSpy } }));
+      usePreferencesStore.setState({ autoCollectEnabled: true, cardAnimationEnabled: true });
+      useGameStore.setState({
+        playfield: {
+          draw: [],
+          waste: [],
+          foundation: [[
+            { rank: "ace", suit: "clubs", face: "up" },
+            { rank: "2", suit: "clubs", face: "up" },
+            { rank: "3", suit: "clubs", face: "up" },
+            { rank: "4", suit: "clubs", face: "up" },
+          ], [], [], []],
+          tableau: [
+            [{ rank: "5", suit: "hearts", face: "up" }],
+            [], [], [], [], [], [],
+          ],
+        },
+      });
+
+      render(<Solitaire />);
+
+      // User moves 4 of clubs from foundation to tableau.
+      const foundationTopCard = screen.getByTestId("play-area").querySelector("#fpile0 .card:last-child") as HTMLElement;
+      act(() => {
+        fireEvent.click(foundationTopCard);
+      });
+
+      // Advance enough time for the manual animation to commit and any immediate
+      // follow-up auto-collect animation/commit to occur if buggy.
+      act(() => {
+        vi.advanceTimersByTime(800);
+      });
+
+      // Only the manual move should have been committed.
+      expect(moveSpy).toHaveBeenCalledTimes(1);
+      expect(moveSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ rank: "4", suit: "clubs" }),
+        "tableau",
+        0,
+        "foundation",
+        0,
+        3,
+      );
+
+      vi.useRealTimers();
+    });
+
+    it("blocks pile taps while auto-collect animation is in progress", () => {
+      vi.useFakeTimers();
+
+      // Arrange: animations enabled so auto-collect uses the overlay path and
+      // movingCards stays non-empty until the timer fires.
+      const realMoveCard = useGameStore.getState().actions.moveCard;
+      const moveSpy = vi.fn((...args: Parameters<typeof realMoveCard>) => realMoveCard(...args));
+      useGameStore.setState(state => ({ actions: { ...state.actions, moveCard: moveSpy } }));
+      usePreferencesStore.setState({ autoCollectEnabled: true, cardAnimationEnabled: true });
+      useGameStore.setState({
+        playfield: {
+          draw: [],
+          waste: [{ rank: "ace", suit: "hearts", face: "up" }],
+          foundation: [[], [], [], []],
+          // King in tableau provides a tap target that would trigger moveCard
+          // if the click were not blocked.
+          tableau: [
+            [{ rank: "king", suit: "clubs", face: "up" }],
+            [], [], [], [], [], [],
+          ],
+        },
+      });
+
+      render(<Solitaire />);
+
+      // Auto-collect has started animating the ace; timer not yet advanced.
+      // Tap the king — should be blocked because autoCollectingRef is true.
+      const kingCard = screen.getByTestId("play-area").querySelector("#tabpile0 .card") as HTMLElement;
+      act(() => {
+        fireEvent.click(kingCard);
+      });
+
+      // moveSpy must not have been called yet (animation pending, click blocked).
+      expect(moveSpy).not.toHaveBeenCalled();
+
+      // Advance past the animation duration to let the auto-collect commit.
+      act(() => {
+        vi.advanceTimersByTime(350);
+      });
+
+      // Now the ace commit should have fired.
+      expect(moveSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ rank: "ace", suit: "hearts" }),
+        "foundation",
+        expect.any(Number),
+        "waste",
+        expect.any(Number),
+        expect.any(Number),
+      );
+
+      vi.useRealTimers();
+    });
+
+    it("blocks drops while auto-collect animation is in progress", () => {
+      vi.useFakeTimers();
+
+      const realMoveCard = useGameStore.getState().actions.moveCard;
+      const moveSpy = vi.fn((...args: Parameters<typeof realMoveCard>) => realMoveCard(...args));
+      useGameStore.setState(state => ({ actions: { ...state.actions, moveCard: moveSpy } }));
+      usePreferencesStore.setState({ autoCollectEnabled: true, cardAnimationEnabled: true });
+      useGameStore.setState({
+        playfield: {
+          draw: [],
+          waste: [{ rank: "ace", suit: "hearts", face: "up" }],
+          foundation: [[], [], [], []],
+          tableau: [[], [], [], [], [], [], []],
+        },
+      });
+
+      render(<Solitaire />);
+
+      // Auto-collect is animating. Attempt a drop onto tableau pile 0.
+      const tabPile = screen.getByTestId("play-area").querySelector("#tabpile0") as HTMLElement;
+      const kingData = JSON.stringify({ rank: "king", suit: "spades", cardIndex: 0, pileIndex: undefined, pileType: "waste" });
+      act(() => {
+        fireEvent.drop(tabPile, { dataTransfer: { getData: () => kingData } });
+      });
+
+      expect(moveSpy).not.toHaveBeenCalled();
+
+      act(() => {
+        vi.advanceTimersByTime(350);
+      });
+
+      // Only the auto-collect ace commit should have fired.
+      expect(moveSpy).toHaveBeenCalledTimes(1);
+      expect(moveSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ rank: "ace", suit: "hearts" }),
+        "foundation",
+        expect.any(Number),
+        "waste",
+        expect.any(Number),
+        expect.any(Number),
+      );
+
+      vi.useRealTimers();
+    });
+
+    it("blocks draw-pile clicks while auto-collect animation is in progress", () => {
+      vi.useFakeTimers();
+
+      const realDrawCard = useGameStore.getState().actions.drawCard;
+      const drawSpy = vi.fn(realDrawCard);
+      useGameStore.setState(state => ({ actions: { ...state.actions, drawCard: drawSpy } }));
+      usePreferencesStore.setState({ autoCollectEnabled: true, cardAnimationEnabled: true });
+      useGameStore.setState({
+        playfield: {
+          draw: [{ rank: "2", suit: "clubs", face: "down" }],
+          waste: [{ rank: "ace", suit: "hearts", face: "up" }],
+          foundation: [[], [], [], []],
+          tableau: [[], [], [], [], [], [], []],
+        },
+      });
+
+      render(<Solitaire />);
+
+      // Auto-collect is running. Clicking the draw pile must be blocked.
+      const drawElem = screen.getByTestId("play-area").querySelector("#draw") as HTMLElement;
+      act(() => {
+        fireEvent.click(drawElem);
+      });
+
+      expect(drawSpy).not.toHaveBeenCalled();
+
+      act(() => {
+        vi.advanceTimersByTime(350);
+      });
+
+      vi.useRealTimers();
     });
   });
 });

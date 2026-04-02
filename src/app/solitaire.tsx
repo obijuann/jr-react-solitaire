@@ -15,6 +15,7 @@ import { PlayfieldState } from "../types/playfield-state";
 import { Ranks } from "../types/ranks";
 import { Suits } from "../types/suits";
 import { buildMovingTransforms, cardAnimationCleanupDelayMs, cardAnimationDurationMs, getWasteOffsetPx, getWasteTargetRect, MovingCardAnimation } from "../utils/animation-utils";
+import { findAutoCollectCandidate, isValidMove } from "../utils/card-movement-utils";
 
 /** Mapping of suit name to display color used for game logic. */
 const suitsToColorsMap: Partial<Record<Suits, string>> = {
@@ -57,6 +58,32 @@ export default function Solitaire() {
   const foundationRefs = useRef<(HTMLDivElement | null)[]>([]);
   const tableauRefs = useRef<(HTMLDivElement | null)[]>([]);
 
+  /**
+   * Last-seen undo queue length, stored between effect runs to detect undo/redo.
+   * Initialized to 0 because all queues start empty.
+   */
+  const prevUndoQueueLengthRef = useRef<number>(useGameStore.getState().undoQueue.length);
+  /**
+   * Last-seen redo queue length, stored between effect runs to detect undo/redo.
+   * An undo always increases this value; a redo always decreases it by exactly 1.
+   */
+  const prevRedoQueueLengthRef = useRef<number>(useGameStore.getState().redoQueue.length);
+  /**
+   * Cached reference to the last playfield observed by the combined effect.
+   * Lets the effect distinguish a playfieldState change from a movingCards change.
+   */
+  const prevPlayfieldRef = useRef<PlayfieldState>(playfieldState);
+  /**
+   * True while an auto-collect pass is actively moving cards. Used to block
+   * tap, drag-start, and drop interactions so they cannot interrupt the pass.
+   */
+  const autoCollectingRef = useRef<boolean>(false);
+  /**
+   * When true, the next playfield change skips one auto-collect pass.
+   * Set only for user-initiated foundation -> tableau moves.
+   */
+  const skipAutoCollectNextTurnRef = useRef<boolean>(false);
+
   useEffect(() => {
     /**
      * Handle global keyboard shortcuts for menu/submenu visibility.
@@ -82,8 +109,43 @@ export default function Solitaire() {
   }, []);
 
   useEffect(() => {
+    /**
+     * Determine whether the most recent playfield change was caused by an undo
+     * or redo operation. If so, auto-collect must not run because the user is
+     * deliberately stepping through history.
+     *
+     * Detection relies on the redo-queue length:
+     *  - Undo:  redo queue grows by 1 (undo always pushes to redo).
+     *  - Redo:  redo queue shrinks by exactly 1 while undo queue grows by 1
+     *           (redo always pops from redo and pushes to undo).
+     *
+     * Normal moves clear the redo queue entirely, so the shrink-by-1 test
+     * distinguishes redo from a normal move that resets the redo queue.
+     */
+    const playfieldChanged = playfieldState !== prevPlayfieldRef.current;
+    prevPlayfieldRef.current = playfieldState;
+
+    if (playfieldChanged) {
+      const { undoQueue, redoQueue } = useGameStore.getState();
+      const currentUndoLength = undoQueue.length;
+      const currentRedoLength = redoQueue.length;
+
+      const wasUndo = currentRedoLength > prevRedoQueueLengthRef.current;
+      const wasRedo =
+        currentRedoLength === prevRedoQueueLengthRef.current - 1 &&
+        currentUndoLength === prevUndoQueueLengthRef.current + 1;
+
+      prevUndoQueueLengthRef.current = currentUndoLength;
+      prevRedoQueueLengthRef.current = currentRedoLength;
+
+      if (wasUndo || wasRedo) {
+        autoCollectingRef.current = false;
+        return;
+      }
+    }
+
     runAutoCollect();
-  }, [playfieldState]);
+  }, [playfieldState, movingCards]);
 
   /**
    * Resolve a pile container reference used when calculating animation targets.
@@ -243,8 +305,13 @@ export default function Solitaire() {
    * @param sourcePileIndex Optional source pile index override.
    * @param sourceCardIndex Optional source-card index override.
    * @param sourceElement Optional source card element to reuse for bounds.
+   * @param isManualMove Optional flag indicating if this is a user-initiated move (true) or auto-collect (false/undefined).
    */
-  function animatedMoveCard(sourceCardData: CardData, targetPileType: PileTypes, targetPileIndex: number, sourcePileType = sourceCardData.pileType as PileTypes, sourcePileIndex = sourceCardData.pileIndex || 0, sourceCardIndex = sourceCardData.cardIndex || 0, sourceElement?: HTMLElement) {
+  function animatedMoveCard(sourceCardData: CardData, targetPileType: PileTypes, targetPileIndex: number, sourcePileType = sourceCardData.pileType as PileTypes, sourcePileIndex = sourceCardData.pileIndex || 0, sourceCardIndex = sourceCardData.cardIndex || 0, sourceElement?: HTMLElement, isManualMove = false) {
+    if (isManualMove && sourcePileType === "foundation" && targetPileType === "tableau") {
+      skipAutoCollectNextTurnRef.current = true;
+    }
+
     if (!cardAnimationEnabled) {
       actions.moveCard(sourceCardData, targetPileType, targetPileIndex, sourcePileType, sourcePileIndex, sourceCardIndex);
       return;
@@ -311,7 +378,6 @@ export default function Solitaire() {
 
       return { card, fromRect, toRect, startTime };
     }).filter(Boolean) as { card: CardData, fromRect: DOMRect, toRect: DOMRect, startTime: number }[];
-
     runOverlayAnimation(
       movingWithTo,
       Object.fromEntries(movingWithTo.map((moving, index) => [index, moving.card.face])) as { [key: number]: "up" | "down" },
@@ -349,53 +415,70 @@ export default function Solitaire() {
   }
 
   /**
-   * Validate whether the dropped card can be placed onto the target pile
-   * according to simple Solitaire rules for tableau and foundation.
+   * Perform one step of the continuous auto-collect pass.
+   *
+   * When auto-collect is enabled and a safe foundation candidate is available,
+   * the card is animated to its destination foundation pile. The pass continues
+   * automatically on the next state change triggered by the committed move.
+   *
+   * The function exits early when:
+   *  - The auto-collect preference is disabled.
+   *  - A card animation overlay is already in progress (prevents overlapping).
+   *  - No candidate qualifies according to the safety rules in the spec.
    */
-  function isValidMove(droppedCardData: CardData, targetPileCardData: CardData | undefined, targetPileType: string) {
-    if (!targetPileCardData && !droppedCardData) {
-      return false;
-    }
-
-    const pileCardDataRankIndex = targetPileCardData ? ranks.indexOf(targetPileCardData.rank) : - 1;
-    const droppedCardDataRankIndex = ranks.indexOf(droppedCardData.rank);
-
-    if (targetPileType === "tableau") {
-      if (!targetPileCardData && droppedCardData.rank === "king") {
-        return true;
-      }
-
-      if (targetPileCardData && suitsToColorsMap[targetPileCardData.suit] !== suitsToColorsMap[droppedCardData.suit] && droppedCardDataRankIndex + 1 === pileCardDataRankIndex) {
-        return true;
-      }
-
-    } else if (targetPileType === "foundation") {
-
-      const cardIndex = droppedCardData.cardIndex as number;
-      const pileIndex = droppedCardData.pileIndex as number;
-      const pileType = droppedCardData.pileType as keyof PlayfieldState;
-      const pileLength = pileIndex >= 0 ? playfieldState[pileType][pileIndex].length : playfieldState[pileType].length;
-      if (pileLength - 1 !== cardIndex) {
-        return false;
-      }
-
-      if (!targetPileCardData && droppedCardData.rank === "ace") {
-        return true;
-      }
-
-      if (targetPileCardData && targetPileCardData.suit === droppedCardData.suit && droppedCardDataRankIndex - 1 === pileCardDataRankIndex) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
   function runAutoCollect() {
-    if (!autoCollectEnabled) return;
+    if (!autoCollectEnabled) {
+      autoCollectingRef.current = false;
+      return;
+    }
 
-    const rand = Math.random();
-    console.log(`running useEffect when playfieldState changes...${rand}`);
+    // Wait for any in-progress animation overlay to complete before starting
+    // the next move. The effect will re-run once movingCards is cleared.
+    if (movingCards.length > 0) return;
+
+    // Skip exactly one eligible auto-collect turn after a user moves a card
+    // from foundation to tableau.
+    if (skipAutoCollectNextTurnRef.current) {
+      skipAutoCollectNextTurnRef.current = false;
+      autoCollectingRef.current = false;
+      return;
+    }
+
+    const candidate = findAutoCollectCandidate(playfieldState, ranks, suitsToColorsMap);
+
+    if (!candidate) {
+      autoCollectingRef.current = false;
+      return;
+    }
+
+    autoCollectingRef.current = true;
+
+    // Resolve the source DOM element so the animation can measure a precise
+    // starting rect. Passing it explicitly avoids a fragile data-carddata
+    // attribute lookup that can fail for multi-card waste piles.
+    let sourceElement: HTMLElement | undefined;
+    if (candidate.sourceType === "waste") {
+      const wasteCards = wasteRef.current?.querySelectorAll(".card");
+      sourceElement = wasteCards?.length
+        ? (wasteCards[wasteCards.length - 1] as HTMLElement)
+        : undefined;
+    } else {
+      const tableauPile = tableauRefs.current[candidate.sourcePileIndex];
+      const tableauCards = tableauPile?.querySelectorAll(".card");
+      sourceElement = tableauCards?.length
+        ? (tableauCards[tableauCards.length - 1] as HTMLElement)
+        : undefined;
+    }
+
+    animatedMoveCard(
+      candidate.card,
+      "foundation",
+      candidate.targetFoundationIndex,
+      candidate.sourceType,
+      candidate.sourcePileIndex,
+      candidate.sourceCardIndex,
+      sourceElement,
+    );
   }
 
   /**
@@ -423,6 +506,8 @@ export default function Solitaire() {
    * @param dragEvent The drag event from the DOM
    */
   function dragStartHandler(dragEvent: React.DragEvent<HTMLDivElement>): void {
+    // Block drag starts while auto-collect is running to prevent conflicts.
+    if (autoCollectingRef.current) return;
     // Restrict drag intent to move operations and clear stale payload.
     dragEvent.dataTransfer.effectAllowed = "move";
     dragEvent.dataTransfer.clearData();
@@ -442,6 +527,8 @@ export default function Solitaire() {
    * @param e Mouse event from the click
    */
   function drawCardHandler(e: React.MouseEvent) {
+    // Block draw-pile clicks while auto-collect is in progress.
+    if (autoCollectingRef.current) return;
     // Prevent click bubbling/default behavior and route through draw animation flow.
     e.preventDefault();
     animatedDrawCard();
@@ -453,6 +540,8 @@ export default function Solitaire() {
    * @param e Mouse event coming from the pile container
    */
   function pileClickHandler(e: React.MouseEvent<HTMLDivElement>) {
+    // Block pile taps while auto-collect is running to prevent conflicts.
+    if (autoCollectingRef.current) return;
     const target = e.target as HTMLDivElement;
     if (!target) return;
 
@@ -467,12 +556,12 @@ export default function Solitaire() {
 
     // First priority: try to auto-move the tapped card to a valid foundation pile.
     let targetPileIndex = playfieldState.foundation.findIndex((foundationCardPileData: CardData[]) => {
-      return isValidMove(tapppedCardData, foundationCardPileData.length ? foundationCardPileData.slice(-1)[0] : undefined, "foundation");
+      return isValidMove(tapppedCardData, foundationCardPileData.length ? foundationCardPileData.slice(-1)[0] : undefined, "foundation", playfieldState, ranks, suitsToColorsMap);
     })
 
     if (targetPileIndex !== -1) {
       // Found a legal foundation destination, so perform that move immediately.
-      animatedMoveCard(tapppedCardData, "foundation", targetPileIndex, undefined, undefined, undefined, tappedCardElement as HTMLElement);
+      animatedMoveCard(tapppedCardData, "foundation", targetPileIndex, undefined, undefined, undefined, tappedCardElement as HTMLElement, true);
       return;
     }
 
@@ -515,7 +604,7 @@ export default function Solitaire() {
             ? tableauCardPileDataList[tableauCardPileDataList.length - 1]
             : undefined;
 
-          return isValidMove(candidateCard, potentialTargetCardData, "tableau");
+          return isValidMove(candidateCard, potentialTargetCardData, "tableau", playfieldState, ranks, suitsToColorsMap);
         });
 
         if (targetPileIndex >= 0) {
@@ -527,18 +616,18 @@ export default function Solitaire() {
       if (targetPileIndex >= 0 && sourceCardIndex >= 0) {
         // Move the selected run using the first successful candidate source index.
         const cardToMove: CardData = playfieldState["tableau"][sourcePileIndex][sourceCardIndex];
-        animatedMoveCard(cardToMove, "tableau", targetPileIndex, tapppedCardData.pileType, sourcePileIndex, sourceCardIndex);
+        animatedMoveCard(cardToMove, "tableau", targetPileIndex, tapppedCardData.pileType, sourcePileIndex, sourceCardIndex, undefined, true);
       }
     } else {
       // Non-tableau tap behavior (usually waste/foundation):
       // only the tapped card is considered, and we search for a legal tableau destination.
       targetPileIndex = playfieldState.tableau.findIndex((tableauCardPileData) => {
-        return isValidMove(tapppedCardData, tableauCardPileData.length ? tableauCardPileData.slice(-1)[0] : null, "tableau");
+        return isValidMove(tapppedCardData, tableauCardPileData.length ? tableauCardPileData.slice(-1)[0] : null, "tableau", playfieldState, ranks, suitsToColorsMap);
       })
 
       if (targetPileIndex !== -1) {
         // Move the selected card to the first valid tableau target found.
-        animatedMoveCard(tapppedCardData, "tableau", targetPileIndex, undefined, undefined, undefined, tappedCardElement as HTMLElement);
+        animatedMoveCard(tapppedCardData, "tableau", targetPileIndex, undefined, undefined, undefined, tappedCardElement as HTMLElement, true);
       }
     }
   }
@@ -552,6 +641,8 @@ export default function Solitaire() {
    * @param targetPileIndex The index of the target pile
    */
   function dropHandler(e: React.DragEvent, targetPileType: string, targetPileIndex: number) {
+    // Block drops while auto-collect is running to prevent conflicts.
+    if (autoCollectingRef.current) return;
     if (!e || !e.dataTransfer || !e.target || !targetPileType) return;
 
     // Recover the dragged card payload placed by dragStartHandler.
@@ -568,7 +659,7 @@ export default function Solitaire() {
     if (targetPileType == "tableau" && droppedCardData.pileType === "tableau" && !!droppedCardData.pileIndex) {
       // Tableau-to-tableau drops can move a run, so find the deepest valid source card.
       const validMoveCardIndex = playfieldState["tableau"][droppedCardData.pileIndex].findLastIndex((cardData: CardData) => {
-        return cardData.face === "up" && isValidMove(cardData, targetCardData, targetPileType)
+        return cardData.face === "up" && isValidMove(cardData, targetCardData, targetPileType, playfieldState, ranks, suitsToColorsMap)
       });
 
       if (validMoveCardIndex >= 0) {
@@ -578,7 +669,10 @@ export default function Solitaire() {
       }
     } else {
       // All other drops are single-card moves gated by isValidMove.
-      if (isValidMove(droppedCardData, targetCardData, targetPileType)) {
+      if (isValidMove(droppedCardData, targetCardData, targetPileType, playfieldState, ranks, suitsToColorsMap)) {
+        if (droppedCardData.pileType === "foundation" && targetPileType === "tableau") {
+          skipAutoCollectNextTurnRef.current = true;
+        }
         actions.moveCard(droppedCardData, targetPileType as PileTypes, targetPileIndex);
       }
     }
