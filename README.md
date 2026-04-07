@@ -6,13 +6,6 @@ Note, this is a personal project just to keep my skills current. It's not intend
 
 ![Solitaire Play field](docs/playfield.png)
 
-## TODO
-
-These are some of the features that are coming in the future:
-
-- User Preferences
-  - Enable autocomplete via preferences
-
 ## Available Scripts
 
 In the project directory, you can run:
