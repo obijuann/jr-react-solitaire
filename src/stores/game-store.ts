@@ -10,21 +10,7 @@ import usePreferencesStore from "./preferences-store";
 import useStatisticsStore from "./statistics-store";
 
 /** Ordered ranks from lowest to highest used for game rules. */
-const ranks: Ranks[] = [
-    "ace",
-    "2",
-    "3",
-    "4",
-    "5",
-    "6",
-    "7",
-    "8",
-    "9",
-    "10",
-    "jack",
-    "queen",
-    "king",
-];
+const ranks: Ranks[] = ["ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "jack", "queen", "king"];
 
 /** Template for an empty playfield used to reset or initialize state. */
 const emptyPlayArea: PlayfieldState = {
@@ -43,6 +29,8 @@ type GameStoreState = {
     undoQueue: Partial<PlayfieldState>[];
     /** Stack of undone playfield states used for redo operations. */
     redoQueue: Partial<PlayfieldState>[];
+    /** Last action type that mutated the playfield. */
+    lastPlayfieldMutation: "init" | "draw" | "move" | "undo" | "redo" | "other";
     /** Optional modal currently displayed (e.g., 'gamewin'). */
     modalType?: ModalTypes;
     /** Whether the main menu is visible. */
@@ -149,6 +137,7 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
             shuffledDeck: [],
             undoQueue: [],
             redoQueue: [],
+            lastPlayfieldMutation: "init",
             modalType: undefined,
             menuVisible: true,
             submenuId: "",
@@ -180,7 +169,10 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
                  * @param p Partial playfield properties to merge.
                  */
                 setPlayfield: (p: Partial<PlayfieldState>) => {
-                    set(state => ({ playfield: { ...state.playfield, ...p } }));
+                    set(state => ({
+                        playfield: { ...state.playfield, ...p },
+                        lastPlayfieldMutation: "other",
+                    }));
                 },
 
                 /**
@@ -284,6 +276,7 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
                         playfield: { draw: drawPileCardData, tableau: tableauCardData, waste: [], foundation: [[], [], [], []] },
                         undoQueue: [],
                         redoQueue: [],
+                        lastPlayfieldMutation: "other",
                     }));
 
                     get().actions.checkGameState();
@@ -362,7 +355,11 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
                         }
                     }
 
-                    set(() => ({ playfield, undoQueue: undoQueue }));
+                    set(() => ({
+                        playfield,
+                        undoQueue: undoQueue,
+                        lastPlayfieldMutation: "draw",
+                    }));
                     get().actions.checkGameState();
                 },
 
@@ -418,7 +415,12 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
                     const undoQueue = structuredClone(get().undoQueue || []);
                     undoQueue.push(undoPileData);
 
-                    set(() => ({ playfield: newPlayfield, undoQueue: undoQueue, redoQueue: [] }));
+                    set(() => ({
+                        playfield: newPlayfield,
+                        undoQueue: undoQueue,
+                        redoQueue: [],
+                        lastPlayfieldMutation: "move",
+                    }));
                     get().actions.checkGameState();
                 },
 
@@ -445,7 +447,12 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
                     const redoQueue = structuredClone(get().redoQueue || []);
                     redoQueue.push(redoMoveData);
 
-                    set(() => ({ playfield: current, undoQueue: undoQueue, redoQueue: redoQueue }));
+                    set(() => ({
+                        playfield: current,
+                        undoQueue: undoQueue,
+                        redoQueue: redoQueue,
+                        lastPlayfieldMutation: "undo",
+                    }));
                 },
 
                 /** Redo the last undone change by applying the top of `redoQueue`. */
@@ -471,7 +478,12 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
                     const undoQueue = structuredClone(get().undoQueue || []);
                     undoQueue.push(undoMoveData);
 
-                    set(() => ({ playfield: current, undoQueue: undoQueue, redoQueue: redoQueue }));
+                    set(() => ({
+                        playfield: current,
+                        undoQueue: undoQueue,
+                        redoQueue: redoQueue,
+                        lastPlayfieldMutation: "redo",
+                    }));
                 },
 
                 /** Reset the game timer to zero and stop it. */

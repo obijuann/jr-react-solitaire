@@ -65,6 +65,7 @@ export default function Menu() {
     const cardFace = usePreferencesStore(state => state.cardFace);
     const gameTimerEnabled = usePreferencesStore(state => state.gameTimerEnabled);
     const cardAnimationEnabled = usePreferencesStore(state => state.cardAnimationEnabled);
+    const autoCollectEnabled = usePreferencesStore(state => state.autoCollectEnabled);
 
     useEffect(() => {
         // Close the submenu on resize
@@ -228,6 +229,14 @@ export default function Menu() {
     }
 
     /**
+     * Update the user preference for auto-collect
+     * @param e Change event from the input element
+     */
+    function handleAutoCollectSwitchChange(e: ChangeEvent<HTMLInputElement>): void {
+        usePreferencesStore.setState(() => ({ autoCollectEnabled: e.target.checked }));
+    }
+
+    /**
      * Render the "Preferences" submenu.
      * @returns JSX.Element
      */
@@ -283,6 +292,17 @@ export default function Menu() {
                                 checked={cardAnimationEnabled}
                                 size="medium"
                                 onChange={handleCardAnimationSwitchChange}
+                                sx={checkboxSx}
+                            />
+                        </div>
+                    </div>
+                    <div className="group-section">
+                        <div>Auto Collect</div>
+                        <div>
+                            <Checkbox
+                                checked={autoCollectEnabled}
+                                size="medium"
+                                onChange={handleAutoCollectSwitchChange}
                                 sx={checkboxSx}
                             />
                         </div>

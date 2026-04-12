@@ -6,7 +6,7 @@ import useGameStore from "../stores/game-store";
 
 beforeEach(() => {
     useGameStore.setState({ menuVisible: true, submenuId: "", shuffledDeck: [], modalType: undefined });
-    usePreferencesStore.setState({ themeColor: "green", cardFace: "english", cardBack: "blue", gameTimerEnabled: true, cardAnimationEnabled: true });
+    usePreferencesStore.setState({ themeColor: "green", cardFace: "english", cardBack: "blue", gameTimerEnabled: true, cardAnimationEnabled: true, autoCollectEnabled: true });
 });
 
 import usePreferencesStore from "../stores/preferences-store";
@@ -329,8 +329,9 @@ it("renders the user preferences submenu", () => {
 
     // Assert
     expect(screen.getByText(/appearance/i)).toBeInTheDocument();
+    // Timer, Card Animations and Auto-collect checkboxes are all checked by default
     const checkedCheckboxes = screen.getAllByRole("checkbox", { checked: true });
-    expect(checkedCheckboxes).toHaveLength(2);
+    expect(checkedCheckboxes).toHaveLength(3);
     expect(screen.getByText(/cyan/i)).toBeInTheDocument();
     expect(screen.getByText(/simple/i)).toBeInTheDocument();
     expect(screen.getByText(/abstract/i)).toBeInTheDocument();
@@ -350,11 +351,42 @@ it("renders the user preferences submenu with the unchecked game timer", () => {
 
     // Assert
     expect(screen.getByText(/appearance/i)).toBeInTheDocument();
+    // Card Animations and Auto-collect are checked; Timer is unchecked
     const checkedCheckboxes = screen.getAllByRole("checkbox", { checked: true });
-    expect(checkedCheckboxes).toHaveLength(1);
+    expect(checkedCheckboxes).toHaveLength(2);
     const uncheckedCheckboxes = screen.getAllByRole("checkbox", { checked: false });
     expect(uncheckedCheckboxes).toHaveLength(1);
     expect(screen.getByText(/green/i)).toBeInTheDocument();
     expect(screen.getByText(/english/i)).toBeInTheDocument();
     expect(screen.getByText(/blue/i)).toBeInTheDocument();
+});
+
+it("auto-collect checkbox toggles autoCollectEnabled preference", () => {
+    // Arrange
+    usePreferencesStore.setState({ autoCollectEnabled: true });
+    render(<Menu />);
+
+    const prefsMenuButton = screen.getByRole("button", { name: "Preferences" });
+    fireEvent.click(prefsMenuButton);
+
+    // Assert: auto-collect option label is visible
+    expect(screen.getByText(/auto collect/i)).toBeInTheDocument();
+
+    // Locate the Auto-collect checkbox (third checkbox in the general section)
+    const checkboxes = screen.getAllByRole("checkbox");
+    // Timer, Card Animations, Auto-collect — all checked initially
+    const autoCollectCheckbox = checkboxes[2];
+    expect(autoCollectCheckbox).toBeChecked();
+
+    // Act: uncheck auto-collect
+    fireEvent.click(autoCollectCheckbox);
+
+    // Assert: preference is updated to false
+    expect(usePreferencesStore.getState().autoCollectEnabled).toBe(false);
+
+    // Act: re-check auto-collect
+    fireEvent.click(autoCollectCheckbox);
+
+    // Assert: preference is updated back to true
+    expect(usePreferencesStore.getState().autoCollectEnabled).toBe(true);
 });

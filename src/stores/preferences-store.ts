@@ -19,6 +19,9 @@ type PreferencesStoreState = {
     /** Flag indicating whether card animations are enabled. */
     cardAnimationEnabled: boolean;
 
+    /** Flag indicating whether eligible cards are automatically moved to the foundation. */
+    autoCollectEnabled: boolean;
+
     /** Grouped store actions */
     actions: {
         /** Resets all user preferences */
@@ -34,6 +37,7 @@ export const usePreferencesStore = create<PreferencesStoreState>()(
             cardBack: "blue",
             gameTimerEnabled: true,
             cardAnimationEnabled: true,
+            autoCollectEnabled: true,
 
             actions: {
                 /**
@@ -45,7 +49,8 @@ export const usePreferencesStore = create<PreferencesStoreState>()(
                         cardFace: "english",
                         cardBack: "blue",
                         gameTimerEnabled: true,
-                        cardAnimationEnabled: true
+                        cardAnimationEnabled: true,
+                        autoCollectEnabled: true
                     }))
                 }
             },
@@ -57,7 +62,8 @@ export const usePreferencesStore = create<PreferencesStoreState>()(
                 cardFace: state.cardFace,
                 cardBack: state.cardBack,
                 gameTimerEnabled: state.gameTimerEnabled,
-                cardAnimationEnabled: state.cardAnimationEnabled
+                cardAnimationEnabled: state.cardAnimationEnabled,
+                autoCollectEnabled: state.autoCollectEnabled
             }),
             onRehydrateStorage: () => (state, error) => {
                 if (error) {
@@ -65,7 +71,7 @@ export const usePreferencesStore = create<PreferencesStoreState>()(
                     state?.actions?.resetPreferences?.();
                 }
             },
-            version: 2
+            version: 3
         },
     ),
 )
