@@ -148,6 +148,7 @@ describe("Solitaire app behavior", () => {
   });
 
   it("animated draw delays the waste update until the animation completes", () => {
+    // Arrange
     vi.useFakeTimers();
 
     usePreferencesStore.setState({ cardAnimationEnabled: true });
@@ -166,25 +167,32 @@ describe("Solitaire app behavior", () => {
     const drawElem = playArea.querySelector("#draw") as HTMLElement;
     const wasteElem = playArea.querySelector("#waste") as HTMLElement;
 
+    // Assert: initial state before draw
     expect(drawElem.childNodes.length).toBe(1);
     expect(wasteElem.childNodes.length).toBe(0);
 
+    // Act: click the draw pile to start the animation
     act(() => {
       fireEvent.click(drawElem);
     });
 
+    // Assert: waste still empty while animation is in-flight
     expect(wasteElem.childNodes.length).toBe(0);
 
+    // Act: advance time (still within animation duration)
     act(() => {
       vi.advanceTimersByTime(250);
     });
 
+    // Assert: waste still empty — animation not yet complete
     expect(wasteElem.childNodes.length).toBe(0);
 
+    // Act: advance past the animation duration
     act(() => {
       vi.advanceTimersByTime(75);
     });
 
+    // Assert: animation complete — card committed to waste
     expect(wasteElem.childNodes.length).toBe(1);
 
     vi.useRealTimers();
@@ -292,6 +300,7 @@ describe("Solitaire app behavior", () => {
   });
 
   it("tableau tap prefers moving the tapped run when legal", () => {
+    // Arrange
     const moveOriginal = useGameStore.getState().actions.moveCard;
     const moveSpy = vi.fn();
     act(() => {
@@ -322,10 +331,12 @@ describe("Solitaire app behavior", () => {
     const tappedCard = screen.getByTestId("play-area").querySelector("#tabpile0 .card") as HTMLElement;
     expect(tappedCard).toBeTruthy();
 
+    // Act
     act(() => {
       fireEvent.click(tappedCard);
     });
 
+    // Assert
     expect(moveSpy).toHaveBeenCalledTimes(1);
     expect(moveSpy).toHaveBeenCalledWith(
       expect.objectContaining({ rank: "8", suit: "clubs", face: "up" }),
@@ -342,6 +353,7 @@ describe("Solitaire app behavior", () => {
   });
 
   it("tableau tap falls back to progressively shorter runs", () => {
+    // Arrange
     const moveOriginal = useGameStore.getState().actions.moveCard;
     const moveSpy = vi.fn();
     act(() => {
@@ -373,10 +385,12 @@ describe("Solitaire app behavior", () => {
     const tappedCard = screen.getByTestId("play-area").querySelector("#tabpile0 .card") as HTMLElement;
     expect(tappedCard).toBeTruthy();
 
+    // Act
     act(() => {
       fireEvent.click(tappedCard);
     });
 
+    // Assert
     expect(moveSpy).toHaveBeenCalledTimes(1);
     expect(moveSpy).toHaveBeenCalledWith(
       expect.objectContaining({ rank: "8", suit: "hearts", face: "up" }),
@@ -393,6 +407,7 @@ describe("Solitaire app behavior", () => {
   });
 
   it("tableau tap does not move when no run from tap point has a legal destination", () => {
+    // Arrange
     const moveOriginal = useGameStore.getState().actions.moveCard;
     const moveSpy = vi.fn();
     act(() => {
@@ -423,10 +438,12 @@ describe("Solitaire app behavior", () => {
     const tappedCard = screen.getByTestId("play-area").querySelector("#tabpile0 .card") as HTMLElement;
     expect(tappedCard).toBeTruthy();
 
+    // Act
     act(() => {
       fireEvent.click(tappedCard);
     });
 
+    // Assert
     expect(moveSpy).not.toHaveBeenCalled();
 
     act(() => {
@@ -435,6 +452,7 @@ describe("Solitaire app behavior", () => {
   });
 
   it("tableau tap on top card can fall back to a longer run below it", () => {
+    // Arrange
     const moveOriginal = useGameStore.getState().actions.moveCard;
     const moveSpy = vi.fn();
     act(() => {
@@ -466,10 +484,12 @@ describe("Solitaire app behavior", () => {
     const tappedTopCard = sourceCards[sourceCards.length - 1] as HTMLElement;
     expect(tappedTopCard).toBeTruthy();
 
+    // Act
     act(() => {
       fireEvent.click(tappedTopCard);
     });
 
+    // Assert
     expect(moveSpy).toHaveBeenCalledTimes(1);
     expect(moveSpy).toHaveBeenCalledWith(
       expect.objectContaining({ rank: "6", suit: "diamonds", face: "up" }),
@@ -532,8 +552,10 @@ describe("Solitaire app behavior", () => {
         },
       });
 
+      // Act
       render(<Solitaire />);
 
+      // Assert
       expect(moveSpy).not.toHaveBeenCalled();
     });
 
@@ -554,8 +576,10 @@ describe("Solitaire app behavior", () => {
         },
       });
 
+      // Act
       render(<Solitaire />);
 
+      // Assert
       expect(moveSpy).not.toHaveBeenCalled();
     });
 
@@ -576,9 +600,10 @@ describe("Solitaire app behavior", () => {
         },
       });
 
+      // Act
       render(<Solitaire />);
 
-      // The tableau ace (clubs) should be chosen before the waste ace (diamonds).
+      // Assert: the tableau ace (clubs) should be chosen before the waste ace (diamonds).
       expect(moveSpy).toHaveBeenCalledWith(
         expect.objectContaining({ rank: "ace", suit: "clubs" }),
         "foundation",
@@ -645,6 +670,8 @@ describe("Solitaire app behavior", () => {
       }));
 
       render(<Solitaire />);
+
+      // No candidates on initial render (no waste cards, no tableau cards).
       expect(moveSpy).not.toHaveBeenCalled();
 
       // Act: redo applies the forward move and changes playfieldState.
@@ -654,10 +681,12 @@ describe("Solitaire app behavior", () => {
         useGameStore.getState().actions.redo();
       });
 
+      // Assert: auto-collect must NOT have fired after the redo.
       expect(moveSpy).not.toHaveBeenCalled();
     });
 
     it("skips one auto-collect turn after a manual foundation-to-tableau move", () => {
+      // Arrange
       const realMoveCard = useGameStore.getState().actions.moveCard;
       const moveSpy = vi.fn((...args: Parameters<typeof realMoveCard>) => realMoveCard(...args));
 
@@ -680,13 +709,14 @@ describe("Solitaire app behavior", () => {
 
       render(<Solitaire />);
 
-      // Click the top foundation card (2 of hearts), which is a legal move to tableau.
       const foundationTopCard = screen.getByTestId("play-area").querySelector("#fpile0 .card:last-child") as HTMLElement;
+
+      // Act: click the top foundation card (2 of hearts), which is a legal move to tableau.
       act(() => {
         fireEvent.click(foundationTopCard);
       });
 
-      // The manual foundation -> tableau move should happen.
+      // Assert: the manual foundation -> tableau move should happen.
       expect(moveSpy).toHaveBeenCalledWith(
         expect.objectContaining({ rank: "2", suit: "hearts" }),
         "tableau",
@@ -696,11 +726,12 @@ describe("Solitaire app behavior", () => {
         1,
       );
 
-      // Auto-collect must not immediately reverse that move back to foundation.
+      // Assert: auto-collect must not immediately reverse that move back to foundation.
       expect(moveSpy).toHaveBeenCalledTimes(1);
     });
 
     it("does not immediately reverse an animated foundation-to-tableau move", () => {
+      // Arrange
       vi.useFakeTimers();
 
       const realMoveCard = useGameStore.getState().actions.moveCard;
@@ -727,19 +758,20 @@ describe("Solitaire app behavior", () => {
 
       render(<Solitaire />);
 
-      // User moves 4 of clubs from foundation to tableau.
       const foundationTopCard = screen.getByTestId("play-area").querySelector("#fpile0 .card:last-child") as HTMLElement;
+
+      // Act: user moves 4 of clubs from foundation to tableau.
       act(() => {
         fireEvent.click(foundationTopCard);
       });
 
-      // Advance enough time for the manual animation to commit and any immediate
+      // Act: advance enough time for the manual animation to commit and any immediate
       // follow-up auto-collect animation/commit to occur if buggy.
       act(() => {
         vi.advanceTimersByTime(800);
       });
 
-      // Only the manual move should have been committed.
+      // Assert: only the manual move should have been committed.
       expect(moveSpy).toHaveBeenCalledTimes(1);
       expect(moveSpy).toHaveBeenCalledWith(
         expect.objectContaining({ rank: "4", suit: "clubs" }),
@@ -754,10 +786,10 @@ describe("Solitaire app behavior", () => {
     });
 
     it("blocks pile taps while auto-collect animation is in progress", () => {
-      vi.useFakeTimers();
-
       // Arrange: animations enabled so auto-collect uses the overlay path and
       // movingCards stays non-empty until the timer fires.
+      vi.useFakeTimers();
+
       const realMoveCard = useGameStore.getState().actions.moveCard;
       const moveSpy = vi.fn((...args: Parameters<typeof realMoveCard>) => realMoveCard(...args));
       useGameStore.setState(state => ({ actions: { ...state.actions, moveCard: moveSpy } }));
@@ -778,22 +810,22 @@ describe("Solitaire app behavior", () => {
 
       render(<Solitaire />);
 
-      // Auto-collect has started animating the ace; timer not yet advanced.
-      // Tap the king — should be blocked because autoCollectingRef is true.
       const kingCard = screen.getByTestId("play-area").querySelector("#tabpile0 .card") as HTMLElement;
+
+      // Act: tap the king — should be blocked because auto-collect animation is in progress.
       act(() => {
         fireEvent.click(kingCard);
       });
 
-      // moveSpy must not have been called yet (animation pending, click blocked).
+      // Assert: moveSpy must not have been called (animation pending, click blocked).
       expect(moveSpy).not.toHaveBeenCalled();
 
-      // Advance past the animation duration to let the auto-collect commit.
+      // Act: advance past the animation duration to let the auto-collect commit.
       act(() => {
         vi.advanceTimersByTime(350);
       });
 
-      // Now the ace commit should have fired.
+      // Assert: the ace commit should have fired.
       expect(moveSpy).toHaveBeenCalledWith(
         expect.objectContaining({ rank: "ace", suit: "hearts" }),
         "foundation",
@@ -807,6 +839,7 @@ describe("Solitaire app behavior", () => {
     });
 
     it("blocks drops while auto-collect animation is in progress", () => {
+      // Arrange
       vi.useFakeTimers();
 
       const realMoveCard = useGameStore.getState().actions.moveCard;
@@ -824,20 +857,23 @@ describe("Solitaire app behavior", () => {
 
       render(<Solitaire />);
 
-      // Auto-collect is animating. Attempt a drop onto tableau pile 0.
       const tabPile = screen.getByTestId("play-area").querySelector("#tabpile0") as HTMLElement;
       const kingData = JSON.stringify({ rank: "king", suit: "spades", cardIndex: 0, pileIndex: undefined, pileType: "waste" });
+
+      // Act: attempt a drop while auto-collect animation is in progress.
       act(() => {
         fireEvent.drop(tabPile, { dataTransfer: { getData: () => kingData } });
       });
 
+      // Assert: drop is blocked while animation is running.
       expect(moveSpy).not.toHaveBeenCalled();
 
+      // Act: advance past the animation duration to let the auto-collect commit.
       act(() => {
         vi.advanceTimersByTime(350);
       });
 
-      // Only the auto-collect ace commit should have fired.
+      // Assert: only the auto-collect ace commit should have fired.
       expect(moveSpy).toHaveBeenCalledTimes(1);
       expect(moveSpy).toHaveBeenCalledWith(
         expect.objectContaining({ rank: "ace", suit: "hearts" }),
@@ -852,6 +888,7 @@ describe("Solitaire app behavior", () => {
     });
 
     it("blocks draw-pile clicks while auto-collect animation is in progress", () => {
+      // Arrange
       vi.useFakeTimers();
 
       const realDrawCard = useGameStore.getState().actions.drawCard;
@@ -869,12 +906,14 @@ describe("Solitaire app behavior", () => {
 
       render(<Solitaire />);
 
-      // Auto-collect is running. Clicking the draw pile must be blocked.
       const drawElem = screen.getByTestId("play-area").querySelector("#draw") as HTMLElement;
+
+      // Act: click the draw pile while auto-collect animation is running.
       act(() => {
         fireEvent.click(drawElem);
       });
 
+      // Assert: draw is blocked while auto-collect is animating.
       expect(drawSpy).not.toHaveBeenCalled();
 
       act(() => {
@@ -882,6 +921,65 @@ describe("Solitaire app behavior", () => {
       });
 
       vi.useRealTimers();
+    });
+  });
+
+  it("dragging a run from tableau pile index 0 moves the run head, not just the dragged card", () => {
+    // Regression: !!droppedCardData.pileIndex was false for pile 0 (!!0 === false),
+    // silently bypassing the tableau-to-tableau run-detection branch and leaving
+    // the card unmoved when the dragged card itself wasn't valid on the target.
+
+    // Arrange
+    const moveOriginal = useGameStore.getState().actions.moveCard;
+    const moveSpy = vi.fn();
+    act(() => {
+      useGameStore.setState(state => ({ actions: { ...state.actions, moveCard: moveSpy } }));
+      useGameStore.setState({
+        playfield: {
+          draw: [],
+          waste: [],
+          foundation: [[], [], [], []],
+          tableau: [
+            // pile 0: 8♣ (black) with 7♦ (red) on top — a two-card run.
+            [
+              { rank: "8", suit: "clubs", face: "up", pileType: "tableau", pileIndex: 0, cardIndex: 0 },
+              { rank: "7", suit: "diamonds", face: "up", pileType: "tableau", pileIndex: 0, cardIndex: 1 },
+            ],
+            // pile 1: 9♥ (red) — 8♣ (black) is valid on it; 7♦ (red) is not.
+            [{ rank: "9", suit: "hearts", face: "up" }],
+            [], [], [], [], [],
+          ],
+        },
+      });
+    });
+
+    render(<Solitaire />);
+
+    const droppedCardData = JSON.stringify({
+      rank: "7", suit: "diamonds", face: "up",
+      pileType: "tableau", pileIndex: 0, cardIndex: 1,
+    });
+    const target = screen.getByTestId("play-area").querySelector("#tabpile1") as HTMLElement;
+    expect(target).toBeTruthy();
+
+    // Act: drag 7♦ (top card, pile index 0) and drop onto pile 1 (9♥).
+    act(() => {
+      fireEvent.drop(target, { dataTransfer: { getData: () => droppedCardData } });
+    });
+
+    // Assert: moveCard must be called with 8♣ (the run head at index 0), not 7♦.
+    expect(moveSpy).toHaveBeenCalledTimes(1);
+    expect(moveSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ rank: "8", suit: "clubs" }),
+      "tableau",
+      1,
+      "tableau",
+      0,
+      0,
+    );
+
+    act(() => {
+      useGameStore.setState(state => ({ actions: { ...state.actions, moveCard: moveOriginal } }));
     });
   });
 });

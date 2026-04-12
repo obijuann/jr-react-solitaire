@@ -371,7 +371,7 @@ export default function Solitaire() {
           rank: card.rank,
           suit: card.suit
         };
-        cardElement = document.querySelector(`[data-carddata='${JSON.stringify(expectedData).replace(/'/g, "\\'")}']`) as HTMLElement;
+        cardElement = document.querySelector(`[data-carddata='${JSON.stringify(expectedData)}']`) as HTMLElement;
       }
       if (!cardElement) return null;
       const fromRect = cardElement.getBoundingClientRect();
@@ -656,7 +656,7 @@ export default function Solitaire() {
     // For non-empty piles, validate against the current top card only.
     if (cardDataList && cardDataList.length) targetCardData = cardDataList.slice(-1)[0];
 
-    if (targetPileType == "tableau" && droppedCardData.pileType === "tableau" && !!droppedCardData.pileIndex) {
+    if (targetPileType == "tableau" && droppedCardData.pileType === "tableau" && droppedCardData.pileIndex !== undefined) {
       // Tableau-to-tableau drops can move a run, so find the deepest valid source card.
       const validMoveCardIndex = playfieldState["tableau"][droppedCardData.pileIndex].findLastIndex((cardData: CardData) => {
         return cardData.face === "up" && isValidMove(cardData, targetCardData, targetPileType, playfieldState, ranks, suitsToColorsMap)
