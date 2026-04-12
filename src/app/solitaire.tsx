@@ -36,6 +36,7 @@ export default function Solitaire() {
   const playfieldState = useGameStore(state => state.playfield);
   const menuVisible = useGameStore(state => state.menuVisible);
   const modalType = useGameStore(state => state.modalType);
+  const lastPlayfieldMutation = useGameStore(state => state.lastPlayfieldMutation);
   const actions = useGameStore(state => ({
     newGame: state.actions.newGame,
     restartGame: state.actions.restartGame,
@@ -58,16 +59,6 @@ export default function Solitaire() {
   const foundationRefs = useRef<(HTMLDivElement | null)[]>([]);
   const tableauRefs = useRef<(HTMLDivElement | null)[]>([]);
 
-  /**
-   * Last-seen undo queue length, stored between effect runs to detect undo/redo.
-   * Initialized to 0 because all queues start empty.
-   */
-  const prevUndoQueueLengthRef = useRef<number>(useGameStore.getState().undoQueue.length);
-  /**
-   * Last-seen redo queue length, stored between effect runs to detect undo/redo.
-   * An undo always increases this value; a redo always decreases it by exactly 1.
-   */
-  const prevRedoQueueLengthRef = useRef<number>(useGameStore.getState().redoQueue.length);
   /**
    * Cached reference to the last playfield observed by the combined effect.
    * Lets the effect distinguish a playfieldState change from a movingCards change.
@@ -109,43 +100,20 @@ export default function Solitaire() {
   }, []);
 
   useEffect(() => {
-    /**
-     * Determine whether the most recent playfield change was caused by an undo
-     * or redo operation. If so, auto-collect must not run because the user is
-     * deliberately stepping through history.
-     *
-     * Detection relies on the redo-queue length:
-     *  - Undo:  redo queue grows by 1 (undo always pushes to redo).
-     *  - Redo:  redo queue shrinks by exactly 1 while undo queue grows by 1
-     *           (redo always pops from redo and pushes to undo).
-     *
-     * Normal moves clear the redo queue entirely, so the shrink-by-1 test
-     * distinguishes redo from a normal move that resets the redo queue.
-     */
+    // Skip auto-collect only when this playfield transition came from
+    // history traversal (undo/redo).
     const playfieldChanged = playfieldState !== prevPlayfieldRef.current;
     prevPlayfieldRef.current = playfieldState;
 
     if (playfieldChanged) {
-      const { undoQueue, redoQueue } = useGameStore.getState();
-      const currentUndoLength = undoQueue.length;
-      const currentRedoLength = redoQueue.length;
-
-      const wasUndo = currentRedoLength > prevRedoQueueLengthRef.current;
-      const wasRedo =
-        currentRedoLength === prevRedoQueueLengthRef.current - 1 &&
-        currentUndoLength === prevUndoQueueLengthRef.current + 1;
-
-      prevUndoQueueLengthRef.current = currentUndoLength;
-      prevRedoQueueLengthRef.current = currentRedoLength;
-
-      if (wasUndo || wasRedo) {
+      if (lastPlayfieldMutation === "undo" || lastPlayfieldMutation === "redo") {
         autoCollectingRef.current = false;
         return;
       }
     }
 
     runAutoCollect();
-  }, [playfieldState, movingCards]);
+  }, [playfieldState, movingCards, lastPlayfieldMutation]);
 
   /**
    * Resolve a pile container reference used when calculating animation targets.

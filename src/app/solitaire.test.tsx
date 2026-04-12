@@ -19,6 +19,7 @@ afterEach(() => {
     shuffledDeck: [],
     undoQueue: [],
     redoQueue: [],
+    lastPlayfieldMutation: "init",
     modalType: undefined,
     menuVisible: true,
     gameTimer: 0,
