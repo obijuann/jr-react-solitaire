@@ -793,16 +793,16 @@ export default function Solitaire() {
           rowGap: "30px"
         }}
       >
-        <Grid item sx={{ gridColumn: "1 / 2", gridRow: "1 / 2", display: "flex", justifyContent: "center" }}>
+        <Grid sx={{ gridColumn: "1 / 2", gridRow: "1 / 2", display: "flex", justifyContent: "center" }}>
           {renderDrawPile()}
         </Grid>
-        <Grid item sx={{ gridColumn: "2 / 4", gridRow: "1 / 2" }}>
+        <Grid sx={{ gridColumn: "2 / 4", gridRow: "1 / 2" }}>
           {renderWastePile()}
         </Grid>
-        <Grid item sx={{ gridColumn: "4 / 8", gridRow: "1 / 2" }}>
+        <Grid sx={{ gridColumn: "4 / 8", gridRow: "1 / 2" }}>
           {renderFoundation()}
         </Grid>
-        <Grid item sx={{ gridColumn: "1 / 8", gridRow: "2 / 3" }}>
+        <Grid sx={{ gridColumn: "1 / 8", gridRow: "2 / 3" }}>
           {renderTableau()}
         </Grid>
       </Grid>
