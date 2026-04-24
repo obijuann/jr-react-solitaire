@@ -19,7 +19,7 @@ afterEach(() => {
     shuffledDeck: [],
     undoQueue: [],
     redoQueue: [],
-    lastPlayfieldMutation: "init",
+    lastPlayfieldUpdateType: "init",
     modalType: undefined,
     menuVisible: true,
     gameTimer: 0,
@@ -511,6 +511,55 @@ describe("Solitaire app behavior", () => {
   // ---------------------------------------------------------------------------
 
   describe("auto-collect", () => {
+    it("waits for first user action after new deal before auto-collecting", () => {
+      // Arrange: explicit deal update type with a safe auto-collect candidate.
+      const realDrawCard = useGameStore.getState().actions.drawCard;
+      const drawSpy = vi.fn(realDrawCard);
+      const moveSpy = vi.fn();
+      useGameStore.setState(state => ({
+        actions: {
+          ...state.actions,
+          drawCard: drawSpy,
+          moveCard: moveSpy,
+        },
+      }));
+      usePreferencesStore.setState({ autoCollectEnabled: true, cardAnimationEnabled: false });
+      useGameStore.setState({
+        lastPlayfieldUpdateType: "deal",
+        playfield: {
+          draw: [{ rank: "2", suit: "clubs", face: "down" }],
+          waste: [],
+          foundation: [[], [], [], []],
+          tableau: [
+            [{ rank: "ace", suit: "hearts", face: "up" }],
+            [], [], [], [], [], [],
+          ],
+        },
+      });
+
+      render(<Solitaire />);
+
+      // Assert: no auto-collect immediately after fresh deal render.
+      expect(moveSpy).not.toHaveBeenCalled();
+
+      // Act: first user action (draw pile click) arms auto-collect.
+      const drawElem = screen.getByTestId("play-area").querySelector("#draw") as HTMLElement;
+      act(() => {
+        fireEvent.click(drawElem);
+      });
+
+      // Assert: user draw plus auto-collect move now both run.
+      expect(drawSpy).toHaveBeenCalledTimes(1);
+      expect(moveSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ rank: "ace", suit: "hearts" }),
+        "foundation",
+        expect.any(Number),
+        "tableau",
+        0,
+        0,
+      );
+    });
+
     it("moves a safe card to foundation when auto-collect is enabled", () => {
       // Arrange: ace on waste, auto-collect on, animations off.
       const moveSpy = vi.fn();
@@ -897,11 +946,15 @@ describe("Solitaire app behavior", () => {
       useGameStore.setState(state => ({ actions: { ...state.actions, drawCard: drawSpy } }));
       usePreferencesStore.setState({ autoCollectEnabled: true, cardAnimationEnabled: true });
       useGameStore.setState({
+        lastPlayfieldUpdateType: "deal",
         playfield: {
           draw: [{ rank: "2", suit: "clubs", face: "down" }],
-          waste: [{ rank: "ace", suit: "hearts", face: "up" }],
+          waste: [],
           foundation: [[], [], [], []],
-          tableau: [[], [], [], [], [], [], []],
+          tableau: [
+            [{ rank: "ace", suit: "hearts", face: "up" }],
+            [], [], [], [], [], [],
+          ],
         },
       });
 
@@ -909,13 +962,18 @@ describe("Solitaire app behavior", () => {
 
       const drawElem = screen.getByTestId("play-area").querySelector("#draw") as HTMLElement;
 
-      // Act: click the draw pile while auto-collect animation is running.
+      // Act: first click arms auto-collect and starts auto-collect animation.
       act(() => {
         fireEvent.click(drawElem);
       });
 
-      // Assert: draw is blocked while auto-collect is animating.
-      expect(drawSpy).not.toHaveBeenCalled();
+      // Act: second click should be blocked while auto-collect animation is in progress.
+      act(() => {
+        fireEvent.click(drawElem);
+      });
+
+      // Assert: only the first draw click should have been accepted.
+      expect(drawSpy).toHaveBeenCalledTimes(1);
 
       act(() => {
         vi.advanceTimersByTime(350);
