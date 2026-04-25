@@ -45,12 +45,7 @@ export function getWasteOffsetPx(styles: CSSStyleDeclaration, viewportWidth: num
  * @param offsetTwoPx Resolved offset for the top card when exactly 2 cards exist.
  * @returns The target rectangle for the animated draw overlay.
  */
-export function getWasteTargetRect(
-  wasteRect: DOMRect,
-  futureWasteCount: number,
-  offsetOnePx: number,
-  offsetTwoPx: number,
-): DOMRect {
+export function getWasteTargetRect(wasteRect: DOMRect, futureWasteCount: number, offsetOnePx: number, offsetTwoPx: number): DOMRect {
   let translateX = 0;
 
   if (futureWasteCount === 2) {

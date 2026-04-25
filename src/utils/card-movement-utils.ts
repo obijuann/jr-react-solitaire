@@ -118,7 +118,7 @@ function buildFoundationSummary(
  * @param rankIndexMap Rank lookup map.
  * @returns Foundation index, or -1 when no legal destination exists.
  */
-function findFoundationTargetWithSummary(
+function findFoundationTarget(
     card: CardData,
     summary: FoundationSummary,
     rankIndexMap: Record<string, number>,
@@ -144,7 +144,7 @@ function findFoundationTargetWithSummary(
  * @param suitsToColorsMap Suit-to-color mapping.
  * @returns True when moving card to foundation is considered safe.
  */
-function isAutoCollectSafeWithSummary(
+function isAutoCollectSafe(
     card: CardData,
     summary: FoundationSummary,
     rankIndexMap: Record<string, number>,
@@ -275,71 +275,6 @@ export function isValidMove(
 }
 
 /**
- * Test whether a card is legally placeable on a specific foundation pile.
- *
- * An ace starts on an empty foundation. Any other card must match the pile's
- * suit and be exactly one rank higher than the current top card.
- *
- * @param card The candidate card.
- * @param foundationPile The target foundation pile.
- * @param ranks Ordered rank list from lowest ("ace") to highest ("king").
- * @returns True when the placement is legal.
- */
-export function isFoundationLegal(card: CardData, foundationPile: CardData[], ranks: Ranks[]): boolean {
-    const rankIndexMap = buildRankIndexMap(ranks);
-
-    if (foundationPile.length === 0) {
-        return card.rank === "ace";
-    }
-
-    const topCard = foundationPile[foundationPile.length - 1];
-    const cardRankIndex = getRankIndex(card.rank, rankIndexMap);
-    const topRankIndex = getRankIndex(topCard.rank, rankIndexMap);
-
-    return topCard.suit === card.suit && cardRankIndex === topRankIndex + 1;
-}
-
-/**
- * Return the index of the first foundation pile that `card` may legally land on.
- *
- * For aces the leftmost empty foundation is chosen. For all other cards exactly
- * one suit-matching pile can exist as the destination.
- *
- * @param card The card to place.
- * @param foundationPiles The four foundation piles.
- * @param ranks Ordered rank list from lowest to highest.
- * @returns Foundation pile index, or -1 if no legal destination exists.
- */
-export function findFoundationTarget(card: CardData, foundationPiles: CardData[][], ranks: Ranks[]): number {
-    return foundationPiles.findIndex(pile => isFoundationLegal(card, pile, ranks));
-}
-
-/**
- * Determine whether it is safe to auto-collect a card to its foundation pile.
- *
- * Aces are unconditionally safe. For all other cards two checks are applied:
- *
- * 1. Base safety gate — the card's rank index must be at most 2 above the
- *    lowest rank index among all started (non-empty) foundations.
- *
- * 2. Opposite-color relaxation — a red card is also safe when both black
- *    foundations are started and its rank index is at most 1 above the lower
- *    of the two black foundation tops. The mirror rule applies for black cards
- *    against both red foundations.
- *
- * @param card The candidate card.
- * @param foundationPiles The four foundation piles.
- * @param ranks Ordered rank list from lowest to highest.
- * @param suitsToColorsMap Maps each suit name to "black" or "red".
- * @returns True when the card is safe to auto-collect.
- */
-export function isAutoCollectSafe(card: CardData, foundationPiles: CardData[][], ranks: Ranks[], suitsToColorsMap: Partial<Record<Suits, string>>): boolean {
-    const rankIndexMap = buildRankIndexMap(ranks);
-    const summary = buildFoundationSummary(foundationPiles, rankIndexMap, suitsToColorsMap);
-    return isAutoCollectSafeWithSummary(card, summary, rankIndexMap, suitsToColorsMap);
-}
-
-/**
  * Find the next card that should be auto-collected to a foundation pile.
  *
  * Scan order (per spec):
@@ -347,7 +282,7 @@ export function isAutoCollectSafe(card: CardData, foundationPiles: CardData[][],
  *     of each column is considered.
  *  2. Waste top card, if no tableau candidate qualifies.
  *
- * A candidate must be both foundation-legal ({@link isFoundationLegal}) and
+ * A candidate must be both foundation-legal ({@link findFoundationTarget}) and
  * safety-approved ({@link isAutoCollectSafe}).
  *
  * @param playfield Current playfield state.
@@ -370,10 +305,10 @@ export function findAutoCollectCandidate(playfield: PlayfieldState, ranks: Ranks
         // Only face-up top cards are eligible.
         if (topCard.face !== "up") continue;
 
-        const targetFoundationIndex = findFoundationTargetWithSummary(topCard, foundationSummary, rankIndexMap);
+        const targetFoundationIndex = findFoundationTarget(topCard, foundationSummary, rankIndexMap);
         if (targetFoundationIndex === -1) continue;
 
-        if (isAutoCollectSafeWithSummary(topCard, foundationSummary, rankIndexMap, suitsToColorsMap)) {
+        if (isAutoCollectSafe(topCard, foundationSummary, rankIndexMap, suitsToColorsMap)) {
             return {
                 card: topCard,
                 sourceType: "tableau",
@@ -389,10 +324,10 @@ export function findAutoCollectCandidate(playfield: PlayfieldState, ranks: Ranks
     if (waste.length > 0) {
         const topCard = waste[waste.length - 1];
         if (topCard.face === "up") {
-            const targetFoundationIndex = findFoundationTargetWithSummary(topCard, foundationSummary, rankIndexMap);
+            const targetFoundationIndex = findFoundationTarget(topCard, foundationSummary, rankIndexMap);
             if (
                 targetFoundationIndex !== -1 &&
-                isAutoCollectSafeWithSummary(topCard, foundationSummary, rankIndexMap, suitsToColorsMap)
+                isAutoCollectSafe(topCard, foundationSummary, rankIndexMap, suitsToColorsMap)
             ) {
                 return {
                     card: topCard,

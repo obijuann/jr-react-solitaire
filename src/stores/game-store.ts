@@ -29,8 +29,8 @@ type GameStoreState = {
     undoQueue: Partial<PlayfieldState>[];
     /** Stack of undone playfield states used for redo operations. */
     redoQueue: Partial<PlayfieldState>[];
-    /** Last action type that mutated the playfield. */
-    lastPlayfieldMutation: "init" | "draw" | "move" | "undo" | "redo" | "other";
+    /** Last action type that updated the playfield. */
+    lastPlayfieldUpdateType: "init" | "deal" | "draw" | "move" | "undo" | "redo";
     /** Optional modal currently displayed (e.g., 'gamewin'). */
     modalType?: ModalTypes;
     /** Whether the main menu is visible. */
@@ -44,12 +44,6 @@ type GameStoreState = {
 
     /** Grouped store actions */
     actions: {
-        /**
-         * Replace parts of the current playfield.
-         * @param p Partial playfield properties to merge into state.
-         */
-        setPlayfield: (p: Partial<PlayfieldState>) => void;
-
         /**
          * Toggle the main menu visibility.
          * @param hideMenus When true, hide menus and clear any open submenu.
@@ -137,7 +131,7 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
             shuffledDeck: [],
             undoQueue: [],
             redoQueue: [],
-            lastPlayfieldMutation: "init",
+            lastPlayfieldUpdateType: "init",
             modalType: undefined,
             menuVisible: true,
             submenuId: "",
@@ -162,17 +156,6 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
                     if (!menuVisible && (timer > 0 || get().shuffledDeck?.length > 0)) {
                         get().actions.startTimer();
                     }
-                },
-
-                /**
-                 * Merge provided partial playfield data into the current playfield state.
-                 * @param p Partial playfield properties to merge.
-                 */
-                setPlayfield: (p: Partial<PlayfieldState>) => {
-                    set(state => ({
-                        playfield: { ...state.playfield, ...p },
-                        lastPlayfieldMutation: "other",
-                    }));
                 },
 
                 /**
@@ -276,7 +259,7 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
                         playfield: { draw: drawPileCardData, tableau: tableauCardData, waste: [], foundation: [[], [], [], []] },
                         undoQueue: [],
                         redoQueue: [],
-                        lastPlayfieldMutation: "other",
+                        lastPlayfieldUpdateType: "deal",
                     }));
 
                     get().actions.checkGameState();
@@ -358,7 +341,7 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
                     set(() => ({
                         playfield,
                         undoQueue: undoQueue,
-                        lastPlayfieldMutation: "draw",
+                        lastPlayfieldUpdateType: "draw",
                     }));
                     get().actions.checkGameState();
                 },
@@ -419,7 +402,7 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
                         playfield: newPlayfield,
                         undoQueue: undoQueue,
                         redoQueue: [],
-                        lastPlayfieldMutation: "move",
+                        lastPlayfieldUpdateType: "move",
                     }));
                     get().actions.checkGameState();
                 },
@@ -451,7 +434,7 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
                         playfield: current,
                         undoQueue: undoQueue,
                         redoQueue: redoQueue,
-                        lastPlayfieldMutation: "undo",
+                        lastPlayfieldUpdateType: "undo",
                     }));
                 },
 
@@ -482,7 +465,7 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
                         playfield: current,
                         undoQueue: undoQueue,
                         redoQueue: redoQueue,
-                        lastPlayfieldMutation: "redo",
+                        lastPlayfieldUpdateType: "redo",
                     }));
                 },
 

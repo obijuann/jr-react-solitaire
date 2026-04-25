@@ -24,7 +24,7 @@ beforeEach(() => {
     shuffledDeck: [],
     undoQueue: [],
     redoQueue: [],
-    lastPlayfieldMutation: "init",
+    lastPlayfieldUpdateType: "init",
     modalType: undefined,
     gameTimer: 0,
     timerId: null,
@@ -67,6 +67,7 @@ describe("Game store actions", () => {
     expect(pf.foundation.every(f => f.length === 0)).toBe(true);
     // 52 - 28 = 24
     expect(pf.draw.length).toBe(24);
+    expect(useGameStore.getState().lastPlayfieldUpdateType).toBe("deal");
   });
 
   it("drawCard moves a card from draw to waste", () => {
@@ -156,7 +157,7 @@ describe("Game store actions", () => {
     expect(pf.foundation[0].length).toBe(1);
   });
 
-  it("moveCard marks mutation as move even when it clears redoQueue", () => {
+  it("moveCard marks update type as move even when it clears redoQueue", () => {
     // Arrange
     const sourceCard = { rank: "7", suit: "hearts", face: "up" } as CardData;
     useGameStore.setState({
@@ -172,7 +173,7 @@ describe("Game store actions", () => {
       },
       undoQueue: [],
       redoQueue: [{ waste: [], foundation: [[{ rank: "ace", suit: "hearts", face: "up" } as CardData], [], [], []] }],
-      lastPlayfieldMutation: "undo",
+      lastPlayfieldUpdateType: "undo",
     });
 
     // Act
@@ -187,26 +188,26 @@ describe("Game store actions", () => {
 
     // Assert
     const state = useGameStore.getState();
-    expect(state.lastPlayfieldMutation).toBe("move");
+    expect(state.lastPlayfieldUpdateType).toBe("move");
     expect(state.redoQueue.length).toBe(0);
   });
 
-  it("undo and redo mark mutation source correctly", () => {
+  it("undo and redo mark update type correctly", () => {
     // Arrange
     const card = { rank: "ace", suit: "spades", face: "up" } as CardData;
     useGameStore.setState({
       playfield: { draw: [], waste: [card], foundation: [[], [], [], []], tableau: [[], [], [], [], [], [], []] },
       undoQueue: [{ waste: [], foundation: [[card], [], [], []] }],
       redoQueue: [],
-      lastPlayfieldMutation: "move",
+      lastPlayfieldUpdateType: "move",
     });
 
     // Act
     useGameStore.getState().actions.undo();
-    expect(useGameStore.getState().lastPlayfieldMutation).toBe("undo");
+    expect(useGameStore.getState().lastPlayfieldUpdateType).toBe("undo");
 
     useGameStore.getState().actions.redo();
-    expect(useGameStore.getState().lastPlayfieldMutation).toBe("redo");
+    expect(useGameStore.getState().lastPlayfieldUpdateType).toBe("redo");
   });
 
   it("newGame shuffles a new deck, redeals the playfield, clears the undo/redo queues, and starts a new game timer", () => {
@@ -493,22 +494,6 @@ describe("Game store actions", () => {
     } finally {
       vi.useRealTimers();
     }
-  });
-
-  it("setPlayfield merges partial playfield updates", () => {
-    // Arrange
-    const a = { rank: "ace", suit: "hearts", face: "down" } as CardData;
-    const b = { rank: "2", suit: "hearts", face: "down" } as CardData;
-    useGameStore.setState({ playfield: { draw: [a], waste: [], foundation: [[], [], [], []], tableau: [[], [], [], [], [], [], []] } });
-
-    // Act
-    useGameStore.getState().actions.setPlayfield({ waste: [b] });
-
-    // Assert: draw remains, waste updated
-    const pf = useGameStore.getState().playfield;
-    expect(pf.draw.length).toBe(1);
-    expect(pf.waste.length).toBe(1);
-    expect(pf.waste[0].rank).toBe("2");
   });
 
   it("restartGame re-deals and restarts the timer", () => {

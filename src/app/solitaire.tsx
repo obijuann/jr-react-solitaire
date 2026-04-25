@@ -36,7 +36,7 @@ export default function Solitaire() {
   const playfieldState = useGameStore(state => state.playfield);
   const menuVisible = useGameStore(state => state.menuVisible);
   const modalType = useGameStore(state => state.modalType);
-  const lastPlayfieldMutation = useGameStore(state => state.lastPlayfieldMutation);
+  const lastPlayfieldUpdateType = useGameStore(state => state.lastPlayfieldUpdateType);
   const actions = useGameStore(state => ({
     newGame: state.actions.newGame,
     restartGame: state.actions.restartGame,
@@ -106,14 +106,14 @@ export default function Solitaire() {
     prevPlayfieldRef.current = playfieldState;
 
     if (playfieldChanged) {
-      if (lastPlayfieldMutation === "undo" || lastPlayfieldMutation === "redo") {
+      if (lastPlayfieldUpdateType === "undo" || lastPlayfieldUpdateType === "redo") {
         autoCollectingRef.current = false;
         return;
       }
     }
 
     runAutoCollect();
-  }, [playfieldState, movingCards, lastPlayfieldMutation]);
+  }, [playfieldState, movingCards, lastPlayfieldUpdateType]);
 
   /**
    * Resolve a pile container reference used when calculating animation targets.
@@ -395,7 +395,7 @@ export default function Solitaire() {
    *  - No candidate qualifies according to the safety rules in the spec.
    */
   function runAutoCollect() {
-    if (!autoCollectEnabled) {
+    if (!autoCollectEnabled || lastPlayfieldUpdateType === "deal") {
       autoCollectingRef.current = false;
       return;
     }
