@@ -496,22 +496,6 @@ describe("Game store actions", () => {
     }
   });
 
-  it("setPlayfield merges partial playfield updates", () => {
-    // Arrange
-    const a = { rank: "ace", suit: "hearts", face: "down" } as CardData;
-    const b = { rank: "2", suit: "hearts", face: "down" } as CardData;
-    useGameStore.setState({ playfield: { draw: [a], waste: [], foundation: [[], [], [], []], tableau: [[], [], [], [], [], [], []] } });
-
-    // Act
-    useGameStore.getState().actions.setPlayfield({ waste: [b] });
-
-    // Assert: draw remains, waste updated
-    const pf = useGameStore.getState().playfield;
-    expect(pf.draw.length).toBe(1);
-    expect(pf.waste.length).toBe(1);
-    expect(pf.waste[0].rank).toBe("2");
-  });
-
   it("restartGame re-deals and restarts the timer", () => {
     vi.useFakeTimers();
     try {

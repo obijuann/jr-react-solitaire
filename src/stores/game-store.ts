@@ -30,7 +30,7 @@ type GameStoreState = {
     /** Stack of undone playfield states used for redo operations. */
     redoQueue: Partial<PlayfieldState>[];
     /** Last action type that updated the playfield. */
-    lastPlayfieldUpdateType: "init" | "deal" | "draw" | "move" | "undo" | "redo" | "other";
+    lastPlayfieldUpdateType: "init" | "deal" | "draw" | "move" | "undo" | "redo";
     /** Optional modal currently displayed (e.g., 'gamewin'). */
     modalType?: ModalTypes;
     /** Whether the main menu is visible. */
@@ -44,12 +44,6 @@ type GameStoreState = {
 
     /** Grouped store actions */
     actions: {
-        /**
-         * Replace parts of the current playfield.
-         * @param p Partial playfield properties to merge into state.
-         */
-        setPlayfield: (p: Partial<PlayfieldState>) => void;
-
         /**
          * Toggle the main menu visibility.
          * @param hideMenus When true, hide menus and clear any open submenu.
@@ -162,17 +156,6 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
                     if (!menuVisible && (timer > 0 || get().shuffledDeck?.length > 0)) {
                         get().actions.startTimer();
                     }
-                },
-
-                /**
-                 * Merge provided partial playfield data into the current playfield state.
-                 * @param p Partial playfield properties to merge.
-                 */
-                setPlayfield: (p: Partial<PlayfieldState>) => {
-                    set(state => ({
-                        playfield: { ...state.playfield, ...p },
-                        lastPlayfieldUpdateType: "other",
-                    }));
                 },
 
                 /**
