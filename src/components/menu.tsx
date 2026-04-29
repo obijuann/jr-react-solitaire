@@ -66,6 +66,7 @@ export default function Menu() {
     const gameTimerEnabled = usePreferencesStore(state => state.gameTimerEnabled);
     const cardAnimationEnabled = usePreferencesStore(state => state.cardAnimationEnabled);
     const autoCollectEnabled = usePreferencesStore(state => state.autoCollectEnabled);
+    const solvableOnlyEnabled = usePreferencesStore(state => state.solvableOnlyEnabled);
 
     useEffect(() => {
         // Close the submenu on resize
@@ -237,6 +238,14 @@ export default function Menu() {
     }
 
     /**
+     * Update the user preference for solvable-only game generation.
+     * @param e Change event from the input element
+     */
+    function handleSolvableOnlySwitchChange(e: ChangeEvent<HTMLInputElement>): void {
+        usePreferencesStore.setState(() => ({ solvableOnlyEnabled: e.target.checked }));
+    }
+
+    /**
      * Render the "Preferences" submenu.
      * @returns JSX.Element
      */
@@ -303,6 +312,18 @@ export default function Menu() {
                                 checked={autoCollectEnabled}
                                 size="medium"
                                 onChange={handleAutoCollectSwitchChange}
+                                sx={checkboxSx}
+                            />
+                        </div>
+                    </div>
+                    <div className="group-section">
+                        <div>Solvable Only</div>
+                        <div>
+                            {/* Restrict new deals to entries marked solvable in the bundled bitmap table. */}
+                            <Checkbox
+                                checked={solvableOnlyEnabled}
+                                size="medium"
+                                onChange={handleSolvableOnlySwitchChange}
                                 sx={checkboxSx}
                             />
                         </div>
@@ -511,7 +532,7 @@ export default function Menu() {
      * Handler for the "New Game" action; closes menus and starts a new game.
      * @param e Mouse event
      */
-    function newGameHandler(e: React.MouseEvent) {
+    async function newGameHandler(e: React.MouseEvent) {
         e.preventDefault();
 
         // If there is a current game in progress, starting a new game counts as a loss.
@@ -521,7 +542,7 @@ export default function Menu() {
         }
 
         useGameStore.getState().actions.toggleMenu(true);
-        useGameStore.getState().actions.newGame();
+        await useGameStore.getState().actions.newGame();
     }
 
     /**

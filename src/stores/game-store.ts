@@ -4,13 +4,10 @@ import { CardData } from "../types/card-data";
 import { ModalTypes } from "../types/modal-types";
 import { PileTypes } from "../types/pile-types";
 import { PlayfieldState } from "../types/playfield-state";
-import { Ranks } from "../types/ranks";
-import { Suits } from "../types/suits";
+import { getRandomGameNumber, shuffleDeckWithGameNumber } from "../utils/deck-shuffler";
+import { pickRandomSolvableGameNumber } from "../utils/solvability-table";
 import usePreferencesStore from "./preferences-store";
 import useStatisticsStore from "./statistics-store";
-
-/** Ordered ranks from lowest to highest used for game rules. */
-const ranks: Ranks[] = ["ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "jack", "queen", "king"];
 
 /** Template for an empty playfield used to reset or initialize state. */
 const emptyPlayArea: PlayfieldState = {
@@ -25,6 +22,8 @@ type GameStoreState = {
     playfield: PlayfieldState;
     /** The current shuffled deck not yet dealt. */
     shuffledDeck: CardData[];
+    /** Current game number seed used to produce the shuffled deck. */
+    currentGameNumber: number | null;
     /** Stack of prior playfield states used for undo operations. */
     undoQueue: Partial<PlayfieldState>[];
     /** Stack of undone playfield states used for redo operations. */
@@ -59,14 +58,14 @@ type GameStoreState = {
         /** Clear the active submenu. */
         clearSubmenu: () => void;
 
-        /** Shuffle a new deck into `shuffledDeck`. */
-        shuffleDeck: () => void;
+        /** Shuffle a new deck into `shuffledDeck` and return selected game number. */
+        shuffleDeck: () => Promise<number>;
 
         /** Deal the shuffled deck into the tableau and draw piles. */
         dealDeck: () => void;
 
         /** Start a brand new game: shuffle, deal and start timer. */
-        newGame: () => void;
+        newGame: () => Promise<void>;
 
         /** Pause the game timer if the game is in progress. */
         pauseGame: () => void;
@@ -129,6 +128,7 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
         (set, get) => ({
             playfield: emptyPlayArea,
             shuffledDeck: [],
+            currentGameNumber: null,
             undoQueue: [],
             redoQueue: [],
             lastPlayfieldUpdateType: "init",
@@ -211,27 +211,25 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
                 },
 
                 /**
-                 * Create and shuffle a standard 52-card deck and store it in `shuffledDeck`.
+                 * Shuffle a deck from a selected game number seed.
+                 * If solvable-only is enabled, picks a random game number known to be solvable.
+                 *
+                 * @returns The selected game number used to generate `shuffledDeck`
                  */
-                shuffleDeck: () => {
-                    const newDeck: CardData[] = [];
-                    const suitsList: Suits[] = ["clubs", "diamonds", "hearts", "spades"];
+                shuffleDeck: async () => {
+                    const prefs = usePreferencesStore.getState();
+                    // Branch game-number selection based on current user preference.
+                    const gameNumber = prefs.solvableOnlyEnabled
+                        ? await pickRandomSolvableGameNumber()
+                        : getRandomGameNumber();
+                    const newDeck = shuffleDeckWithGameNumber(gameNumber);
 
-                    for (let si = 0; si < suitsList.length; si++) {
-                        for (let ri = 0; ri < ranks.length; ri++) {
-                            const card: CardData = { rank: ranks[ri], suit: suitsList[si], face: "down" };
-                            newDeck.push(card);
-                        }
-                    }
+                    set(() => ({
+                        shuffledDeck: newDeck,
+                        currentGameNumber: gameNumber,
+                    }));
 
-                    for (let i = newDeck.length - 1; i > 0; i--) {
-                        const j = Math.floor(Math.random() * (i + 1));
-                        const temp = newDeck[i];
-                        newDeck[i] = newDeck[j];
-                        newDeck[j] = temp;
-                    }
-
-                    set(() => ({ shuffledDeck: newDeck }));
+                    return gameNumber;
                 },
 
                 /**
@@ -268,11 +266,12 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
                 /**
                  * Start a new game: clear modal, reset timer, shuffle and deal the deck, then start timer.
                  */
-                newGame: () => {
+                newGame: async () => {
                     set(() => ({ modalType: undefined }));
                     get().actions.stopTimer();
                     get().actions.resetTimer();
-                    get().actions.shuffleDeck();
+                    // Await so the deck/game number state is ready before dealing starts.
+                    await get().actions.shuffleDeck();
                     get().actions.dealDeck();
                     get().actions.startTimer();
                 },
@@ -307,7 +306,7 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
 
                 /** Quit the current game and reset playfield and deck state. */
                 quitGame: () => {
-                    set(() => ({ modalType: undefined, shuffledDeck: [], playfield: emptyPlayArea, undoQueue: [], redoQueue: [] }));
+                    set(() => ({ modalType: undefined, shuffledDeck: [], currentGameNumber: null, playfield: emptyPlayArea, undoQueue: [], redoQueue: [] }));
                     get().actions.stopTimer();
                     get().actions.resetTimer();
                 },
@@ -555,6 +554,7 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
                 playfield: state.playfield,
                 redoQueue: state.redoQueue,
                 shuffledDeck: state.shuffledDeck,
+                currentGameNumber: state.currentGameNumber,
                 undoQueue: state.undoQueue,
                 menuVisible: state.menuVisible
             }),
@@ -564,7 +564,7 @@ export const useGameStore = createWithEqualityFn<GameStoreState>()(
                     console.error(`error on store hydration: ${error}`);
                 }
             },
-            version: 3
+            version: 4
         },
     ),
 )

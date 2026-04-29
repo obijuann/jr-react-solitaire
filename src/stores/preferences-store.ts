@@ -22,6 +22,9 @@ type PreferencesStoreState = {
     /** Flag indicating whether eligible cards are automatically moved to the foundation. */
     autoCollectEnabled: boolean;
 
+    /** Flag indicating whether new games should be restricted to precomputed solvable deals. */
+    solvableOnlyEnabled: boolean;
+
     /** Grouped store actions */
     actions: {
         /** Resets all user preferences */
@@ -38,10 +41,11 @@ export const usePreferencesStore = create<PreferencesStoreState>()(
             gameTimerEnabled: true,
             cardAnimationEnabled: true,
             autoCollectEnabled: true,
+            solvableOnlyEnabled: true,
 
             actions: {
                 /**
-                 * Resets all user preferences
+                 * Reset all user preferences to factory defaults.
                  */
                 resetPreferences: () => {
                     set(() => ({
@@ -50,7 +54,8 @@ export const usePreferencesStore = create<PreferencesStoreState>()(
                         cardBack: "blue",
                         gameTimerEnabled: true,
                         cardAnimationEnabled: true,
-                        autoCollectEnabled: true
+                        autoCollectEnabled: true,
+                        solvableOnlyEnabled: true
                     }))
                 }
             },
@@ -63,15 +68,27 @@ export const usePreferencesStore = create<PreferencesStoreState>()(
                 cardBack: state.cardBack,
                 gameTimerEnabled: state.gameTimerEnabled,
                 cardAnimationEnabled: state.cardAnimationEnabled,
-                autoCollectEnabled: state.autoCollectEnabled
+                autoCollectEnabled: state.autoCollectEnabled,
+                solvableOnlyEnabled: state.solvableOnlyEnabled
             }),
+            // Add default for the solvable-only flag when hydrating older persisted versions.
+            migrate: (persistedState, version) => {
+                if (version < 4) {
+                    return {
+                        ...(persistedState as Record<string, unknown>),
+                        solvableOnlyEnabled: true,
+                    };
+                }
+                return persistedState;
+            },
             onRehydrateStorage: () => (state, error) => {
                 if (error) {
                     console.error(`error on store hydration: ${error}`);
                     state?.actions?.resetPreferences?.();
                 }
             },
-            version: 3
+            // Version 4 introduces the persisted `solvableOnlyEnabled` preference.
+            version: 4
         },
     ),
 )
