@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { CardData } from "../types/card-data";
+import { setSolvabilityBitmapForTests } from "../utils/solvability-table";
 import useGameStore from "./game-store";
 import usePreferencesStore from "./preferences-store";
 import useStatisticsStore from "./statistics-store";
@@ -16,12 +17,24 @@ function makeDeck(): CardData[] {
   return deck;
 }
 
+function makeBitmapWithBits(indices: number[]): Uint8Array {
+  const bitmap = new Uint8Array(125_000);
+  for (const index of indices) {
+    const byteIndex = Math.floor(index / 8);
+    const bitOffset = index % 8;
+    bitmap[byteIndex] |= (1 << bitOffset);
+  }
+  return bitmap;
+}
+
 beforeEach(() => {
-  usePreferencesStore.setState({ gameTimerEnabled: true });
+  usePreferencesStore.setState({ gameTimerEnabled: true, solvableOnlyEnabled: true });
+  setSolvabilityBitmapForTests(new Uint8Array(125_000).fill(0xff));
 
   useGameStore.setState({
     playfield: { draw: [], waste: [], foundation: [[], [], [], []], tableau: [[], [], [], [], [], [], []] },
     shuffledDeck: [],
+    currentGameNumber: null,
     undoQueue: [],
     redoQueue: [],
     lastPlayfieldUpdateType: "init",
@@ -35,9 +48,40 @@ beforeEach(() => {
 });
 
 describe("Game store actions", () => {
-  it("shuffleDeck produces 52 cards", () => {
+  it("shuffleDeck picks random game number when solvable-only is disabled", async () => {
+    // Arrange
+    const randomSpy = vi.spyOn(Math, "random").mockReturnValue(0);
+    usePreferencesStore.setState({ solvableOnlyEnabled: false });
+
+    // Act
+    const gameNumber = await useGameStore.getState().actions.shuffleDeck();
+
+    // Assert
+    expect(gameNumber).toBe(1);
+    expect(useGameStore.getState().currentGameNumber).toBe(1);
+    expect(useGameStore.getState().shuffledDeck).toHaveLength(52);
+    randomSpy.mockRestore();
+  });
+
+  it("shuffleDeck picks solvable game number when solvable-only is enabled", async () => {
+    // Arrange
+    setSolvabilityBitmapForTests(makeBitmapWithBits([42]));
+    const randomSpy = vi.spyOn(Math, "random").mockReturnValue(0.0000415);
+    usePreferencesStore.setState({ solvableOnlyEnabled: true });
+
+    // Act
+    const gameNumber = await useGameStore.getState().actions.shuffleDeck();
+
+    // Assert
+    expect(gameNumber).toBe(42);
+    expect(useGameStore.getState().currentGameNumber).toBe(42);
+    expect(useGameStore.getState().shuffledDeck).toHaveLength(52);
+    randomSpy.mockRestore();
+  });
+
+  it("shuffleDeck produces 52 cards", async () => {
     // Arrange + Act
-    useGameStore.getState().actions.shuffleDeck();
+    await useGameStore.getState().actions.shuffleDeck();
     const s = useGameStore.getState().shuffledDeck;
 
     // Assert
@@ -210,7 +254,7 @@ describe("Game store actions", () => {
     expect(useGameStore.getState().lastPlayfieldUpdateType).toBe("redo");
   });
 
-  it("newGame shuffles a new deck, redeals the playfield, clears the undo/redo queues, and starts a new game timer", () => {
+  it("newGame shuffles a new deck, redeals the playfield, clears the undo/redo queues, and starts a new game timer", async () => {
 
     // Arrange
     vi.useFakeTimers();
@@ -225,12 +269,13 @@ describe("Game store actions", () => {
       expect(useGameStore.getState().undoQueue.length).toBe(1);
 
       // Act
-      useGameStore.getState().actions.newGame();
+      await useGameStore.getState().actions.newGame();
       vi.advanceTimersByTime(1100);
 
       // Assert
       expect(useGameStore.getState().modalType).toBeUndefined();
       expect(useGameStore.getState().shuffledDeck.length).toEqual(52);
+      expect(useGameStore.getState().currentGameNumber).toBeTypeOf("number");
       expect(useGameStore.getState().undoQueue.length).toBe(0);
       expect(useGameStore.getState().redoQueue.length).toBe(0);
       expect(useGameStore.getState().gameTimer).toBeGreaterThanOrEqual(1);
@@ -263,6 +308,7 @@ describe("Game store actions", () => {
     // Assert
     expect(useGameStore.getState().modalType).toBeUndefined();
     expect(useGameStore.getState().shuffledDeck).toEqual([]);
+    expect(useGameStore.getState().currentGameNumber).toBeNull();
     expect(useGameStore.getState().undoQueue.length).toBe(0);
     expect(useGameStore.getState().redoQueue.length).toBe(0);
     expect(useGameStore.getState().gameTimer).toBe(0);

@@ -20,10 +20,11 @@ export default function Modal() {
      * Handler for the New Game button inside the modal. Starts a new game.
      * @param e Mouse event
      */
-    function newGameHandler(e: React.MouseEvent) {
+    async function newGameHandler(e: React.MouseEvent) {
         e.preventDefault();
         e.stopPropagation();
-        useGameStore.getState().actions.newGame();
+        // Await ensures solvable-only game generation completes before modal flow proceeds.
+        await useGameStore.getState().actions.newGame();
     }
 
     /**

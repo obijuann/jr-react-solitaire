@@ -4,10 +4,12 @@ import { act, cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import useGameStore from "../stores/game-store";
 import usePreferencesStore from "../stores/preferences-store";
+import { setSolvabilityBitmapForTests } from "../utils/solvability-table";
 import Solitaire from "./solitaire";
 
 beforeEach(() => {
-  usePreferencesStore.setState({ cardAnimationEnabled: false, autoCollectEnabled: false });
+  usePreferencesStore.setState({ cardAnimationEnabled: false, autoCollectEnabled: false, solvableOnlyEnabled: true });
+  setSolvabilityBitmapForTests(new Uint8Array(125_000).fill(0xff));
 });
 
 afterEach(() => {
@@ -49,14 +51,14 @@ describe("Solitaire app behavior", () => {
     expect(menuArea.querySelector("#menu")).toBeInTheDocument();
   });
 
-  it("Deals the cards when a new game event is published", () => {
+  it("Deals the cards when a new game event is published", async () => {
     // Arrange
     render(<Solitaire />);
 
     // Act
-    act(() => {
+    await act(async () => {
       // Use the store action directly
-      useGameStore.getState().actions.newGame();
+      await useGameStore.getState().actions.newGame();
     });
 
     // Assert
@@ -79,14 +81,14 @@ describe("Solitaire app behavior", () => {
     expect(menuArea.querySelector("#menu")).toBeInTheDocument();
   });
 
-  it("Removes cards from the playfield when the game is quit", () => {
+  it("Removes cards from the playfield when the game is quit", async () => {
     // Arrange
     render(<Solitaire />);
 
     // Act
-    act(() => {
+    await act(async () => {
       // Use the store action directly
-      useGameStore.getState().actions.newGame();
+      await useGameStore.getState().actions.newGame();
     });
 
     // Assert
@@ -199,10 +201,12 @@ describe("Solitaire app behavior", () => {
     vi.useRealTimers();
   });
 
-  it("dragStart sets cardData on dataTransfer", () => {
+  it("dragStart sets cardData on dataTransfer", async () => {
     // Arrange
     // Ensure there is a game with cards
-    act(() => useGameStore.getState().actions.newGame());
+    await act(async () => {
+      await useGameStore.getState().actions.newGame();
+    });
 
     // Act
     render(<Solitaire />);

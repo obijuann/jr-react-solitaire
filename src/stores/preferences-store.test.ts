@@ -10,6 +10,7 @@ describe("Preferences store", () => {
       gameTimerEnabled: true,
       cardAnimationEnabled: true,
       autoCollectEnabled: true,
+      solvableOnlyEnabled: true,
     });
   });
 
@@ -24,6 +25,7 @@ describe("Preferences store", () => {
     expect(state.gameTimerEnabled).toBe(true);
     expect(state.cardAnimationEnabled).toBe(true);
     expect(state.autoCollectEnabled).toBe(true);
+    expect(state.solvableOnlyEnabled).toBe(true);
   });
 
   it("resetPreferences resets all values to defaults", () => {
@@ -35,6 +37,7 @@ describe("Preferences store", () => {
       gameTimerEnabled: false,
       cardAnimationEnabled: false,
       autoCollectEnabled: false,
+      solvableOnlyEnabled: false,
     });
 
     // Act
@@ -48,6 +51,7 @@ describe("Preferences store", () => {
     expect(state.gameTimerEnabled).toBe(true);
     expect(state.cardAnimationEnabled).toBe(true);
     expect(state.autoCollectEnabled).toBe(true);
+    expect(state.solvableOnlyEnabled).toBe(true);
   });
 
   it("allows updating individual theme color", () => {
@@ -108,6 +112,23 @@ describe("Preferences store", () => {
     expect(usePreferencesStore.getState().autoCollectEnabled).toBe(true);
   });
 
+  it("allows toggling solvableOnlyEnabled", () => {
+    // Arrange
+    expect(usePreferencesStore.getState().solvableOnlyEnabled).toBe(true);
+
+    // Act
+    usePreferencesStore.setState({ solvableOnlyEnabled: false });
+
+    // Assert
+    expect(usePreferencesStore.getState().solvableOnlyEnabled).toBe(false);
+
+    // Act
+    usePreferencesStore.setState({ solvableOnlyEnabled: true });
+
+    // Assert
+    expect(usePreferencesStore.getState().solvableOnlyEnabled).toBe(true);
+  });
+
   it("resetPreferences can be called multiple times", () => {
     // Arrange
     usePreferencesStore.setState({
@@ -115,6 +136,7 @@ describe("Preferences store", () => {
       cardFace: "french",
       cardBack: "red",
       gameTimerEnabled: false,
+      solvableOnlyEnabled: false,
     });
 
     // Act
@@ -134,5 +156,6 @@ describe("Preferences store", () => {
     expect(usePreferencesStore.getState().cardBack).toBe("blue");
     expect(usePreferencesStore.getState().gameTimerEnabled).toBe(true);
     expect(usePreferencesStore.getState().autoCollectEnabled).toBe(true);
+    expect(usePreferencesStore.getState().solvableOnlyEnabled).toBe(true);
   });
 });
