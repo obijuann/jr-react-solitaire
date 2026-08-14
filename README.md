@@ -21,7 +21,7 @@ Runs the app in the production mode.
 
 ### `npm run lint`
 
-Runs eslint and stylelint and displays any lint errors in the console.
+Runs oxlint and stylelint and displays any lint errors in the console.
 
 ### `npm vitest`
 

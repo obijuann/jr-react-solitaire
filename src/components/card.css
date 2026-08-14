@@ -26,6 +26,10 @@
     100% { transform: rotateY(180deg); }
 }
 
+.card.faceup .card-inner {
+    transform: rotateY(180deg);
+}
+
 .card.anim.faceup .card-inner {
     animation: card-flip-up 0.5s ease-in-out forwards;
 }
@@ -34,18 +38,8 @@
     animation: card-flip-up 0.25s ease-in-out forwards;
 }
 
-.card.faceup .card-inner {
-    transform: rotateY(180deg);
-}
-
-.card.faceup .back {
-    transform: rotateY(0deg);
-}
-
 .back,
 .face {
-    /* Safari */
-    -webkit-backface-visibility: hidden;
     backface-visibility: hidden;
     border: 1px solid black;
     border-radius: var(--border-radius);
@@ -59,6 +53,10 @@
     background-color: black;
     background-repeat: no-repeat;
     background-size: 100%;
+}
+
+.card.faceup .back {
+    transform: rotateY(0deg);
 }
 
 .back.abstract_clouds {

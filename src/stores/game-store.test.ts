@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { CardData } from "../types/card-data";
+import { PileTypes } from "../types/pile-types";
 import { setSolvabilityBitmapForTests } from "../utils/solvability-table";
 import useGameStore from "./game-store";
 import usePreferencesStore from "./preferences-store";
@@ -681,8 +682,7 @@ describe("Game store actions", () => {
 
     // Act: pass an invalid target pile (bypass types)
     // Intentionally pass an invalid pile type at runtime to hit the default branch.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    useGameStore.getState().actions.moveCard({ ...c, pileType: "waste", pileIndex: 0, cardIndex: 0 } as any, "invalid" as any, 0, "waste", 0, 0);
+    useGameStore.getState().actions.moveCard({ ...c, pileType: "waste", pileIndex: 0, cardIndex: 0 } as CardData, "invalid" as PileTypes, 0, "waste", 0, 0);
 
     // Assert: no change
     expect(useGameStore.getState().playfield).toEqual(before);

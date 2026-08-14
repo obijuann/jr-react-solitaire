@@ -1,3 +1,46 @@
+button {
+    border: 0;
+    border-radius: var(--border-radius);
+    color: var(--color-on-primary);
+    cursor: pointer;
+    font-size: 24px;
+    margin: 0;
+}
+
+button.primary {
+    align-items: center;
+    background-color: transparent;
+    display: flex;
+    flex-direction: column;
+    width: 100px;
+}
+
+button.primary svg {
+    font-size: 80px;
+}
+
+button:disabled {
+    cursor: unset;
+    opacity: .5;
+}
+
+button.secondary {
+    align-items: center;
+    background-color: transparent;
+    display: flex;
+    font-size: 20px;
+    height: 40px;
+}
+
+button.secondary svg {
+    margin-right: 10px;
+}
+
+button:not(:disabled):hover,
+button:not(:disabled):active {
+    background-color: rgba(0, 0, 0, .1);
+}
+
 #menu {
     --border-radius: 8px;
     background: rgba(0, 0, 0, .7);
@@ -29,13 +72,13 @@
     width: 100%;
 }
 
-#menu:not(.visible) #menu-control button {
-    transform: unset;
-}
-
 #menu-control button:hover,
 #menu-control button:active {
     filter: brightness(1);
+}
+
+#menu:not(.visible) #menu-control button {
+    transform: unset;
 }
 
 #primary-menu {
@@ -139,49 +182,6 @@
 #group-submenu .group-section {
     background-color: var(--color-primary);
     justify-content: space-between;
-}
-
-button {
-    border: 0;
-    border-radius: var(--border-radius);
-    color: var(--color-on-primary);
-    cursor: pointer;
-    font-size: 24px;
-    margin: 0;
-}
-
-button.primary {
-    align-items: center;
-    background-color: transparent;
-    display: flex;
-    flex-direction: column;
-    width: 100px;
-}
-
-button.primary svg {
-    font-size: 80px;
-}
-
-button:disabled {
-    cursor: unset;
-    opacity: .5;
-}
-
-button.secondary {
-    align-items: center;
-    background-color: transparent;
-    display: flex;
-    font-size: 20px;
-    height: 40px;
-}
-
-button.secondary svg {
-    margin-right: 10px;
-}
-
-button:not(:disabled):hover,
-button:not(:disabled):active {
-    background-color: rgba(0, 0, 0, .1);
 }
 
 @media (max-width: 889px) {
